@@ -1,7 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateEnrollmentInput, EndEnrollmentInput } from '@escola/contracts';
+import { CreateEnrollmentInput, EndEnrollmentInput, RenewBatchInput } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
-import { parseDateString } from '../common/dates';
+import { dueDateFor, parseDateString } from '../common/dates';
+
+const oneDayBefore = (date: Date) => new Date(date.getTime() - 24 * 60 * 60 * 1000);
 
 @Injectable()
 export class EnrollmentsService {
@@ -99,5 +101,78 @@ export class EnrollmentsService {
     return sibling
       ? { hasSibling: true, siblingName: sibling.student.fullName, suggestedDiscountPercent: 10 }
       : { hasSibling: false };
+  }
+
+  /**
+   * Rematrícula em lote (spec seção 6): clona matrículas ativas de uma turma pra outra
+   * (normalmente a turma do ano seguinte), com reajuste % em massa (editável por aluno),
+   * e cobra a taxa de matrícula embutida na primeira mensalidade (competência de janeiro).
+   */
+  async renewBatch(schoolId: string, input: RenewBatchInput) {
+    const targetClassroom = await this.prisma.classroom.findFirst({
+      where: { id: input.targetClassroomId, schoolId },
+    });
+    if (!targetClassroom) throw new NotFoundException('Turma de destino não encontrada');
+
+    const activeEnrollments = await this.prisma.enrollment.findMany({
+      where: { schoolId, classroomId: input.classroomId, status: 'ACTIVE' },
+    });
+    if (activeEnrollments.length === 0) {
+      throw new BadRequestException('Não há matrículas ativas nesta turma para rematricular');
+    }
+    if (activeEnrollments.length > targetClassroom.capacity) {
+      throw new BadRequestException(
+        `Turma de destino comporta ${targetClassroom.capacity} alunos, mas há ${activeEnrollments.length} para rematricular.`,
+      );
+    }
+
+    const newStartDate = parseDateString(input.newStartDate);
+    const januaryCompetence = new Date(Date.UTC(newStartDate.getUTCFullYear(), 0, 1));
+    const overrideByEnrollment = new Map(input.overrides.map((o) => [o.enrollmentId, o.monthlyFeeCents]));
+
+    return this.prisma.$transaction(async (tx) => {
+      let renewed = 0;
+      for (const old of activeEnrollments) {
+        await tx.enrollment.update({
+          where: { id: old.id },
+          data: { status: 'ENDED', endDate: oneDayBefore(newStartDate) },
+        });
+
+        const newMonthlyFeeCents =
+          overrideByEnrollment.get(old.id) ?? Math.round(old.monthlyFeeCents * (1 + input.readjustPercent / 100));
+
+        const newEnrollment = await tx.enrollment.create({
+          data: {
+            schoolId,
+            studentId: old.studentId,
+            classroomId: input.targetClassroomId,
+            startDate: newStartDate,
+            monthlyFeeCents: newMonthlyFeeCents,
+            discountCents: old.discountCents,
+            discountReason: old.discountReason,
+            dueDay: old.dueDay,
+            enrollmentFeeCents: old.enrollmentFeeCents,
+            notes: old.notes,
+          },
+        });
+
+        // Invoice avulsa de janeiro já embutindo a taxa de matrícula — evita conflito
+        // com a geração automática mensal, que usa a mesma chave (schoolId, enrollmentId, competence).
+        const enrollmentFee = input.chargeEnrollmentFee ? old.enrollmentFeeCents : 0;
+        await tx.tuitionInvoice.create({
+          data: {
+            schoolId,
+            enrollmentId: newEnrollment.id,
+            competence: januaryCompetence,
+            amountCents: newMonthlyFeeCents + enrollmentFee,
+            discountCents: old.discountCents,
+            dueDate: dueDateFor(januaryCompetence, old.dueDay),
+          },
+        });
+
+        renewed += 1;
+      }
+      return { renewed };
+    });
   }
 }

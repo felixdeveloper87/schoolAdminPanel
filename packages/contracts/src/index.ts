@@ -140,6 +140,17 @@ export const loginSchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>;
 
 // ---------------------------------------------------------------------------
+// AppUser (usuário do painel — ADMIN cria/gerencia)
+// ---------------------------------------------------------------------------
+export const createUserSchema = z.object({
+  name: z.string().min(2, 'Nome obrigatório'),
+  email: z.string().email('E-mail inválido'),
+  password: z.string().min(6, 'Senha deve ter ao menos 6 caracteres'),
+  role: z.enum(ROLES),
+});
+export type CreateUserInput = z.infer<typeof createUserSchema>;
+
+// ---------------------------------------------------------------------------
 // Guardian (responsável)
 // ---------------------------------------------------------------------------
 export const guardianSchema = z.object({
@@ -275,3 +286,52 @@ export const createExpenseCategorySchema = z.object({
     .or(z.literal('').transform(() => undefined)),
 });
 export type CreateExpenseCategoryInput = z.infer<typeof createExpenseCategorySchema>;
+
+// ---------------------------------------------------------------------------
+// Goal (meta mensal)
+// ---------------------------------------------------------------------------
+export const upsertGoalSchema = z.object({
+  month: competenceString,
+  newStudentsTarget: z.number().int().min(0, 'Não pode ser negativo'),
+  revenueTargetCents: cents.optional(),
+});
+export type UpsertGoalInput = z.infer<typeof upsertGoalSchema>;
+
+// ---------------------------------------------------------------------------
+// WaitlistEntry (lista de espera)
+// ---------------------------------------------------------------------------
+export const createWaitlistEntrySchema = z.object({
+  childName: z.string().min(2, 'Nome obrigatório'),
+  birthDate: dateString,
+  guardianName: z.string().min(2, 'Nome obrigatório'),
+  phoneWhatsapp: z.string().regex(/^\d{10,11}$/, 'Telefone com DDD, só números (10–11 dígitos)'),
+  desiredAgeGroup: z.enum(AGE_GROUPS),
+  desiredShift: z.enum(SHIFTS),
+  notes: z.string().max(500).optional().or(z.literal('').transform(() => undefined)),
+});
+export type CreateWaitlistEntryInput = z.infer<typeof createWaitlistEntrySchema>;
+
+export const updateWaitlistStatusSchema = z.object({
+  status: z.enum(WAITLIST_STATUSES),
+});
+export type UpdateWaitlistStatusInput = z.infer<typeof updateWaitlistStatusSchema>;
+
+// ---------------------------------------------------------------------------
+// Rematrícula em lote
+// ---------------------------------------------------------------------------
+export const renewBatchSchema = z.object({
+  classroomId: z.string().min(1, 'Escolha a turma'),
+  targetClassroomId: z.string().min(1, 'Escolha a turma de destino'),
+  readjustPercent: z.number().min(-100).max(500),
+  newStartDate: dateString,
+  chargeEnrollmentFee: z.boolean().default(true),
+  overrides: z
+    .array(
+      z.object({
+        enrollmentId: z.string().min(1),
+        monthlyFeeCents: cents,
+      }),
+    )
+    .default([]),
+});
+export type RenewBatchInput = z.infer<typeof renewBatchSchema>;

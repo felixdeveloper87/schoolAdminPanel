@@ -16,5 +16,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  // Exclui rotas de API, assets internos do Next e arquivos estáticos da pasta public/
+  // (logo, ícones etc.) — sem isso, o navegador não carrega a logo nem na tela de login.
+  matcher: ['/((?!api|_next/static|_next/image|.*\\.(?:ico|png|jpg|jpeg|svg|webp)$).*)'],
 };

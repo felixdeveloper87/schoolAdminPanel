@@ -4,10 +4,13 @@ import {
   CreateEnrollmentInput,
   endEnrollmentSchema,
   EndEnrollmentInput,
+  renewBatchSchema,
+  RenewBatchInput,
 } from '@escola/contracts';
 import { EnrollmentsService } from './enrollments.service';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { Roles } from '../auth/roles.decorator';
 import { JwtPayload } from '../auth/jwt-payload';
 
 @Controller('enrollments')
@@ -39,5 +42,14 @@ export class EnrollmentsController {
     @Body(new ZodValidationPipe(endEnrollmentSchema)) body: EndEnrollmentInput,
   ) {
     return this.enrollmentsService.end(user.schoolId, id, body);
+  }
+
+  @Post('renew-batch')
+  @Roles('ADMIN')
+  renewBatch(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(renewBatchSchema)) body: RenewBatchInput,
+  ) {
+    return this.enrollmentsService.renewBatch(user.schoolId, body);
   }
 }

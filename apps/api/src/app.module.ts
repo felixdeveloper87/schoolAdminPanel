@@ -12,6 +12,10 @@ import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { UsersModule } from './users/users.module';
+import { GoalsModule } from './goals/goals.module';
+import { WaitlistModule } from './waitlist/waitlist.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -25,6 +29,10 @@ import { DashboardModule } from './dashboard/dashboard.module';
     InvoicesModule,
     ExpensesModule,
     DashboardModule,
+    UsersModule,
+    GoalsModule,
+    WaitlistModule,
+    ReportsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
