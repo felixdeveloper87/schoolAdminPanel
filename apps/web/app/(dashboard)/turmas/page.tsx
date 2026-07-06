@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { Pencil, Plus } from 'lucide-react';
 import { AGE_GROUP_LABELS, AgeGroup, SHIFT_LABELS, Shift } from '@escola/contracts';
-import { apiGet } from '@/lib/server-api';
+import { apiGet, getSessionUser } from '@/lib/server-api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ClassroomDialog } from '@/components/classroom-dialog';
+import { RenewBatchDialog } from '@/components/renew-batch-dialog';
 
 interface ClassroomRow {
   id: string;
@@ -20,7 +21,10 @@ interface ClassroomRow {
 }
 
 export default async function TurmasPage() {
-  const classrooms = await apiGet<ClassroomRow[]>('/classrooms');
+  const [user, classrooms] = await Promise.all([
+    getSessionUser(),
+    apiGet<ClassroomRow[]>('/classrooms'),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -31,13 +35,25 @@ export default async function TurmasPage() {
             {classrooms.filter((c) => c.active).length} turma(s) ativa(s)
           </p>
         </div>
-        <ClassroomDialog
-          trigger={
-            <Button>
-              <Plus className="h-4 w-4" /> Nova turma
-            </Button>
-          }
-        />
+        <div className="flex gap-2">
+          {user.role === 'ADMIN' && (
+            <RenewBatchDialog
+              classrooms={classrooms.map((c) => ({
+                id: c.id,
+                name: c.name,
+                activeCount: c.activeCount,
+                capacity: c.capacity,
+              }))}
+            />
+          )}
+          <ClassroomDialog
+            trigger={
+              <Button>
+                <Plus className="h-4 w-4" /> Nova turma
+              </Button>
+            }
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

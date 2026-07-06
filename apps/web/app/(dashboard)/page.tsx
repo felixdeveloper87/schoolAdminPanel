@@ -1,9 +1,15 @@
 import Link from 'next/link';
-import { Cake, Hourglass } from 'lucide-react';
+import { Cake, Hourglass, TrendingUp } from 'lucide-react';
 import { apiGet, getSessionUser } from '@/lib/server-api';
 import { brl, currentCompetence, formatCompetence } from '@/lib/format';
 import { StatCard } from '@/components/stat-card';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  RevenueVsExpensesChart,
+  ExpensesByCategoryChart,
+  ActiveStudentsChart,
+  GoalVsActualChart,
+} from '@/components/charts/dashboard-charts';
 
 interface DashboardSummary {
   competence: string;
@@ -25,11 +31,28 @@ interface DashboardSummary {
   goal: { newStudentsTarget: number; revenueTargetCents: number | null } | null;
 }
 
+interface DashboardCharts {
+  revenueVsExpenses: { competence: string; receivedCents: number; expensesCents: number }[];
+  activeStudentsEvolution: { competence: string; activeCount: number }[];
+  goalVsActual: { competence: string; target: number | null; actual: number }[];
+  expensesByCategory: { name: string; colorHex: string; totalCents: number }[];
+}
+
+interface DashboardProjection {
+  avgDefaultRate: number;
+  monthlyRevenueCents: number;
+  months: { competence: string; projectedCents: number }[];
+}
+
 export default async function PainelPage() {
-  const [user, summary] = await Promise.all([
+  const month = currentCompetence();
+  const [user, summary, charts] = await Promise.all([
     getSessionUser(),
-    apiGet<DashboardSummary>(`/dashboard/summary?month=${currentCompetence()}`),
+    apiGet<DashboardSummary>(`/dashboard/summary?month=${month}`),
+    apiGet<DashboardCharts>(`/dashboard/charts?month=${month}`),
   ]);
+  const projection =
+    user.role === 'ADMIN' ? await apiGet<DashboardProjection>(`/dashboard/projection?month=${month}`) : null;
   const pct = (v: number) => `${Math.round(v * 100)}%`;
 
   return (
@@ -133,6 +156,75 @@ export default async function PainelPage() {
           </CardContent>
         </Card>
       </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Receita recebida × despesas</CardTitle>
+            <CardDescription>Últimos 12 meses</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RevenueVsExpensesChart data={charts.revenueVsExpenses} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Despesas por categoria</CardTitle>
+            <CardDescription>{formatCompetence(summary.competence)}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ExpensesByCategoryChart data={charts.expensesByCategory} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Evolução de alunos ativos</CardTitle>
+            <CardDescription>Últimos 12 meses</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ActiveStudentsChart data={charts.activeStudentsEvolution} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Meta de novos alunos × realizado</CardTitle>
+            <CardDescription>Últimos 12 meses</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <GoalVsActualChart data={charts.goalVsActual} />
+          </CardContent>
+        </Card>
+      </div>
+
+      {projection && (
+        <Card className="notebook-card" style={{ ['--notebook-accent' as string]: 'var(--primary)' }}>
+          <CardHeader className="flex-row items-center gap-2 space-y-0">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            <div>
+              <CardTitle>Projeção de receita (próximos 6 meses)</CardTitle>
+              <CardDescription>
+                Fórmula: soma das mensalidades das matrículas ativas ×
+                (1 − taxa média de inadimplência dos últimos 6 meses fechados). Cenário simples, sem
+                machine learning.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Mensalidades ativas somam <span className="money font-semibold text-foreground">{brl(projection.monthlyRevenueCents)}</span>/mês
+              · taxa média de inadimplência: <span className="font-semibold text-foreground">{pct(projection.avgDefaultRate)}</span>
+            </p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {projection.months.map((m) => (
+                <div key={m.competence} className="rounded-md border p-3 text-center">
+                  <p className="text-xs text-muted-foreground">{formatCompetence(m.competence)}</p>
+                  <p className="money mt-1 font-semibold">{brl(m.projectedCents)}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

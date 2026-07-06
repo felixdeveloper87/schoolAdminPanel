@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ExpenseDialog, DeleteExpenseButton } from '@/components/expense-dialog';
+import { ExportCsvButton } from '@/components/export-csv-button';
 
 interface ExpenseRow {
   id: string;
@@ -54,14 +55,27 @@ export default async function DespesasPage({
             <span className="money ml-2 font-semibold text-destructive">Total: {brl(data.totalCents)}</span>
           </div>
         </div>
-        <ExpenseDialog
-          categories={categories}
-          trigger={
-            <Button>
-              <Plus className="h-4 w-4" /> Nova despesa
-            </Button>
-          }
-        />
+        <div className="flex gap-2">
+          <ExportCsvButton
+            filename={`despesas-${competence}.csv`}
+            rows={data.items.map((e) => ({
+              Descrição: e.description,
+              Categoria: e.category.name,
+              Valor: (e.amountCents / 100).toFixed(2),
+              Data: formatDate(e.expenseDate),
+              Fornecedor: e.supplier ?? '',
+              Recorrente: e.recurring ? 'Sim' : 'Não',
+            }))}
+          />
+          <ExpenseDialog
+            categories={categories}
+            trigger={
+              <Button>
+                <Plus className="h-4 w-4" /> Nova despesa
+              </Button>
+            }
+          />
+        </div>
       </div>
 
       <Card>

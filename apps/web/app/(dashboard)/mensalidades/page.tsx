@@ -14,6 +14,7 @@ import { Card } from '@/components/ui/card';
 import { InvoiceStatusBadge } from '@/components/invoice-status-badge';
 import { InvoiceActions } from '@/components/invoice-actions';
 import { GenerateInvoicesButton } from '@/components/generate-invoices-button';
+import { ExportCsvButton } from '@/components/export-csv-button';
 import { cn } from '@/lib/utils';
 
 interface InvoiceRow {
@@ -80,7 +81,22 @@ export default async function MensalidadesPage({
             </Link>
           </div>
         </div>
-        {isAdmin && <GenerateInvoicesButton competence={competence} />}
+        <div className="flex gap-2">
+          <ExportCsvButton
+            filename={`mensalidades-${competence}.csv`}
+            rows={data.items.map((i) => ({
+              Aluno: i.student.fullName,
+              Turma: i.classroom.name,
+              Valor: (i.effectiveCents / 100).toFixed(2),
+              Vencimento: formatDate(i.dueDate),
+              Status: INVOICE_STATUS_LABELS[i.status],
+              'Pago em': i.paidAt ? formatDate(i.paidAt) : '',
+              Método: i.paymentMethod ? PAYMENT_METHOD_LABELS[i.paymentMethod] : '',
+              Observação: i.receiptNote ?? '',
+            }))}
+          />
+          {isAdmin && <GenerateInvoicesButton competence={competence} />}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2 text-sm">

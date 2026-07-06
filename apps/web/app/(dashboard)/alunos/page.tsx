@@ -7,12 +7,13 @@ import {
   StudentStatus,
 } from '@escola/contracts';
 import { apiGet } from '@/lib/server-api';
-import { brl, formatAge } from '@/lib/format';
+import { brl, formatAge, formatDate } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StudentsFilters } from '@/components/students-filters';
+import { ExportCsvButton } from '@/components/export-csv-button';
 
 interface StudentRow {
   id: string;
@@ -57,11 +58,28 @@ export default async function AlunosPage({
           <h1 className="text-2xl font-bold">Alunos</h1>
           <p className="text-sm text-muted-foreground">{data.total} aluno(s)</p>
         </div>
-        <Button asChild>
-          <Link href="/alunos/novo">
-            <Plus className="h-4 w-4" /> Novo aluno
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <ExportCsvButton
+            filename="alunos.csv"
+            rows={data.items.map((s) => ({
+              Nome: s.fullName,
+              Idade: formatAge(s.birthDate),
+              Nascimento: formatDate(s.birthDate),
+              Turma: s.classroom?.name ?? '',
+              Período: ENROLLMENT_TYPE_LABELS[s.enrollmentType],
+              Mensalidade: s.monthlyFeeCents !== null ? (s.monthlyFeeCents / 100).toFixed(2) : '',
+              Status: STUDENT_STATUS_LABELS[s.status],
+              Inadimplente: s.hasOverdue ? 'Sim' : 'Não',
+              Responsável: s.financialGuardian?.fullName ?? '',
+              WhatsApp: s.financialGuardian?.phoneWhatsapp ?? '',
+            }))}
+          />
+          <Button asChild>
+            <Link href="/alunos/novo">
+              <Plus className="h-4 w-4" /> Novo aluno
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <StudentsFilters classrooms={classrooms} />

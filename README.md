@@ -34,12 +34,24 @@ pnpm --filter @escola/api prisma:seed         # escola exemplo + usuários + dad
 pnpm dev
 ```
 
-Acesse http://localhost:3001. Usuários do seed:
+Acesse http://localhost:3001. O seed não cria usuários (só a escola, turmas, alunos e despesas de exemplo).
 
-| E-mail | Senha | Papel |
-|---|---|---|
-| admin@escola.com | admin123 | ADMIN |
-| secretaria@escola.com | staff123 | STAFF |
+`POST /api/users` (criação de usuário) exige estar autenticado como ADMIN — então o *primeiro*
+usuário de uma escola nova precisa ser inserido direto no banco:
+
+```bash
+docker compose -f docker-compose.dev.yml exec postgres psql -U escola -d escola -c "
+INSERT INTO app_users (id, \"schoolId\", name, email, \"passwordHash\", role, active)
+VALUES (gen_random_uuid()::text, 'seed-school', 'Seu Nome', 'voce@escola.com',
+        crypt('sua-senha', gen_salt('bf', 10)), 'ADMIN', true);
+"
+```
+
+> Requer a extensão `pgcrypto` (`CREATE EXTENSION IF NOT EXISTS pgcrypto;`) para `crypt()`/`gen_salt()`.
+> Alternativa mais simples: gerar o hash com `node -e "console.log(require('bcryptjs').hashSync('sua-senha', 10))"`
+> e inserir o valor já pronto no `passwordHash`.
+
+Depois de logado como ADMIN, os demais usuários podem ser criados via `POST /api/users`.
 
 Em dev não há nginx: o `next.config.js` faz rewrite de `/api/*` para a API do Nest
 (`API_URL`, default `http://localhost:3002`), mantendo a mesma origem do navegador.

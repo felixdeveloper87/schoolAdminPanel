@@ -15,6 +15,9 @@ import {
   Menu,
   LogOut,
   X,
+  FileBarChart,
+  Target,
+  Hourglass,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SessionUser } from '@/lib/server-api';
@@ -26,14 +29,17 @@ const NAV_ITEMS = [
   { href: '/mensalidades', label: 'Mensalidades', icon: Receipt },
   { href: '/turmas', label: 'Turmas', icon: School },
   { href: '/despesas', label: 'Despesas', icon: Wallet },
+  { href: '/relatorios', label: 'Relatórios', icon: FileBarChart },
+  { href: '/metas', label: 'Metas', icon: Target, adminOnly: true },
+  { href: '/lista-espera', label: 'Lista de espera', icon: Hourglass },
   { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ];
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
   const pathname = usePathname();
   return (
     <nav className="flex flex-col gap-1">
-      {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+      {NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin).map(({ href, label, icon: Icon }) => {
         const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
         return (
           <Link
@@ -100,7 +106,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col gap-6 border-r bg-card py-5 md:flex">
         <Brand />
         <div className="flex-1 px-3">
-          <NavLinks />
+          <NavLinks isAdmin={user.role === 'ADMIN'} />
         </div>
         <div className="border-t px-3 pt-4">
           <p className="px-3 pb-2 text-sm">
@@ -130,7 +136,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
                   <X className="h-5 w-5" />
                 </DialogPrimitive.Close>
               </div>
-              <NavLinks onNavigate={() => setMenuOpen(false)} />
+              <NavLinks onNavigate={() => setMenuOpen(false)} isAdmin={user.role === 'ADMIN'} />
               <div className="mt-auto border-t pt-4">
                 <p className="px-3 pb-2 text-sm font-semibold">{user.name}</p>
                 <LogoutButton className="w-full" />

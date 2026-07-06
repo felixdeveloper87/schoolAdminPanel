@@ -1,5 +1,4 @@
 import { PrismaClient, EnrollmentType, AgeGroup, Shift, Relationship } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -19,28 +18,8 @@ async function main() {
   });
   const schoolId = school.id;
 
-  await prisma.appUser.upsert({
-    where: { schoolId_email: { schoolId, email: 'admin@escola.com' } },
-    update: {},
-    create: {
-      schoolId,
-      name: 'Ana Diretora',
-      email: 'admin@escola.com',
-      passwordHash: await bcrypt.hash('admin123', 10),
-      role: 'ADMIN',
-    },
-  });
-  await prisma.appUser.upsert({
-    where: { schoolId_email: { schoolId, email: 'secretaria@escola.com' } },
-    update: {},
-    create: {
-      schoolId,
-      name: 'Carla Secretária',
-      email: 'secretaria@escola.com',
-      passwordHash: await bcrypt.hash('staff123', 10),
-      role: 'STAFF',
-    },
-  });
+  // Usuários reais são criados via POST /api/users (ADMIN), não pelo seed —
+  // evita recriar contas de teste com senha fraca a cada novo `prisma db seed`.
 
   // Categorias de despesa (seed inicial da spec)
   const categoryNames = [
@@ -210,7 +189,7 @@ async function main() {
     ],
   });
 
-  console.log('Seed concluído: escola, usuários (admin@escola.com/admin123, secretaria@escola.com/staff123), turmas, alunos, mensalidades, despesas.');
+  console.log('Seed concluído: escola, turmas, alunos, mensalidades, despesas. Usuários já existentes foram preservados.');
 }
 
 main()
