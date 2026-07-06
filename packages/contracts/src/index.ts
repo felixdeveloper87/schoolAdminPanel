@@ -180,7 +180,6 @@ export type GuardianInput = z.infer<typeof guardianSchema>;
 const studentBase = z.object({
   fullName: z.string().min(2, 'Nome obrigatório'),
   birthDate: dateString,
-  status: z.enum(STUDENT_STATUSES).default('ACTIVE'),
   enrollmentType: z.enum(ENROLLMENT_TYPES),
   mealsIncluded: z.boolean().default(true),
   allergies: z.string().max(500).optional().or(z.literal('').transform(() => undefined)),
@@ -208,9 +207,20 @@ export type CreateStudentInput = z.infer<typeof createStudentSchema>;
 export const updateStudentSchema = createStudentSchema;
 export type UpdateStudentInput = z.infer<typeof updateStudentSchema>;
 
-export const updateStudentStatusSchema = z.object({
-  status: z.enum(STUDENT_STATUSES),
-});
+export const updateStudentStatusSchema = z
+  .object({
+    status: z.enum(STUDENT_STATUSES),
+    reason: z.string().max(500).optional().or(z.literal('').transform(() => undefined)),
+  })
+  .superRefine((data, ctx) => {
+    if (data.status === 'INACTIVE' && (!data.reason || data.reason.trim().length < 3)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Informe o motivo do desligamento',
+        path: ['reason'],
+      });
+    }
+  });
 export type UpdateStudentStatusInput = z.infer<typeof updateStudentStatusSchema>;
 
 // ---------------------------------------------------------------------------

@@ -14,6 +14,7 @@ import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StudentsFilters } from '@/components/students-filters';
 import { ExportCsvButton } from '@/components/export-csv-button';
+import { StudentAvatar } from '@/components/student-avatar';
 
 interface StudentRow {
   id: string;
@@ -22,6 +23,7 @@ interface StudentRow {
   status: StudentStatus;
   enrollmentType: EnrollmentType;
   allergies: string | null;
+  photoUrl: string | null;
   classroom: { id: string; name: string } | null;
   monthlyFeeCents: number | null;
   hasOverdue: boolean;
@@ -40,9 +42,12 @@ export default async function AlunosPage({
 }: {
   searchParams: { q?: string; status?: string; classroomId?: string; page?: string };
 }) {
+  // Quadro de alunos ativos: por padrão exclui ex-alunos (que têm página própria em /ex-alunos)
+  const status = searchParams.status === 'WAITLIST' ? 'WAITLIST' : 'ACTIVE';
+
   const query = new URLSearchParams();
   if (searchParams.q) query.set('q', searchParams.q);
-  if (searchParams.status) query.set('status', searchParams.status);
+  query.set('status', status);
   if (searchParams.classroomId) query.set('classroomId', searchParams.classroomId);
   query.set('page', searchParams.page ?? '1');
 
@@ -107,12 +112,17 @@ export default async function AlunosPage({
             {data.items.map((student) => (
               <TableRow key={student.id}>
                 <TableCell>
-                  <Link href={`/alunos/${student.id}`} className="font-semibold hover:text-primary">
-                    {student.fullName}
-                  </Link>
-                  <div className="flex flex-wrap gap-1 pt-0.5">
-                    {student.hasOverdue && <Badge variant="destructive">Inadimplente</Badge>}
-                    {student.allergies && <Badge variant="warning">Alergia</Badge>}
+                  <div className="flex items-center gap-3">
+                    <StudentAvatar photoUrl={student.photoUrl} name={student.fullName} />
+                    <div>
+                      <Link href={`/alunos/${student.id}`} className="font-semibold hover:text-primary">
+                        {student.fullName}
+                      </Link>
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {student.hasOverdue && <Badge variant="destructive">Inadimplente</Badge>}
+                        {student.allergies && <Badge variant="warning">Alergia</Badge>}
+                      </div>
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell className="hidden text-muted-foreground sm:table-cell">

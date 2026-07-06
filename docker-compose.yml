@@ -27,6 +27,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env}
       PORT: 3001
       NODE_ENV: production
+    volumes:
+      - escola_uploads:/app/apps/api/uploads
     mem_limit: 384m
 
   web:
@@ -54,3 +56,4 @@ services:
 
 volumes:
   escola_pgdata:
+  escola_uploads:

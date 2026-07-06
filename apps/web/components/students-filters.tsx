@@ -3,7 +3,10 @@
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
-import { STUDENT_STATUSES, STUDENT_STATUS_LABELS } from '@escola/contracts';
+import { STUDENT_STATUS_LABELS } from '@escola/contracts';
+
+// Quadro de alunos ativos: só ACTIVE/WAITLIST aqui — inativos têm o quadro próprio em /ex-alunos
+const BOARD_STATUSES = ['ACTIVE', 'WAITLIST'] as const;
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 
@@ -41,11 +44,10 @@ export function StudentsFilters({ classrooms }: { classrooms: { id: string; name
       </form>
       <Select
         className="w-40"
-        value={searchParams.get('status') ?? ''}
+        value={searchParams.get('status') ?? 'ACTIVE'}
         onChange={(e) => apply({ status: e.target.value })}
       >
-        <option value="">Todos os status</option>
-        {STUDENT_STATUSES.map((s) => (
+        {BOARD_STATUSES.map((s) => (
           <option key={s} value={s}>
             {STUDENT_STATUS_LABELS[s]}
           </option>

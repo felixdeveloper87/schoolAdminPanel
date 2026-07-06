@@ -1,9 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, StudentStatus } from '@prisma/client';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 import { CreateStudentInput, UpdateStudentInput } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
-import { parseDateString } from '../common/dates';
+import { parseDateString, todaySaoPaulo } from '../common/dates';
 import { PageParams, paged } from '../common/pagination';
+import { STUDENT_PHOTOS_DIR } from '../uploads/uploads.constants';
 
 @Injectable()
 export class StudentsService {
@@ -55,8 +58,11 @@ export class StudentsService {
         enrollmentType: s.enrollmentType,
         allergies: s.allergies,
         classroom: enrollment?.classroom ?? null,
+        photoUrl: s.photoUrl,
         monthlyFeeCents: enrollment ? enrollment.monthlyFeeCents - enrollment.discountCents : null,
         hasOverdue: (enrollment?.invoices.length ?? 0) > 0,
+        inactiveReason: s.inactiveReason,
+        inactiveAt: s.inactiveAt,
         financialGuardian: s.guardians[0]
           ? { fullName: s.guardians[0].fullName, phoneWhatsapp: s.guardians[0].phoneWhatsapp }
           : null,
@@ -116,9 +122,44 @@ export class StudentsService {
     });
   }
 
-  async updateStatus(schoolId: string, id: string, status: StudentStatus) {
+  async updateStatus(schoolId: string, id: string, status: StudentStatus, reason?: string) {
     await this.ensureExists(schoolId, id);
-    return this.prisma.student.update({ where: { id }, data: { status } });
+    return this.prisma.$transaction(async (tx) => {
+      if (status === 'INACTIVE') {
+        // Desligar o aluno encerra a matrícula ativa — para de gerar mensalidade novas.
+        await tx.enrollment.updateMany({
+          where: { schoolId, studentId: id, status: 'ACTIVE' },
+          data: { status: 'ENDED', endDate: todaySaoPaulo() },
+        });
+      }
+      return tx.student.update({
+        where: { id },
+        data: {
+          status,
+          inactiveReason: status === 'INACTIVE' ? reason : null,
+          inactiveAt: status === 'INACTIVE' ? todaySaoPaulo() : null,
+        },
+      });
+    });
+  }
+
+  async updatePhoto(schoolId: string, id: string, filename: string) {
+    const student = await this.prisma.student.findFirst({
+      where: { id, schoolId },
+      select: { photoUrl: true },
+    });
+    if (!student) throw new NotFoundException('Aluno não encontrado');
+
+    const photoUrl = `/api/uploads/students/${filename}`;
+    const updated = await this.prisma.student.update({ where: { id }, data: { photoUrl } });
+
+    if (student.photoUrl) {
+      const oldFilename = student.photoUrl.split('/').pop();
+      if (oldFilename && oldFilename !== filename) {
+        await unlink(join(STUDENT_PHOTOS_DIR, oldFilename)).catch(() => undefined);
+      }
+    }
+    return updated;
   }
 
   private async ensureExists(schoolId: string, id: string) {

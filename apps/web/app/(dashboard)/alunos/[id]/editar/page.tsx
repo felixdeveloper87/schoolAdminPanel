@@ -10,6 +10,7 @@ interface StudentDetail {
   status: StudentStatus;
   enrollmentType: EnrollmentType;
   mealsIncluded: boolean;
+  photoUrl: string | null;
   allergies: string | null;
   dietaryRestrictions: string | null;
   medicalNotes: string | null;
@@ -31,7 +32,6 @@ export default async function EditarAlunoPage({ params }: { params: { id: string
   const defaultValues: CreateStudentInput = {
     fullName: student.fullName,
     birthDate: toDateInput(student.birthDate),
-    status: student.status,
     enrollmentType: student.enrollmentType,
     mealsIncluded: student.mealsIncluded,
     allergies: student.allergies ?? undefined,
@@ -52,7 +52,7 @@ export default async function EditarAlunoPage({ params }: { params: { id: string
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-2xl font-bold">Editar aluno</h1>
-      <StudentForm studentId={student.id} defaultValues={defaultValues} />
+      <StudentForm studentId={student.id} defaultValues={defaultValues} currentPhotoUrl={student.photoUrl} />
     </div>
   );
 }

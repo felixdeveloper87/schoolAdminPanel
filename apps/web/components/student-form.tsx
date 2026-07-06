@@ -12,8 +12,6 @@ import {
   ENROLLMENT_TYPE_LABELS,
   RELATIONSHIPS,
   RELATIONSHIP_LABELS,
-  STUDENT_STATUSES,
-  STUDENT_STATUS_LABELS,
 } from '@escola/contracts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StudentPhotoInput, StudentPhotoInputHandle, uploadStudentPhoto } from '@/components/student-photo-input';
 
 const emptyGuardian = {
   fullName: '',
@@ -35,18 +34,19 @@ const emptyGuardian = {
 interface StudentFormProps {
   studentId?: string;
   defaultValues?: CreateStudentInput;
+  currentPhotoUrl?: string | null;
 }
 
-export function StudentForm({ studentId, defaultValues }: StudentFormProps) {
+export function StudentForm({ studentId, defaultValues, currentPhotoUrl }: StudentFormProps) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
+  const photoInputRef = React.useRef<StudentPhotoInputHandle>(null);
 
   const form = useForm<CreateStudentInput>({
     resolver: zodResolver(createStudentSchema),
     defaultValues: defaultValues ?? {
       fullName: '',
       birthDate: '',
-      status: 'ACTIVE',
       enrollmentType: 'FULL_TIME',
       mealsIncluded: true,
       guardians: [{ ...emptyGuardian, isFinancialResponsible: true }],
@@ -83,6 +83,12 @@ export function StudentForm({ studentId, defaultValues }: StudentFormProps) {
       return;
     }
     const saved = await res.json();
+
+    const photoFile = photoInputRef.current?.getFile();
+    if (photoFile) {
+      await uploadStudentPhoto(saved.id, photoFile);
+    }
+
     router.push(`/alunos/${saved.id}`);
     router.refresh();
   };
@@ -96,6 +102,9 @@ export function StudentForm({ studentId, defaultValues }: StudentFormProps) {
           <CardTitle>Dados do aluno</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <StudentPhotoInput ref={photoInputRef} currentPhotoUrl={currentPhotoUrl} />
+          </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="fullName">Nome completo</Label>
             <Input id="fullName" {...register('fullName')} />
@@ -105,16 +114,6 @@ export function StudentForm({ studentId, defaultValues }: StudentFormProps) {
             <Label htmlFor="birthDate">Data de nascimento</Label>
             <Input id="birthDate" type="date" {...register('birthDate')} />
             {errors.birthDate && <p className="text-xs text-destructive">{errors.birthDate.message}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="status">Status</Label>
-            <Select id="status" {...register('status')}>
-              {STUDENT_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {STUDENT_STATUS_LABELS[s]}
-                </option>
-              ))}
-            </Select>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="enrollmentType">Período</Label>

@@ -1,4 +1,16 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { StudentStatus } from '@prisma/client';
 import {
   createStudentSchema,
@@ -14,6 +26,7 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtPayload } from '../auth/jwt-payload';
 import { parsePageParams } from '../common/pagination';
+import { StudentPhotoInterceptor } from '../uploads/student-photo.interceptor';
 
 @Controller('students')
 export class StudentsController {
@@ -66,6 +79,17 @@ export class StudentsController {
     @Param('id') id: string,
     @Body(new ZodValidationPipe(updateStudentStatusSchema)) body: UpdateStudentStatusInput,
   ) {
-    return this.studentsService.updateStatus(user.schoolId, id, body.status);
+    return this.studentsService.updateStatus(user.schoolId, id, body.status, body.reason);
+  }
+
+  @Post(':id/photo')
+  @UseInterceptors(StudentPhotoInterceptor)
+  uploadPhoto(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) throw new BadRequestException('Envie um arquivo de imagem no campo "photo"');
+    return this.studentsService.updatePhoto(user.schoolId, id, file.filename);
   }
 }

@@ -24,12 +24,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { InvoiceStatusBadge } from '@/components/invoice-status-badge';
 import { InvoiceActions } from '@/components/invoice-actions';
 import { EnrollmentDialog, EndEnrollmentButton } from '@/components/enrollment-dialog';
+import { DeactivateStudentDialog, ReactivateStudentButton } from '@/components/student-status-dialog';
+import { StudentAvatar } from '@/components/student-avatar';
 
 interface StudentDetail {
   id: string;
   fullName: string;
   birthDate: string;
   status: StudentStatus;
+  inactiveReason: string | null;
+  inactiveAt: string | null;
+  photoUrl: string | null;
   enrollmentType: EnrollmentType;
   mealsIncluded: boolean;
   allergies: string | null;
@@ -90,18 +95,21 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            <Link href="/alunos" className="hover:text-primary">Alunos</Link> / Ficha
-          </p>
-          <h1 className="text-2xl font-bold">{student.fullName}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>{formatAge(student.birthDate)} · nasc. {formatDate(student.birthDate)}</span>
-            <Badge variant={student.status === 'ACTIVE' ? 'success' : 'secondary'}>
-              {STUDENT_STATUS_LABELS[student.status]}
-            </Badge>
-            <Badge variant="secondary">{ENROLLMENT_TYPE_LABELS[student.enrollmentType]}</Badge>
-            {student.mealsIncluded && <Badge variant="secondary">Refeição inclusa</Badge>}
+        <div className="flex items-start gap-4">
+          <StudentAvatar photoUrl={student.photoUrl} name={student.fullName} size="lg" />
+          <div>
+            <p className="text-sm text-muted-foreground">
+              <Link href="/alunos" className="hover:text-primary">Alunos</Link> / Ficha
+            </p>
+            <h1 className="text-2xl font-bold">{student.fullName}</h1>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span>{formatAge(student.birthDate)} · nasc. {formatDate(student.birthDate)}</span>
+              <Badge variant={student.status === 'ACTIVE' ? 'success' : 'secondary'}>
+                {STUDENT_STATUS_LABELS[student.status]}
+              </Badge>
+              <Badge variant="secondary">{ENROLLMENT_TYPE_LABELS[student.enrollmentType]}</Badge>
+              {student.mealsIncluded && <Badge variant="secondary">Refeição inclusa</Badge>}
+            </div>
           </div>
         </div>
         <div className="flex gap-2">
@@ -110,15 +118,36 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
               <Pencil className="h-4 w-4" /> Editar
             </Link>
           </Button>
-          {!activeEnrollment && (
+          {!activeEnrollment && student.status === 'ACTIVE' && (
             <EnrollmentDialog
               studentId={student.id}
               studentName={student.fullName}
               classrooms={classrooms.filter((c) => c.active)}
             />
           )}
+          {student.status === 'INACTIVE' ? (
+            <ReactivateStudentButton studentId={student.id} />
+          ) : (
+            <DeactivateStudentDialog studentId={student.id} studentName={student.fullName} />
+          )}
         </div>
       </div>
+
+      {student.status === 'INACTIVE' && (
+        <Card className="notebook-card" style={{ ['--notebook-accent' as string]: 'var(--muted-foreground)' }}>
+          <CardHeader>
+            <CardTitle>Ex-aluno</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm">
+            <p>
+              <span className="font-semibold">Motivo:</span> {student.inactiveReason ?? '—'}
+            </p>
+            {student.inactiveAt && (
+              <p className="text-muted-foreground">Desde {formatDate(student.inactiveAt)}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {(student.allergies || student.dietaryRestrictions || student.medicalNotes) && (
         <Card className="notebook-card" style={{ ['--notebook-accent' as string]: 'var(--destructive)' }}>

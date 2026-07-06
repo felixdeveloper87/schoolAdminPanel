@@ -16,6 +16,7 @@ import { UsersModule } from './users/users.module';
 import { GoalsModule } from './goals/goals.module';
 import { WaitlistModule } from './waitlist/waitlist.module';
 import { ReportsModule } from './reports/reports.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ReportsModule } from './reports/reports.module';
     GoalsModule,
     WaitlistModule,
     ReportsModule,
+    UploadsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

@@ -147,6 +147,8 @@ model Student {
   fullName            String
   birthDate           DateTime       @db.Date
   status              StudentStatus  @default(ACTIVE)
+  inactiveReason       String?
+  inactiveAt           DateTime?      @db.Date
   enrollmentType      EnrollmentType
   mealsIncluded       Boolean        @default(true)
   allergies           String?

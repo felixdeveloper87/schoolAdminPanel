@@ -18,6 +18,7 @@ import {
   FileBarChart,
   Target,
   Hourglass,
+  UserX,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SessionUser } from '@/lib/server-api';
@@ -26,6 +27,7 @@ import { ROLE_LABELS } from '@escola/contracts';
 const NAV_ITEMS = [
   { href: '/', label: 'Painel', icon: LayoutDashboard },
   { href: '/alunos', label: 'Alunos', icon: Users },
+  { href: '/ex-alunos', label: 'Ex-alunos', icon: UserX },
   { href: '/mensalidades', label: 'Mensalidades', icon: Receipt },
   { href: '/turmas', label: 'Turmas', icon: School },
   { href: '/despesas', label: 'Despesas', icon: Wallet },
