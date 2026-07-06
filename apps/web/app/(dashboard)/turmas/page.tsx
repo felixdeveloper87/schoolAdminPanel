@@ -27,10 +27,10 @@ export default async function TurmasPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Turmas</h1>
+          <h1 className="page-title">Turmas</h1>
           <p className="text-sm text-muted-foreground">
             {classrooms.filter((c) => c.active).length} turma(s) ativa(s)
           </p>
@@ -60,7 +60,7 @@ export default async function TurmasPage() {
         {classrooms.map((classroom) => (
           <Card
             key={classroom.id}
-            className="notebook-card"
+            className="notebook-card paper-panel transition-all hover:-translate-y-0.5 hover:shadow-md"
             style={{
               ['--notebook-accent' as string]: classroom.active ? 'var(--primary)' : 'var(--muted-foreground)',
             }}

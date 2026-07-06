@@ -67,10 +67,10 @@ export default async function MensalidadesPage({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Mensalidades</h1>
+          <h1 className="page-title">Mensalidades</h1>
           <div className="mt-1 flex items-center gap-2 text-sm">
             <Link href={linkFor({ competence: addMonths(competence, -1), status })} className="rounded p-1 hover:bg-muted" aria-label="Mês anterior">
               <ChevronLeft className="h-4 w-4" />
@@ -103,7 +103,7 @@ export default async function MensalidadesPage({
         <Link
           href={linkFor({})}
           className={cn(
-            'rounded-full border px-3 py-1 font-semibold',
+            'rounded-full border bg-card/80 px-3 py-1.5 font-bold shadow-sm',
             !status ? 'bg-primary text-primary-foreground' : 'hover:bg-muted',
           )}
         >
@@ -116,7 +116,7 @@ export default async function MensalidadesPage({
               key={s}
               href={linkFor({ status: s })}
               className={cn(
-                'rounded-full border px-3 py-1 font-semibold',
+                'rounded-full border bg-card/80 px-3 py-1.5 font-bold shadow-sm',
                 status === s ? 'bg-primary text-primary-foreground' : 'hover:bg-muted',
               )}
             >
@@ -127,7 +127,7 @@ export default async function MensalidadesPage({
         })}
       </div>
 
-      <Card>
+      <Card className="paper-panel overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

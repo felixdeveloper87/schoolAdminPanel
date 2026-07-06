@@ -48,10 +48,10 @@ export default async function ListaEsperaPage({ searchParams }: { searchParams: 
   const waitingCount = entries.filter((e) => e.status === 'WAITING').length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Lista de espera</h1>
+          <h1 className="page-title">Lista de espera</h1>
           <p className="text-sm text-muted-foreground">{waitingCount} aguardando vaga</p>
         </div>
         <WaitlistEntryDialog trigger={<Button><Plus className="h-4 w-4" /> Nova entrada</Button>} />
@@ -60,7 +60,7 @@ export default async function ListaEsperaPage({ searchParams }: { searchParams: 
       <div className="flex flex-wrap gap-2 text-sm">
         <Link
           href="/lista-espera"
-          className={cn('rounded-full border px-3 py-1 font-semibold', !status ? 'bg-primary text-primary-foreground' : 'hover:bg-muted')}
+          className={cn('rounded-full border bg-card/80 px-3 py-1.5 font-bold shadow-sm', !status ? 'bg-primary text-primary-foreground' : 'hover:bg-muted')}
         >
           Todas
         </Link>
@@ -68,14 +68,14 @@ export default async function ListaEsperaPage({ searchParams }: { searchParams: 
           <Link
             key={s}
             href={`/lista-espera?status=${s}`}
-            className={cn('rounded-full border px-3 py-1 font-semibold', status === s ? 'bg-primary text-primary-foreground' : 'hover:bg-muted')}
+            className={cn('rounded-full border bg-card/80 px-3 py-1.5 font-bold shadow-sm', status === s ? 'bg-primary text-primary-foreground' : 'hover:bg-muted')}
           >
             {WAITLIST_STATUS_LABELS[s]}
           </Link>
         ))}
       </div>
 
-      <Card>
+      <Card className="paper-panel overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

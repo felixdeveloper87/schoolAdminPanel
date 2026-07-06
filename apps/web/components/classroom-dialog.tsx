@@ -77,7 +77,7 @@ export function ClassroomDialog({ classroom, trigger }: ClassroomDialogProps) {
             <Input placeholder="ex.: Maternal 1 — Integral" {...register('name')} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Faixa etária</Label>
               <Select {...register('ageGroup')}>

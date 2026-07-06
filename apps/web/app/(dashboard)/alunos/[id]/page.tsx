@@ -18,7 +18,7 @@ import {
 import { apiGet, getSessionUser } from '@/lib/server-api';
 import { brl, formatAge, formatDate } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { InvoiceStatusBadge } from '@/components/invoice-status-badge';
@@ -93,7 +93,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
   const financial = student.guardians.find((g) => g.isFinancialResponsible);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-4">
           <StudentAvatar photoUrl={student.photoUrl} name={student.fullName} size="lg" />
@@ -101,7 +101,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
             <p className="text-sm text-muted-foreground">
               <Link href="/alunos" className="hover:text-primary">Alunos</Link> / Ficha
             </p>
-            <h1 className="text-2xl font-bold">{student.fullName}</h1>
+            <h1 className="page-title">{student.fullName}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <span>{formatAge(student.birthDate)} · nasc. {formatDate(student.birthDate)}</span>
               <Badge variant={student.status === 'ACTIVE' ? 'success' : 'secondary'}>
@@ -113,11 +113,9 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
           </div>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/alunos/${student.id}/editar`}>
-              <Pencil className="h-4 w-4" /> Editar
-            </Link>
-          </Button>
+          <Link href={`/alunos/${student.id}/editar`} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+            <Pencil className="h-4 w-4" /> Editar
+          </Link>
           {!activeEnrollment && student.status === 'ACTIVE' && (
             <EnrollmentDialog
               studentId={student.id}
@@ -134,7 +132,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
       </div>
 
       {student.status === 'INACTIVE' && (
-        <Card className="notebook-card" style={{ ['--notebook-accent' as string]: 'var(--muted-foreground)' }}>
+        <Card className="notebook-card paper-panel" style={{ ['--notebook-accent' as string]: 'var(--muted-foreground)' }}>
           <CardHeader>
             <CardTitle>Ex-aluno</CardTitle>
           </CardHeader>
@@ -150,7 +148,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
       )}
 
       {(student.allergies || student.dietaryRestrictions || student.medicalNotes) && (
-        <Card className="notebook-card" style={{ ['--notebook-accent' as string]: 'var(--destructive)' }}>
+        <Card className="notebook-card paper-panel" style={{ ['--notebook-accent' as string]: 'var(--destructive)' }}>
           <CardHeader>
             <CardTitle>Saúde e alimentação</CardTitle>
           </CardHeader>
@@ -178,13 +176,13 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="notebook-card" style={{ ['--notebook-accent' as string]: 'var(--accent)' }}>
+        <Card className="notebook-card paper-panel" style={{ ['--notebook-accent' as string]: 'var(--accent)' }}>
           <CardHeader>
             <CardTitle>Responsáveis</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {student.guardians.map((g) => (
-              <div key={g.id} className="rounded-lg border p-3 text-sm">
+              <div key={g.id} className="rounded-lg border bg-muted/25 p-3 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-semibold">
                     {g.fullName}{' '}
@@ -215,7 +213,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
           </CardContent>
         </Card>
 
-        <Card className="notebook-card">
+        <Card className="notebook-card paper-panel">
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle>Matrícula</CardTitle>
             {activeEnrollment && <EndEnrollmentButton enrollmentId={activeEnrollment.id} />}
@@ -251,7 +249,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
         </Card>
       </div>
 
-      <Card>
+      <Card className="paper-panel overflow-hidden">
         <CardHeader>
           <CardTitle>Mensalidades (últimos 12 meses)</CardTitle>
         </CardHeader>
@@ -301,7 +299,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
       </Card>
 
       {student.notes && (
-        <Card>
+        <Card className="paper-panel">
           <CardHeader>
             <CardTitle>Observações</CardTitle>
           </CardHeader>

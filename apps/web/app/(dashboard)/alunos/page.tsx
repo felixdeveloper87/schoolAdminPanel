@@ -9,7 +9,7 @@ import {
 import { apiGet } from '@/lib/server-api';
 import { brl, formatAge, formatDate } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StudentsFilters } from '@/components/students-filters';
@@ -57,10 +57,10 @@ export default async function AlunosPage({
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Alunos</h1>
+          <h1 className="page-title">Alunos</h1>
           <p className="text-sm text-muted-foreground">{data.total} aluno(s)</p>
         </div>
         <div className="flex gap-2">
@@ -79,17 +79,15 @@ export default async function AlunosPage({
               WhatsApp: s.financialGuardian?.phoneWhatsapp ?? '',
             }))}
           />
-          <Button asChild>
-            <Link href="/alunos/novo">
+          <Link href="/alunos/novo" className={buttonVariants()}>
               <Plus className="h-4 w-4" /> Novo aluno
-            </Link>
-          </Button>
+          </Link>
         </div>
       </div>
 
       <StudentsFilters classrooms={classrooms} />
 
-      <Card>
+      <Card className="paper-panel overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

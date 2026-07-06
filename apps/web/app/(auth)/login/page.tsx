@@ -1,67 +1,64 @@
-'use client';
-
-import * as React from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema, LoginInput } from '@escola/contracts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [serverError, setServerError] = React.useState<string | null>(null);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
+const ERROR_MESSAGES: Record<string, string> = {
+  invalid: 'Informe e-mail e senha para entrar.',
+  credentials: 'E-mail ou senha incorretos.',
+  api: 'API indisponível. Confirme se o backend está rodando na porta 3002.',
+  unknown: 'Erro ao entrar. Tente novamente.',
+};
 
-  const onSubmit = async (data: LoginInput) => {
-    setServerError(null);
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      setServerError(res.status === 401 ? 'E-mail ou senha incorretos' : 'Erro ao entrar. Tente novamente.');
-      return;
-    }
-    router.push('/');
-    router.refresh();
-  };
+export default function LoginPage({ searchParams }: { searchParams: { error?: string } }) {
+  const errorMessage = searchParams.error ? ERROR_MESSAGES[searchParams.error] ?? ERROR_MESSAGES.unknown : null;
 
   return (
-    <div className="grid min-h-screen place-items-center px-4">
-      <Card className="notebook-card w-full max-w-sm">
-        <CardHeader>
-          <Image src="/logo.jpg" alt="Peniel Christian School" width={56} height={56} className="mb-2 rounded-xl" />
-          <CardTitle className="text-2xl">Peniel Christian School</CardTitle>
-          <CardDescription>Entre com sua conta da secretaria</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" autoComplete="email" placeholder="voce@escola.com" {...register('email')} />
-              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+    <main className="flex min-h-screen items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
+        <Card className="notebook-card paper-panel">
+          <CardHeader className="items-center p-6 text-center sm:p-7">
+            <Image
+              src="/logo.jpg"
+              alt="Peniel Christian School"
+              width={68}
+              height={68}
+              priority
+              className="rounded-lg border bg-card shadow-sm"
+            />
+            <div className="space-y-1 pt-2">
+              <CardTitle className="text-2xl sm:text-3xl">Peniel Christian School</CardTitle>
+              <CardDescription>Painel administrativo da secretaria</CardDescription>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" autoComplete="current-password" {...register('password')} />
-              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
-            </div>
-            {serverError && <p className="text-sm text-destructive">{serverError}</p>}
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Entrando…' : 'Entrar'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          </CardHeader>
+          <CardContent className="px-6 pb-6 sm:px-7 sm:pb-7">
+            <form action="/api/auth/login" method="post" className="flex flex-col gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="email">E-mail</Label>
+                <Input id="email" name="email" type="email" autoComplete="email" placeholder="voce@escola.com" required />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="password">Senha</Label>
+                <Input id="password" name="password" type="password" autoComplete="current-password" required />
+              </div>
+              {errorMessage && (
+                <p className="rounded-md border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
+                  {errorMessage}
+                </p>
+              )}
+              <Button type="submit" className="w-full">
+                Entrar
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs font-bold text-muted-foreground">
+          <span className="rounded-md border bg-card/80 px-2 py-2 shadow-sm">Alunos</span>
+          <span className="rounded-md border bg-card/80 px-2 py-2 shadow-sm">Turmas</span>
+          <span className="rounded-md border bg-card/80 px-2 py-2 shadow-sm">Financeiro</span>
+        </div>
+      </div>
+    </main>
   );
 }

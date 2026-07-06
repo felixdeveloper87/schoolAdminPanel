@@ -57,7 +57,7 @@ export function WaitlistEntryDialog({ trigger }: { trigger: React.ReactNode }) {
           <DialogTitle>Nova entrada na lista de espera</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="col-span-2 space-y-1.5">
               <Label>Nome da criança</Label>
               <Input {...register('childName')} />

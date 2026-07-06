@@ -26,10 +26,10 @@ export default async function ExAlunosPage() {
   const data = await apiGet<StudentsResponse>('/students?status=INACTIVE&pageSize=200');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Ex-alunos</h1>
+          <h1 className="page-title">Ex-alunos</h1>
           <p className="text-sm text-muted-foreground">{data.total} desligado(s)</p>
         </div>
         <ExportCsvButton
@@ -44,7 +44,7 @@ export default async function ExAlunosPage() {
         />
       </div>
 
-      <Card>
+      <Card className="paper-panel overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

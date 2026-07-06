@@ -97,7 +97,7 @@ export function StudentForm({ studentId, defaultValues, currentPhotoUrl }: Stude
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <Card className="notebook-card">
+      <Card className="notebook-card paper-panel">
         <CardHeader>
           <CardTitle>Dados do aluno</CardTitle>
         </CardHeader>
@@ -132,7 +132,7 @@ export function StudentForm({ studentId, defaultValues, currentPhotoUrl }: Stude
         </CardContent>
       </Card>
 
-      <Card className="notebook-card" style={{ ['--notebook-accent' as string]: 'var(--destructive)' }}>
+      <Card className="notebook-card paper-panel" style={{ ['--notebook-accent' as string]: 'var(--destructive)' }}>
         <CardHeader>
           <CardTitle>Saúde e alimentação</CardTitle>
         </CardHeader>
@@ -156,7 +156,7 @@ export function StudentForm({ studentId, defaultValues, currentPhotoUrl }: Stude
         </CardContent>
       </Card>
 
-      <Card className="notebook-card" style={{ ['--notebook-accent' as string]: 'var(--accent)' }}>
+      <Card className="notebook-card paper-panel" style={{ ['--notebook-accent' as string]: 'var(--accent)' }}>
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle>Responsáveis</CardTitle>
           <Button type="button" variant="outline" size="sm" onClick={() => append(emptyGuardian)}>
@@ -166,7 +166,7 @@ export function StudentForm({ studentId, defaultValues, currentPhotoUrl }: Stude
         <CardContent className="space-y-6">
           {guardiansRootError && <p className="text-sm text-destructive">{guardiansRootError}</p>}
           {fields.map((field, index) => (
-            <fieldset key={field.id} className="rounded-lg border p-4">
+            <fieldset key={field.id} className="rounded-lg border bg-muted/25 p-4">
               <div className="mb-3 flex items-center justify-between">
                 <legend className="font-display font-semibold">Responsável {index + 1}</legend>
                 {fields.length > 1 && (

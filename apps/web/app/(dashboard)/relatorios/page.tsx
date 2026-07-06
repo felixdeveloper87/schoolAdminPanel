@@ -50,8 +50,8 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: {
   }));
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Relatórios</h1>
+    <div className="space-y-7">
+      <h1 className="page-title">Relatórios</h1>
 
       <Tabs defaultValue="inadimplencia">
         <TabsList>
@@ -66,7 +66,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: {
             </p>
             <ExportCsvButton filename="inadimplencia.csv" rows={defaultersCsvRows} />
           </div>
-          <Card>
+          <Card className="paper-panel overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -134,20 +134,20 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <Card className="notebook-card" style={{ ['--notebook-accent' as string]: 'var(--success)' }}>
+              <Card className="notebook-card paper-panel" style={{ ['--notebook-accent' as string]: 'var(--success)' }}>
                 <CardContent className="p-5">
                   <p className="text-xs font-semibold uppercase text-muted-foreground">Receita recebida</p>
                   <p className="money mt-1 text-xl font-bold text-success">{brl(dre.revenueCents)}</p>
                 </CardContent>
               </Card>
-              <Card className="notebook-card" style={{ ['--notebook-accent' as string]: 'var(--destructive)' }}>
+              <Card className="notebook-card paper-panel" style={{ ['--notebook-accent' as string]: 'var(--destructive)' }}>
                 <CardContent className="p-5">
                   <p className="text-xs font-semibold uppercase text-muted-foreground">Despesas</p>
                   <p className="money mt-1 text-xl font-bold text-destructive">{brl(dre.totalExpensesCents)}</p>
                 </CardContent>
               </Card>
               <Card
-                className="notebook-card"
+                className="notebook-card paper-panel"
                 style={{ ['--notebook-accent' as string]: dre.resultCents >= 0 ? 'var(--success)' : 'var(--destructive)' }}
               >
                 <CardContent className="p-5">
@@ -159,7 +159,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: {
               </Card>
             </div>
 
-            <Card>
+            <Card className="paper-panel overflow-hidden">
               <CardHeader>
                 <CardTitle>Despesas por categoria</CardTitle>
               </CardHeader>

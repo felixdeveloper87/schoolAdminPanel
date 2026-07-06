@@ -139,7 +139,7 @@ export function EnrollmentDialog({
             </Select>
             {errors.classroomId && <p className="text-xs text-destructive">{errors.classroomId.message}</p>}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Início</Label>
               <Input type="date" {...register('startDate')} />

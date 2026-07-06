@@ -9,9 +9,6 @@ export function middleware(request: NextRequest) {
   if (!hasToken && !isLoginPage) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
-  if (hasToken && isLoginPage) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
   return NextResponse.next();
 }
 

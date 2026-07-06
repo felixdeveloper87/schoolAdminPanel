@@ -50,8 +50,8 @@ export default async function EditarAlunoPage({ params }: { params: { id: string
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold">Editar aluno</h1>
+    <div className="mx-auto max-w-3xl space-y-7">
+      <h1 className="page-title">Editar aluno</h1>
       <StudentForm studentId={student.id} defaultValues={defaultValues} currentPhotoUrl={student.photoUrl} />
     </div>
   );

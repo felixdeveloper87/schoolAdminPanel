@@ -41,7 +41,7 @@ const config: Config = {
         mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
       },
       borderRadius: {
-        lg: '0.625rem',
+        lg: '0.5rem',
         md: '0.5rem',
         sm: '0.375rem',
       },

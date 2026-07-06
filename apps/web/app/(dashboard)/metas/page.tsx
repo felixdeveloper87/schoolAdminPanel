@@ -17,16 +17,16 @@ export default async function MetasPage() {
   const goals = await apiGet<GoalRow[]>('/goals');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Metas</h1>
+          <h1 className="page-title">Metas</h1>
           <p className="text-sm text-muted-foreground">Metas mensais de novos alunos e faturamento</p>
         </div>
         <GoalDialog trigger={<Button><Plus className="h-4 w-4" /> Nova meta</Button>} />
       </div>
 
-      <Card>
+      <Card className="paper-panel overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

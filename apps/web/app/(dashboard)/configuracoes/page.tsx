@@ -17,10 +17,10 @@ export default async function ConfiguracoesPage() {
   const users = user.role === 'ADMIN' ? await apiGet<UserRow[]>('/users') : null;
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">Configurações</h1>
+    <div className="max-w-3xl space-y-7">
+      <h1 className="page-title">Configurações</h1>
 
-      <Card>
+      <Card className="paper-panel">
         <CardHeader>
           <CardTitle>Sua conta</CardTitle>
         </CardHeader>
@@ -37,7 +37,7 @@ export default async function ConfiguracoesPage() {
       </Card>
 
       {users && (
-        <Card>
+        <Card className="paper-panel overflow-hidden">
           <CardHeader>
             <CardTitle>Usuários do painel</CardTitle>
             <CardDescription>
@@ -74,7 +74,7 @@ export default async function ConfiguracoesPage() {
         </Card>
       )}
 
-      <Card>
+      <Card className="paper-panel">
         <CardHeader>
           <CardTitle>Em breve</CardTitle>
           <CardDescription>

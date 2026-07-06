@@ -23,14 +23,25 @@ export class ExpensesController {
   list(
     @CurrentUser() user: JwtPayload,
     @Query('competence') competence?: string,
+    @Query('categoryId') categoryId?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
-    const parsed =
+    const parsedCompetence =
       competence && competenceString.safeParse(competence).success
         ? parseCompetence(competence)
         : undefined;
-    return this.expensesService.list(user.schoolId, parsed, parsePageParams(page, pageSize, 50));
+    return this.expensesService.list(
+      user.schoolId,
+      { competence: parsedCompetence, categoryId: categoryId || undefined },
+      parsePageParams(page, pageSize, 50),
+    );
+  }
+
+  @Get('monthly-trend')
+  monthlyTrend(@CurrentUser() user: JwtPayload, @Query('months') months?: string) {
+    const n = Math.min(24, Math.max(1, Number.parseInt(months ?? '12', 10) || 12));
+    return this.expensesService.monthlyTrend(user.schoolId, n);
   }
 
   @Post()

@@ -9,14 +9,19 @@ import { PageParams, paged } from '../common/pagination';
 export class ExpensesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(schoolId: string, competence: Date | undefined, pageParams: PageParams) {
+  async list(
+    schoolId: string,
+    filters: { competence?: Date; categoryId?: string },
+    pageParams: PageParams,
+  ) {
     const where: Prisma.ExpenseWhereInput = {
       schoolId,
-      ...(competence
-        ? { expenseDate: { gte: monthRange(competence).start, lt: monthRange(competence).end } }
+      ...(filters.competence
+        ? { expenseDate: { gte: monthRange(filters.competence).start, lt: monthRange(filters.competence).end } }
         : {}),
+      ...(filters.categoryId ? { categoryId: filters.categoryId } : {}),
     };
-    const [items, total, sum] = await this.prisma.$transaction([
+    const [items, total, sum, byCategory] = await this.prisma.$transaction([
       this.prisma.expense.findMany({
         where,
         orderBy: { expenseDate: 'desc' },
@@ -26,8 +31,51 @@ export class ExpensesService {
       }),
       this.prisma.expense.count({ where }),
       this.prisma.expense.aggregate({ where, _sum: { amountCents: true } }),
+      this.prisma.expense.groupBy({
+        by: ['categoryId'],
+        where,
+        orderBy: { categoryId: 'asc' },
+        _sum: { amountCents: true },
+        _count: true,
+      }),
     ]);
-    return { ...paged(items, total, pageParams), totalCents: sum._sum.amountCents ?? 0 };
+
+    const categories = await this.prisma.expenseCategory.findMany({ where: { schoolId } });
+    const categoryById = new Map(categories.map((c) => [c.id, c]));
+    const summaryByCategory = byCategory
+      .map((row) => ({
+        categoryId: row.categoryId,
+        name: categoryById.get(row.categoryId)?.name ?? 'Outros',
+        colorHex: categoryById.get(row.categoryId)?.colorHex ?? '#8A8F98',
+        totalCents: row._sum?.amountCents ?? 0,
+        count: row._count,
+      }))
+      .sort((a, b) => b.totalCents - a.totalCents);
+
+    return {
+      ...paged(items, total, pageParams),
+      totalCents: sum._sum.amountCents ?? 0,
+      summaryByCategory,
+    };
+  }
+
+  /** Total gasto por mês nos últimos N meses (para gráfico de tendência). */
+  async monthlyTrend(schoolId: string, months: number) {
+    const now = new Date();
+    const current = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const results: { competence: string; totalCents: number }[] = [];
+    for (let i = months - 1; i >= 0; i--) {
+      const competence = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth() - i, 1));
+      const { start, end } = monthRange(competence);
+      const agg = await this.prisma.expense.aggregate({
+        where: { schoolId, expenseDate: { gte: start, lt: end } },
+        _sum: { amountCents: true },
+      });
+      const y = competence.getUTCFullYear();
+      const m = String(competence.getUTCMonth() + 1).padStart(2, '0');
+      results.push({ competence: `${y}-${m}`, totalCents: agg._sum.amountCents ?? 0 });
+    }
+    return results;
   }
 
   create(schoolId: string, input: CreateExpenseInput) {

@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { todayDateInput } from '@/lib/format';
+import { brl, todayDateInput, toDateInput } from '@/lib/format';
 
 const formSchema = createExpenseSchema.omit({ amountCents: true }).extend({
   amount: z.string().min(1, 'Informe o valor'),
@@ -27,12 +27,25 @@ type FormValues = z.infer<typeof formSchema>;
 const toCents = (value: string) =>
   Math.round(Number(value.replace(/\./g, '').replace(',', '.')) * 100) || 0;
 
+export interface ExpenseToEdit {
+  id: string;
+  categoryId: string;
+  description: string;
+  amountCents: number;
+  expenseDate: string;
+  supplier: string | null;
+  recurring: boolean;
+  notes: string | null;
+}
+
 export function ExpenseDialog({
   categories,
   trigger,
+  expense,
 }: {
   categories: { id: string; name: string }[];
   trigger: React.ReactNode;
+  expense?: ExpenseToEdit;
 }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
@@ -45,25 +58,35 @@ export function ExpenseDialog({
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      categoryId: '',
-      description: '',
-      amount: '',
-      expenseDate: todayDateInput(),
-      recurring: false,
-    },
+    defaultValues: expense
+      ? {
+          categoryId: expense.categoryId,
+          description: expense.description,
+          amount: brl(expense.amountCents).replace(/[^\d,]/g, ''),
+          expenseDate: toDateInput(expense.expenseDate),
+          supplier: expense.supplier ?? undefined,
+          recurring: expense.recurring,
+          notes: expense.notes ?? undefined,
+        }
+      : {
+          categoryId: '',
+          description: '',
+          amount: '',
+          expenseDate: todayDateInput(),
+          recurring: false,
+        },
   });
 
   const onSubmit = async (data: FormValues) => {
     setServerError(null);
     const { amount, ...rest } = data;
-    const res = await fetch('/api/expenses', {
-      method: 'POST',
+    const res = await fetch(expense ? `/api/expenses/${expense.id}` : '/api/expenses', {
+      method: expense ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...rest, amountCents: toCents(amount) }),
     });
     if (!res.ok) {
-      setServerError('Erro ao salvar despesa');
+      setServerError(expense ? 'Erro ao atualizar despesa' : 'Erro ao salvar despesa');
       return;
     }
     reset();
@@ -76,7 +99,7 @@ export function ExpenseDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nova despesa</DialogTitle>
+          <DialogTitle>{expense ? 'Editar despesa' : 'Nova despesa'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="space-y-1.5">
@@ -96,7 +119,7 @@ export function ExpenseDialog({
             <Input placeholder="ex.: Compra de material de limpeza" {...register('description')} />
             {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Valor (R$)</Label>
               <Input inputMode="decimal" placeholder="150,00" {...register('amount')} />
@@ -121,7 +144,7 @@ export function ExpenseDialog({
               Cancelar
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              Salvar despesa
+              {isSubmitting ? 'Salvando…' : expense ? 'Salvar alterações' : 'Salvar despesa'}
             </Button>
           </div>
         </form>

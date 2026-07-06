@@ -12,7 +12,7 @@ export function StudentAvatar({
 }) {
   const dimension = size === 'sm' ? 'h-9 w-9' : 'h-20 w-20';
   return (
-    <div className={cn('shrink-0 overflow-hidden rounded-full border bg-muted', dimension)}>
+    <div className={cn('shrink-0 overflow-hidden rounded-full border bg-muted shadow-sm', dimension)}>
       {photoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={photoUrl} alt={name} className="h-full w-full object-cover" />

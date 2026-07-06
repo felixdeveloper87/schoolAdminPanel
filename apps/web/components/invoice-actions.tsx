@@ -103,7 +103,7 @@ export function InvoiceActions({ invoiceId, studentName, effectiveCents, status,
               if (await patch('pay', data)) setOpen(false);
             })}
           >
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor={`method-${invoiceId}`}>Método</Label>
                 <Select id={`method-${invoiceId}`} {...register('method')}>
