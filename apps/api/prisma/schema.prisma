@@ -1,0 +1,296 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum AgeGroup {
+  BERCARIO_1
+  BERCARIO_2
+  MATERNAL_1
+  MATERNAL_2
+  PRE_1
+  PRE_2
+}
+
+enum Shift {
+  MORNING
+  AFTERNOON
+  FULL_DAY
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  WAITLIST
+}
+
+enum EnrollmentType {
+  FULL_TIME
+  HALF_DAY_MORNING
+  HALF_DAY_AFTERNOON
+}
+
+enum Relationship {
+  MAE
+  PAI
+  AVO
+  TIO
+  OUTRO
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  ENDED
+  CANCELLED
+}
+
+enum DiscountReason {
+  SIBLING
+  SCHOLARSHIP
+  NEGOTIATED
+  NONE
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  EXEMPT
+  CANCELLED
+}
+
+enum PaymentMethod {
+  PIX
+  CASH
+  TRANSFER
+}
+
+enum WaitlistStatus {
+  WAITING
+  CONTACTED
+  ENROLLED
+  GAVE_UP
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+model School {
+  id                  String   @id @default(cuid())
+  name                String
+  cnpj                String?
+  phone               String
+  address             String
+  monthlyCapacityNote String?
+  createdAt           DateTime @default(now())
+
+  users             AppUser[]
+  classrooms        Classroom[]
+  students          Student[]
+  guardians         Guardian[]
+  enrollments       Enrollment[]
+  invoices          TuitionInvoice[]
+  expenseCategories ExpenseCategory[]
+  expenses          Expense[]
+  goals             Goal[]
+  waitlistEntries   WaitlistEntry[]
+
+  @@map("schools")
+}
+
+model AppUser {
+  id           String  @id @default(cuid())
+  schoolId     String
+  name         String
+  email        String
+  passwordHash String
+  role         Role    @default(STAFF)
+  active       Boolean @default(true)
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@unique([schoolId, email])
+  @@map("app_users")
+}
+
+model Classroom {
+  id       String   @id @default(cuid())
+  schoolId String
+  name     String
+  ageGroup AgeGroup
+  shift    Shift
+  capacity Int
+  active   Boolean  @default(true)
+
+  school      School       @relation(fields: [schoolId], references: [id])
+  enrollments Enrollment[]
+
+  @@index([schoolId, active])
+  @@map("classrooms")
+}
+
+model Student {
+  id                  String         @id @default(cuid())
+  schoolId            String
+  fullName            String
+  birthDate           DateTime       @db.Date
+  status              StudentStatus  @default(ACTIVE)
+  enrollmentType      EnrollmentType
+  mealsIncluded       Boolean        @default(true)
+  allergies           String?
+  dietaryRestrictions String?
+  medicalNotes        String?
+  photoUrl            String?
+  notes               String?
+  createdAt           DateTime       @default(now())
+
+  school      School       @relation(fields: [schoolId], references: [id])
+  guardians   Guardian[]
+  enrollments Enrollment[]
+
+  @@index([schoolId, status])
+  @@index([schoolId, fullName])
+  @@map("students")
+}
+
+model Guardian {
+  id                     String       @id @default(cuid())
+  schoolId               String
+  studentId              String
+  fullName               String
+  relationship           Relationship
+  cpf                    String?
+  phoneWhatsapp          String
+  email                  String?
+  isFinancialResponsible Boolean      @default(false)
+  authorizedPickup       Boolean      @default(true)
+
+  school  School  @relation(fields: [schoolId], references: [id])
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, studentId])
+  @@map("guardians")
+}
+
+model Enrollment {
+  id                 String           @id @default(cuid())
+  schoolId           String
+  studentId          String
+  classroomId        String
+  startDate          DateTime         @db.Date
+  endDate            DateTime?        @db.Date
+  status             EnrollmentStatus @default(ACTIVE)
+  monthlyFeeCents    Int
+  discountCents      Int              @default(0)
+  discountReason     DiscountReason   @default(NONE)
+  dueDay             Int
+  enrollmentFeeCents Int              @default(0)
+  notes              String?
+
+  school    School           @relation(fields: [schoolId], references: [id])
+  student   Student          @relation(fields: [studentId], references: [id])
+  classroom Classroom        @relation(fields: [classroomId], references: [id])
+  invoices  TuitionInvoice[]
+
+  @@index([schoolId, status])
+  @@index([schoolId, classroomId, status])
+  @@map("enrollments")
+}
+
+model TuitionInvoice {
+  id            String         @id @default(cuid())
+  schoolId      String
+  enrollmentId  String
+  competence    DateTime       @db.Date
+  amountCents   Int
+  discountCents Int            @default(0)
+  dueDate       DateTime       @db.Date
+  status        InvoiceStatus  @default(PENDING)
+  paidAt        DateTime?
+  paymentMethod PaymentMethod?
+  receiptNote   String?
+  createdAt     DateTime       @default(now())
+
+  school     School     @relation(fields: [schoolId], references: [id])
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id])
+
+  @@unique([schoolId, enrollmentId, competence])
+  @@index([schoolId, competence, status])
+  @@index([schoolId, status, dueDate])
+  @@map("tuition_invoices")
+}
+
+model ExpenseCategory {
+  id       String  @id @default(cuid())
+  schoolId String
+  name     String
+  colorHex String?
+
+  school   School    @relation(fields: [schoolId], references: [id])
+  expenses Expense[]
+
+  @@unique([schoolId, name])
+  @@map("expense_categories")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  schoolId    String
+  categoryId  String
+  description String
+  amountCents Int
+  expenseDate DateTime @db.Date
+  supplier    String?
+  recurring   Boolean  @default(false)
+  notes       String?
+
+  school   School          @relation(fields: [schoolId], references: [id])
+  category ExpenseCategory @relation(fields: [categoryId], references: [id])
+
+  @@index([schoolId, expenseDate])
+  @@map("expenses")
+}
+
+model Goal {
+  id                 String   @id @default(cuid())
+  schoolId           String
+  month              DateTime @db.Date
+  newStudentsTarget  Int
+  revenueTargetCents Int?
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@unique([schoolId, month])
+  @@map("goals")
+}
+
+model WaitlistEntry {
+  id              String         @id @default(cuid())
+  schoolId        String
+  childName       String
+  birthDate       DateTime       @db.Date
+  guardianName    String
+  phoneWhatsapp   String
+  desiredAgeGroup AgeGroup
+  desiredShift    Shift
+  requestedAt     DateTime       @default(now())
+  status          WaitlistStatus @default(WAITING)
+  notes           String?
+
+  school School @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId, status])
+  @@map("waitlist_entries")
+}

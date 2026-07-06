@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Direção visual "caderno escolar brasileiro" — tokens da spec, seção 9 */
+:root {
+  --background: 44 45% 97%;        /* --paper  #FBFAF6 */
+  --foreground: 205 25% 17%;       /* --ink    #23303B */
+  --card: 0 0% 100%;
+  --card-foreground: 205 25% 17%;
+  --primary: 221 62% 39%;          /* --pen-blue #2B4C9B */
+  --primary-foreground: 0 0% 100%;
+  --accent: 38 87% 58%;            /* --pencil-yellow #F2B33D */
+  --accent-foreground: 205 25% 17%;
+  --destructive: 4 68% 57%;        /* --margin-red #D9534F */
+  --destructive-foreground: 0 0% 100%;
+  --muted: 40 30% 93%;             /* --paper-alt #F3F0E8 */
+  --muted-foreground: 204 14% 42%; /* --ink-soft #5B6B78 */
+  --border: 205 40% 91%;           /* --rule-line #DDE6EF */
+  --input: 205 40% 85%;
+  --ring: 221 62% 39%;
+  --success: 148 33% 36%;          /* --leaf-green #3E7C59 */
+  --success-foreground: 0 0% 100%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  /* Margem de caderno: borda esquerda colorida nos cards de destaque */
+  .notebook-card {
+    position: relative;
+    overflow: hidden;
+  }
+  .notebook-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: linear-gradient(180deg, hsl(var(--notebook-accent, var(--primary))), hsl(var(--notebook-accent, var(--primary)) / 0.55));
+  }
+
+  /* Carimbo "PAGO" */
+  .stamp {
+    @apply inline-block font-mono text-[11px] font-semibold uppercase tracking-widest;
+    transform: rotate(-3deg);
+    border: 2px double hsl(var(--success));
+    color: hsl(var(--success));
+    padding: 1px 8px;
+    border-radius: 4px;
+  }
+
+  .money {
+    @apply font-mono;
+    font-variant-numeric: tabular-nums;
+  }
+}

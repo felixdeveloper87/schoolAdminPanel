@@ -1,0 +1,7 @@
+import { AppShell } from '@/components/app-shell';
+import { getSessionUser } from '@/lib/server-api';
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const user = await getSessionUser();
+  return <AppShell user={user}>{children}</AppShell>;
+}

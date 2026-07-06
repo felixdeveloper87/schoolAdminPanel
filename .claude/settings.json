@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(docker info --format \"{{.ServerVersion}}\")",
+      "PowerShell(npm install -g pnpm@9)",
+      "PowerShell(Start-Process \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe\")",
+      "PowerShell(\"Docker Desktop iniciado\")",
+      "Bash(pnpm install *)",
+      "PowerShell(docker info --format \"{{.ServerVersion}}\" 2>&1)",
+      "PowerShell(pnpm -v)",
+      "PowerShell($env:PATH = \"C:\\\\Users\\\\Leandro\\\\AppData\\\\Roaming\\\\npm;$env:PATH\"; pnpm -v)",
+      "PowerShell(& \"C:\\\\Users\\\\Leandro\\\\AppData\\\\Roaming\\\\npm\\\\pnpm.cmd\" install)",
+      "PowerShell(& \"C:\\\\Users\\\\Leandro\\\\AppData\\\\Roaming\\\\npm\\\\pnpm.cmd\" --filter @escola/contracts build)",
+      "PowerShell(docker compose -f docker-compose.dev.yml up -d)",
+      "PowerShell($env:PATH = \"C:\\\\Users\\\\Leandro\\\\AppData\\\\Roaming\\\\npm;$env:PATH\"; & \"C:\\\\Users\\\\Leandro\\\\AppData\\\\Roaming\\\\npm\\\\pnpm.cmd\" --filter @escola/api prisma:generate)",
+      "Bash(\"/c/Users/Leandro/AppData/Roaming/npm/pnpm.cmd\" --filter @escola/api exec prisma migrate dev --name init)",
+      "Bash(\"/c/Users/Leandro/AppData/Roaming/npm/pnpm.cmd\" --filter @escola/api prisma:seed)",
+      "Bash(\"/c/Users/Leandro/AppData/Roaming/npm/pnpm.cmd\" --filter @escola/api dev)",
+      "Bash(echo \"started with PID $!\")",
+      "Bash(\"/c/Users/Leandro/AppData/Roaming/npm/pnpm.cmd\" --filter @escola/web dev)",
+      "Bash(curl -s -i -X POST http://localhost:3001/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"admin@escola.com\",\"password\":\"admin123\"}' -c /tmp/cookies.txt)",
+      "Bash(curl -s -b /tmp/cookies.txt \"http://localhost:3001/api/dashboard/summary?month=2026-07\")",
+      "Bash(curl -s -b /tmp/cookies.txt \"http://localhost:3001/api/invoices?competence=2026-07&status=PENDING&page=1&pageSize=3\")",
+      "Bash(curl -s -i -X PATCH -b /tmp/cookies.txt http://localhost:3001/api/invoices/cmr986mno003tpv7xj3ub4b09/pay -H 'Content-Type: application/json' -d '{\"method\":\"PIX\",\"paidAt\":\"2026-07-06\",\"receiptNote\":\"teste via curl\"}')",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Read(//c//**)",
+      "Bash(npm ls *)"
+    ]
+  }
+}
