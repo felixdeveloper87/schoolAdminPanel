@@ -10,7 +10,7 @@
     "db:seed": "pnpm --filter @escola/api prisma:seed"
   },
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
-  "packageManager": "pnpm@9.12.0"
+  "packageManager": "pnpm@10.13.1"
 }
