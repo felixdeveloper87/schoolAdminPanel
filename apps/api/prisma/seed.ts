@@ -1,8 +1,71 @@
-import { PrismaClient, EnrollmentType, AgeGroup, Shift, Relationship } from '@prisma/client';
+import { PrismaClient, EnrollmentType, AgeGroup, Shift, Relationship, DiscountReason } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 const utcDate = (y: number, m: number, d: number) => new Date(Date.UTC(y, m - 1, d));
+const subMonths = (date: Date, delta: number) => new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() - delta, 1));
+const dueDateFor = (competence: Date, dueDay: number) =>
+  new Date(Date.UTC(competence.getUTCFullYear(), competence.getUTCMonth(), dueDay));
+const pick = <T>(arr: readonly T[], i: number) => arr[i % arr.length];
+const chance = (p: number) => Math.random() < p;
+
+// ---------------------------------------------------------------------------
+// Mensalidade fixa por categoria — integral é sempre a mais cara (spec)
+// ---------------------------------------------------------------------------
+const MONTHLY_FEE_BY_TYPE: Record<EnrollmentType, number> = {
+  FULL_TIME: 180000, // R$ 1.800,00
+  HALF_DAY_MORNING: 110000, // R$ 1.100,00
+  HALF_DAY_AFTERNOON: 110000, // R$ 1.100,00
+};
+const ENROLLMENT_FEE_CENTS = 45000; // R$ 450,00
+
+const FIRST_NAMES_F = [
+  'Alice', 'Sophia', 'Helena', 'Valentina', 'Laura', 'Isabella', 'Manuela', 'Júlia',
+  'Heloísa', 'Luísa', 'Cecília', 'Eloá', 'Antonella', 'Liz', 'Sarah', 'Isadora',
+  'Beatriz', 'Yasmin', 'Lívia', 'Maria Clara',
+] as const;
+const FIRST_NAMES_M = [
+  'Miguel', 'Arthur', 'Heitor', 'Davi', 'Bernardo', 'Noah', 'Gael', 'Théo',
+  'Pedro', 'Enzo', 'Gabriel', 'Lucas', 'Matheus', 'Rafael', 'Vicente', 'Anthony',
+  'Lorenzo', 'Bryan', 'Nicolas', 'Samuel',
+] as const;
+const LAST_NAMES = [
+  'Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira', 'Alves', 'Pereira',
+  'Lima', 'Gomes', 'Costa', 'Ribeiro', 'Martins', 'Carvalho', 'Almeida', 'Lopes',
+  'Soares', 'Fernandes', 'Vieira', 'Barbosa',
+] as const;
+const GUARDIAN_FIRST_F = [
+  'Juliana', 'Fernanda', 'Patrícia', 'Camila', 'Renata', 'Luciana', 'Vanessa', 'Aline',
+  'Bruna', 'Carolina', 'Débora', 'Elaine', 'Simone', 'Tatiane', 'Adriana', 'Priscila',
+] as const;
+const GUARDIAN_FIRST_M = [
+  'Marcos', 'Ricardo', 'André', 'Rodrigo', 'Fábio', 'Eduardo', 'Paulo', 'Sérgio',
+  'Cláudio', 'Fernando', 'Gustavo', 'Diego', 'Leandro', 'Thiago', 'Alexandre', 'Renato',
+] as const;
+const ALLERGIES = ['Amendoim', 'Lactose', 'Glúten', 'Ovo', 'Frutos do mar'] as const;
+
+interface ClassroomPlan {
+  name: string;
+  ageGroup: AgeGroup;
+  shift: Shift;
+  capacity: number;
+  enrollmentType: EnrollmentType;
+  count: number;
+  birthYear: number;
+}
+
+// 6 turmas somando 43 vagas — 40 alunos ativos deixam espaço de ocupação real.
+// Turno determina a categoria de matrícula (e portanto a mensalidade fixa da turma).
+const CLASSROOMS_PLAN: ClassroomPlan[] = [
+  { name: 'Berçário 1 — Manhã', ageGroup: 'BERCARIO_1', shift: 'MORNING', capacity: 8, enrollmentType: 'HALF_DAY_MORNING', count: 6, birthYear: 2025 },
+  { name: 'Berçário 2 — Integral', ageGroup: 'BERCARIO_2', shift: 'FULL_DAY', capacity: 10, enrollmentType: 'FULL_TIME', count: 7, birthYear: 2024 },
+  { name: 'Maternal 1 — Integral', ageGroup: 'MATERNAL_1', shift: 'FULL_DAY', capacity: 12, enrollmentType: 'FULL_TIME', count: 8, birthYear: 2023 },
+  { name: 'Maternal 2 — Tarde', ageGroup: 'MATERNAL_2', shift: 'AFTERNOON', capacity: 12, enrollmentType: 'HALF_DAY_AFTERNOON', count: 7, birthYear: 2022 },
+  { name: 'Pré 1 — Manhã', ageGroup: 'PRE_1', shift: 'MORNING', capacity: 12, enrollmentType: 'HALF_DAY_MORNING', count: 7, birthYear: 2021 },
+  { name: 'Pré 2 — Integral', ageGroup: 'PRE_2', shift: 'FULL_DAY', capacity: 10, enrollmentType: 'FULL_TIME', count: 5, birthYear: 2020 },
+];
+
+const DUE_DAYS = [5, 10, 15, 20, 25] as const;
 
 async function main() {
   const school = await prisma.school.upsert({
@@ -18,10 +81,22 @@ async function main() {
   });
   const schoolId = school.id;
 
-  // Usuários reais são criados via POST /api/users (ADMIN), não pelo seed —
-  // evita recriar contas de teste com senha fraca a cada novo `prisma db seed`.
+  // Usuários reais são criados via POST /api/users (ADMIN) — nunca tocados pelo seed.
 
-  // Categorias de despesa (seed inicial da spec)
+  console.log('Limpando dados de exemplo anteriores (alunos, turmas, mensalidades, despesas)...');
+  await prisma.tuitionInvoice.deleteMany({ where: { schoolId } });
+  await prisma.enrollment.deleteMany({ where: { schoolId } });
+  await prisma.guardian.deleteMany({ where: { schoolId } });
+  await prisma.student.deleteMany({ where: { schoolId } });
+  await prisma.waitlistEntry.deleteMany({ where: { schoolId } });
+  await prisma.expense.deleteMany({ where: { schoolId } });
+  await prisma.goal.deleteMany({ where: { schoolId } });
+  await prisma.classroom.deleteMany({ where: { schoolId } });
+  await prisma.expenseCategory.deleteMany({ where: { schoolId } });
+
+  // ---------------------------------------------------------------------------
+  // Categorias de despesa
+  // ---------------------------------------------------------------------------
   const categoryNames = [
     ['Salários', '#2B4C9B'],
     ['Alimentação', '#3E7C59'],
@@ -33,163 +108,215 @@ async function main() {
     ['Outros', '#8A8F98'],
   ] as const;
   for (const [name, colorHex] of categoryNames) {
-    await prisma.expenseCategory.upsert({
-      where: { schoolId_name: { schoolId, name } },
-      update: {},
-      create: { schoolId, name, colorHex },
-    });
+    await prisma.expenseCategory.create({ data: { schoolId, name, colorHex } });
   }
   const categories = await prisma.expenseCategory.findMany({ where: { schoolId } });
   const cat = (name: string) => categories.find((c) => c.name.startsWith(name))!.id;
 
-  // Idempotência simples para o resto: se já há turmas, para aqui.
-  if ((await prisma.classroom.count({ where: { schoolId } })) > 0) {
-    console.log('Seed já aplicado — mantendo dados existentes.');
-    return;
+  // ---------------------------------------------------------------------------
+  // Turmas
+  // ---------------------------------------------------------------------------
+  const classrooms = [] as { id: string }[];
+  for (const c of CLASSROOMS_PLAN) {
+    classrooms.push(
+      await prisma.classroom.create({
+        data: { schoolId, name: c.name, ageGroup: c.ageGroup, shift: c.shift, capacity: c.capacity },
+      }),
+    );
   }
 
-  const classroomsData: { name: string; ageGroup: AgeGroup; shift: Shift; capacity: number }[] = [
-    { name: 'Berçário 1 — Manhã', ageGroup: 'BERCARIO_1', shift: 'MORNING', capacity: 8 },
-    { name: 'Maternal 1 — Integral', ageGroup: 'MATERNAL_1', shift: 'FULL_DAY', capacity: 12 },
-    { name: 'Maternal 2 — Integral', ageGroup: 'MATERNAL_2', shift: 'FULL_DAY', capacity: 12 },
-    { name: 'Pré 1 — Tarde', ageGroup: 'PRE_1', shift: 'AFTERNOON', capacity: 15 },
-  ];
-  const classrooms = [] as { id: string; name: string }[];
-  for (const c of classroomsData) {
-    classrooms.push(await prisma.classroom.create({ data: { schoolId, ...c } }));
-  }
+  // ---------------------------------------------------------------------------
+  // Competências dos últimos 6 meses (do mais antigo ao atual) e "hoje"
+  // ---------------------------------------------------------------------------
+  const now = new Date();
+  const currentCompetence = utcDate(now.getUTCFullYear(), now.getUTCMonth() + 1, 1);
+  const competences = Array.from({ length: 6 }, (_, i) => subMonths(currentCompetence, 5 - i));
+  const today = utcDate(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate());
+  const enrollmentStart = competences[0]; // matrículas começam no 1º dos 6 meses — todas têm histórico completo
 
-  type SeedStudent = {
-    fullName: string;
-    birth: [number, number, number];
-    type: EnrollmentType;
-    classroomIdx: number;
-    feeCents: number;
-    discountCents?: number;
-    dueDay: number;
-    guardian: { name: string; rel: Relationship; phone: string };
-    allergies?: string;
-  };
+  // ---------------------------------------------------------------------------
+  // 40 alunos distribuídos pelas turmas, com 3 pares de irmãos (desconto SIBLING)
+  // ---------------------------------------------------------------------------
+  const SIBLING_PAIRS = new Set([3, 12, 27]); // índice do 2º irmão de cada par (usa o guardião do índice-1)
 
-  const students: SeedStudent[] = [
-    { fullName: 'Alice Ferreira Lima', birth: [2023, 3, 14], type: 'FULL_TIME', classroomIdx: 1, feeCents: 165000, dueDay: 5, guardian: { name: 'Juliana Ferreira Lima', rel: 'MAE', phone: '21988880001' } },
-    { fullName: 'Bernardo Souza Prado', birth: [2023, 7, 2], type: 'FULL_TIME', classroomIdx: 1, feeCents: 165000, discountCents: 16500, dueDay: 10, guardian: { name: 'Marcos Souza Prado', rel: 'PAI', phone: '21988880002' }, allergies: 'Amendoim' },
-    { fullName: 'Cecília Prado Souza', birth: [2022, 1, 20], type: 'FULL_TIME', classroomIdx: 2, feeCents: 158000, discountCents: 15800, dueDay: 10, guardian: { name: 'Marcos Souza Prado', rel: 'PAI', phone: '21988880002' } },
-    { fullName: 'Davi Oliveira Costa', birth: [2022, 7, 8], type: 'HALF_DAY_AFTERNOON', classroomIdx: 2, feeCents: 98000, dueDay: 15, guardian: { name: 'Renata Oliveira', rel: 'MAE', phone: '21988880004' }, allergies: 'Lactose' },
-    { fullName: 'Elisa Martins Rocha', birth: [2021, 11, 25], type: 'HALF_DAY_AFTERNOON', classroomIdx: 3, feeCents: 92000, dueDay: 5, guardian: { name: 'Patrícia Martins', rel: 'MAE', phone: '21988880005' } },
-    { fullName: 'Felipe Andrade Nunes', birth: [2021, 7, 30], type: 'HALF_DAY_AFTERNOON', classroomIdx: 3, feeCents: 92000, dueDay: 20, guardian: { name: 'Ricardo Nunes', rel: 'PAI', phone: '21988880006' } },
-    { fullName: 'Giovana Ribeiro Alves', birth: [2025, 9, 12], type: 'HALF_DAY_MORNING', classroomIdx: 0, feeCents: 120000, dueDay: 5, guardian: { name: 'Fernanda Ribeiro', rel: 'MAE', phone: '21988880007' } },
-    { fullName: 'Heitor Cardoso Melo', birth: [2025, 7, 18], type: 'HALF_DAY_MORNING', classroomIdx: 0, feeCents: 120000, dueDay: 12, guardian: { name: 'Vera Cardoso', rel: 'AVO', phone: '21988880008' } },
-    { fullName: 'Isadora Teixeira Ramos', birth: [2022, 12, 3], type: 'FULL_TIME', classroomIdx: 2, feeCents: 158000, dueDay: 8, guardian: { name: 'Luciana Teixeira', rel: 'MAE', phone: '21988880009' } },
-    { fullName: 'João Pedro Barros Dias', birth: [2021, 2, 9], type: 'FULL_TIME', classroomIdx: 3, feeCents: 149000, dueDay: 25, guardian: { name: 'André Barros Dias', rel: 'PAI', phone: '21988880010' } },
-  ];
+  let index = 0;
+  const guardianByIndex = new Map<number, { fullName: string; relationship: Relationship; phone: string }>();
 
-  const enrollments: { id: string; feeCents: number; discountCents: number; dueDay: number }[] = [];
-  for (const s of students) {
-    const student = await prisma.student.create({
-      data: {
-        schoolId,
-        fullName: s.fullName,
-        birthDate: utcDate(...s.birth),
-        enrollmentType: s.type,
-        mealsIncluded: s.type === 'FULL_TIME',
-        allergies: s.allergies,
-        guardians: {
-          create: [
-            {
-              schoolId,
-              fullName: s.guardian.name,
-              relationship: s.guardian.rel,
-              phoneWhatsapp: s.guardian.phone,
-              isFinancialResponsible: true,
-              authorizedPickup: true,
-            },
-          ],
-        },
-      },
-    });
-    const enrollment = await prisma.enrollment.create({
-      data: {
-        schoolId,
-        studentId: student.id,
-        classroomId: classrooms[s.classroomIdx].id,
-        startDate: utcDate(2026, 2, 1),
-        monthlyFeeCents: s.feeCents,
-        discountCents: s.discountCents ?? 0,
-        discountReason: s.discountCents ? 'SIBLING' : 'NONE',
-        dueDay: s.dueDay,
-        enrollmentFeeCents: 45000,
-      },
-    });
-    enrollments.push({ id: enrollment.id, feeCents: s.feeCents, discountCents: s.discountCents ?? 0, dueDay: s.dueDay });
-  }
+  for (const plan of CLASSROOMS_PLAN) {
+    const classroom = classrooms[CLASSROOMS_PLAN.indexOf(plan)];
 
-  // Mensalidades: maio (tudo pago), junho (maioria paga, 2 atrasadas), julho (pendentes, 3 pagas)
-  const months: { y: number; m: number }[] = [
-    { y: 2026, m: 5 },
-    { y: 2026, m: 6 },
-    { y: 2026, m: 7 },
-  ];
-  for (const { y, m } of months) {
-    for (const [i, e] of enrollments.entries()) {
-      const competence = utcDate(y, m, 1);
-      const dueDate = utcDate(y, m, e.dueDay);
-      let status: 'PAID' | 'PENDING' | 'OVERDUE' = 'PENDING';
-      if (m === 5) status = 'PAID';
-      if (m === 6) status = i % 5 === 4 ? 'OVERDUE' : 'PAID';
-      if (m === 7) status = i < 3 ? 'PAID' : 'PENDING';
-      await prisma.tuitionInvoice.create({
+    for (let n = 0; n < plan.count; n++) {
+      const isFemale = index % 2 === 0;
+      const firstName = isFemale ? pick(FIRST_NAMES_F, index) : pick(FIRST_NAMES_M, index);
+      const lastName = pick(LAST_NAMES, index * 3 + 1);
+      const fullName = `${firstName} ${lastName}`;
+      const birthDate = utcDate(plan.birthYear, ((index * 5) % 12) + 1, ((index * 7) % 27) + 1);
+
+      let guardian: { fullName: string; relationship: Relationship; phone: string };
+      let discountReason: DiscountReason = 'NONE';
+      let discountCents = 0;
+
+      if (SIBLING_PAIRS.has(index)) {
+        guardian = guardianByIndex.get(index - 1)!;
+        discountReason = 'SIBLING';
+        discountCents = Math.round(MONTHLY_FEE_BY_TYPE[plan.enrollmentType] * 0.1);
+      } else {
+        const guardianIsFemale = index % 3 !== 0; // maioria mães, alguns pais
+        guardian = {
+          fullName: guardianIsFemale
+            ? `${pick(GUARDIAN_FIRST_F, index)} ${lastName}`
+            : `${pick(GUARDIAN_FIRST_M, index)} ${lastName}`,
+          relationship: guardianIsFemale ? 'MAE' : 'PAI',
+          phone: `2199${String(9000000 + index * 37).padStart(7, '0')}`,
+        };
+      }
+      guardianByIndex.set(index, guardian);
+
+      const allergies = chance(0.15) ? pick(ALLERGIES, index) : null;
+      const dueDay = pick(DUE_DAYS, index);
+
+      const student = await prisma.student.create({
         data: {
           schoolId,
-          enrollmentId: e.id,
-          competence,
-          amountCents: e.feeCents,
-          discountCents: e.discountCents,
-          dueDate,
-          status,
-          paidAt: status === 'PAID' ? utcDate(y, m, Math.min(e.dueDay, 28)) : null,
-          paymentMethod: status === 'PAID' ? 'PIX' : null,
-          receiptNote: status === 'PAID' ? 'Comprovante no WhatsApp' : null,
+          fullName,
+          birthDate,
+          enrollmentType: plan.enrollmentType,
+          mealsIncluded: plan.enrollmentType === 'FULL_TIME',
+          allergies,
+          guardians: {
+            create: [
+              {
+                schoolId,
+                fullName: guardian.fullName,
+                relationship: guardian.relationship,
+                phoneWhatsapp: guardian.phone,
+                isFinancialResponsible: true,
+                authorizedPickup: true,
+              },
+            ],
+          },
         },
+      });
+
+      const enrollment = await prisma.enrollment.create({
+        data: {
+          schoolId,
+          studentId: student.id,
+          classroomId: classroom.id,
+          startDate: enrollmentStart,
+          monthlyFeeCents: MONTHLY_FEE_BY_TYPE[plan.enrollmentType],
+          discountCents,
+          discountReason,
+          dueDay,
+          enrollmentFeeCents: ENROLLMENT_FEE_CENTS,
+        },
+      });
+
+      // -----------------------------------------------------------------------
+      // Mensalidades dos últimos 6 meses — histórico consistente por competência
+      // -----------------------------------------------------------------------
+      for (const [ci, competence] of competences.entries()) {
+        const isCurrentMonth = ci === competences.length - 1;
+        const dueDate = dueDateFor(competence, dueDay);
+        const amountCents = MONTHLY_FEE_BY_TYPE[plan.enrollmentType];
+
+        let status: 'PAID' | 'PENDING' | 'OVERDUE' | 'EXEMPT';
+        if (!isCurrentMonth) {
+          // meses fechados: taxa de inadimplência baixa e realista (~8% ao mês)
+          status = chance(0.92) ? 'PAID' : chance(0.75) ? 'OVERDUE' : 'EXEMPT';
+        } else if (dueDate < today) {
+          // vencimento do mês atual já passou
+          status = chance(0.75) ? 'PAID' : 'OVERDUE';
+        } else {
+          // vencimento do mês atual ainda não chegou
+          status = chance(0.4) ? 'PAID' : 'PENDING';
+        }
+
+        await prisma.tuitionInvoice.create({
+          data: {
+            schoolId,
+            enrollmentId: enrollment.id,
+            competence,
+            amountCents,
+            discountCents,
+            dueDate,
+            status,
+            paidAt: status === 'PAID' ? dueDate : null,
+            paymentMethod: status === 'PAID' ? (chance(0.85) ? 'PIX' : chance(0.5) ? 'CASH' : 'TRANSFER') : null,
+            receiptNote: status === 'PAID' ? 'Comprovante no WhatsApp' : null,
+          },
+        });
+      }
+
+      index += 1;
+    }
+  }
+
+  console.log(`${index} alunos criados em ${classrooms.length} turmas, com 6 meses de mensalidades cada.`);
+
+  // ---------------------------------------------------------------------------
+  // Despesas dos últimos 6 meses — fixas recorrentes + variáveis com leve oscilação
+  // ---------------------------------------------------------------------------
+  for (const competence of competences) {
+    const y = competence.getUTCFullYear();
+    const m = competence.getUTCMonth() + 1;
+    const vary = (base: number, pct: number) => Math.round(base * (1 + (Math.random() * 2 - 1) * pct));
+
+    await prisma.expense.create({
+      data: { schoolId, categoryId: cat('Salários'), description: `Folha de pagamento ${m}/${y}`, amountCents: 2800000, expenseDate: utcDate(y, m, 5), recurring: true },
+    });
+    await prisma.expense.create({
+      data: { schoolId, categoryId: cat('Aluguel'), description: `Aluguel do imóvel — ${m}/${y}`, amountCents: 650000, expenseDate: utcDate(y, m, 10), recurring: true },
+    });
+    await prisma.expense.create({
+      data: { schoolId, categoryId: cat('Alimentação'), description: `Hortifruti e mercado — ${m}/${y}`, amountCents: vary(320000, 0.15), expenseDate: utcDate(y, m, 18), recurring: false },
+    });
+    await prisma.expense.create({
+      data: { schoolId, categoryId: cat('Contas'), description: `Água, luz e internet — ${m}/${y}`, amountCents: vary(90000, 0.1), expenseDate: utcDate(y, m, 20), recurring: true },
+    });
+    await prisma.expense.create({
+      data: { schoolId, categoryId: cat('Limpeza'), description: `Material de limpeza — ${m}/${y}`, amountCents: vary(120000, 0.2), expenseDate: utcDate(y, m, 12), recurring: false },
+    });
+    if (chance(0.5)) {
+      await prisma.expense.create({
+        data: { schoolId, categoryId: cat('Material pedagógico'), description: `Material pedagógico — ${m}/${y}`, amountCents: vary(80000, 0.3), expenseDate: utcDate(y, m, 8), recurring: false },
+      });
+    }
+    if (m % 3 === 0) {
+      await prisma.expense.create({
+        data: { schoolId, categoryId: cat('Impostos'), description: `Impostos e taxas — trimestre`, amountCents: 150000, expenseDate: utcDate(y, m, 15), recurring: false },
       });
     }
   }
 
-  // Despesas de junho e julho
-  const expenses: [string, string, number, [number, number, number], boolean][] = [
-    ['Salários', 'Folha de pagamento junho', 1850000, [2026, 6, 5], true],
-    ['Aluguel', 'Aluguel do imóvel — junho', 650000, [2026, 6, 10], true],
-    ['Alimentação', 'Hortifruti e mercado — junho', 214500, [2026, 6, 18], false],
-    ['Contas (água/luz/internet)', 'Luz + internet junho', 87300, [2026, 6, 20], true],
-    ['Salários', 'Folha de pagamento julho', 1850000, [2026, 7, 3], true],
-    ['Aluguel', 'Aluguel do imóvel — julho', 650000, [2026, 7, 5], true],
-    ['Material pedagógico', 'Papelaria e tintas', 63200, [2026, 7, 4], false],
-  ];
-  for (const [catName, description, amountCents, date, recurring] of expenses) {
-    await prisma.expense.create({
+  // ---------------------------------------------------------------------------
+  // Metas dos últimos 3 meses
+  // ---------------------------------------------------------------------------
+  for (const competence of competences.slice(-3)) {
+    await prisma.goal.create({
       data: {
         schoolId,
-        categoryId: cat(catName),
-        description,
-        amountCents,
-        expenseDate: utcDate(...date),
-        recurring,
+        month: competence,
+        newStudentsTarget: 2 + (competence.getUTCMonth() % 3),
+        revenueTargetCents: 5800000,
       },
     });
   }
 
-  // Meta e lista de espera
-  await prisma.goal.create({
-    data: { schoolId, month: utcDate(2026, 7, 1), newStudentsTarget: 3, revenueTargetCents: 1400000 },
-  });
+  // ---------------------------------------------------------------------------
+  // Lista de espera
+  // ---------------------------------------------------------------------------
   await prisma.waitlistEntry.createMany({
     data: [
-      { schoolId, childName: 'Manuela Freitas', birthDate: utcDate(2025, 4, 10), guardianName: 'Camila Freitas', phoneWhatsapp: '21977770001', desiredAgeGroup: 'BERCARIO_2', desiredShift: 'FULL_DAY' },
-      { schoolId, childName: 'Otávio Mendes', birthDate: utcDate(2023, 10, 2), guardianName: 'Paulo Mendes', phoneWhatsapp: '21977770002', desiredAgeGroup: 'MATERNAL_1', desiredShift: 'MORNING' },
+      { schoolId, childName: 'Manuela Freitas', birthDate: utcDate(2025, 4, 10), guardianName: 'Camila Freitas', phoneWhatsapp: '21977770001', desiredAgeGroup: 'BERCARIO_2', desiredShift: 'FULL_DAY', status: 'WAITING' },
+      { schoolId, childName: 'Otávio Mendes', birthDate: utcDate(2023, 10, 2), guardianName: 'Paulo Mendes', phoneWhatsapp: '21977770002', desiredAgeGroup: 'MATERNAL_1', desiredShift: 'MORNING', status: 'WAITING' },
+      { schoolId, childName: 'Beatriz Nogueira', birthDate: utcDate(2022, 6, 15), guardianName: 'Sandra Nogueira', phoneWhatsapp: '21977770003', desiredAgeGroup: 'MATERNAL_2', desiredShift: 'AFTERNOON', status: 'CONTACTED' },
+      { schoolId, childName: 'Caio Monteiro', birthDate: utcDate(2021, 3, 22), guardianName: 'Felipe Monteiro', phoneWhatsapp: '21977770004', desiredAgeGroup: 'PRE_1', desiredShift: 'MORNING', status: 'WAITING' },
+      { schoolId, childName: 'Larissa Campos', birthDate: utcDate(2024, 1, 5), guardianName: 'Michele Campos', phoneWhatsapp: '21977770005', desiredAgeGroup: 'BERCARIO_2', desiredShift: 'FULL_DAY', status: 'GAVE_UP' },
     ],
   });
 
-  console.log('Seed concluído: escola, turmas, alunos, mensalidades, despesas. Usuários já existentes foram preservados.');
+  console.log('Seed concluído: escola, 6 turmas, 40 alunos, 6 meses de mensalidades e despesas, metas e lista de espera.');
 }
 
 main()
