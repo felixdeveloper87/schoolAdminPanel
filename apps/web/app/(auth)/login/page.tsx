@@ -51,7 +51,7 @@ export default function LoginPage({ searchParams }: { searchParams: { error?: st
             priority
             className="rounded-lg border border-white/20 shadow-lg"
           />
-          <span className="font-display text-lg font-bold tracking-tight">Peniel Christian School</span>
+          <span className="font-display text-lg font-bold tracking-tight">Peniel Christian School </span>
         </div>
 
         <div className="relative space-y-6">
