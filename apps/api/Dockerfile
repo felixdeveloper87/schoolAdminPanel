@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM node:20-alpine AS base
+RUN apk add --no-cache openssl
 RUN corepack enable
 WORKDIR /app
 

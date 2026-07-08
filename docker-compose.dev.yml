@@ -11,5 +11,50 @@ services:
     volumes:
       - escola_pgdata_dev:/var/lib/postgresql/data
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: escola-api-dev
+    env_file:
+      - apps/api/.env
+    environment:
+      DATABASE_URL: postgresql://escola:escola@postgres:5432/escola?connection_limit=5
+    working_dir: /app
+    command: pnpm --filter @escola/api dev
+    ports:
+      - '3002:3002'
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/api/node_modules
+      - /app/apps/web/node_modules
+      - /app/packages/contracts/node_modules
+    depends_on:
+      - postgres
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: escola-web-dev
+    environment:
+      API_URL: http://api:3002
+      WATCHPACK_POLLING: 'true'
+      CHOKIDAR_USEPOLLING: 'true'
+    working_dir: /app
+    command: pnpm --filter @escola/web dev
+    ports:
+      - '3001:3001'
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/api/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next
+      - /app/packages/contracts/node_modules
+    depends_on:
+      - api
+
 volumes:
   escola_pgdata_dev:

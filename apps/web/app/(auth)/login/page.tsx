@@ -29,7 +29,7 @@ export default function LoginPage({ searchParams }: { searchParams: { error?: st
             />
             <div className="space-y-1 pt-2">
               <CardTitle className="text-2xl sm:text-3xl">Peniel Christian School</CardTitle>
-              <CardDescription>Painel administrativo da secretaria</CardDescription>
+              <CardDescription>Painel administrativo da diretoria</CardDescription>
             </div>
           </CardHeader>
           <CardContent className="px-6 pb-6 sm:px-7 sm:pb-7">

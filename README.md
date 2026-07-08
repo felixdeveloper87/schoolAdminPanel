@@ -55,6 +55,8 @@ Depois de logado como ADMIN, os demais usuários podem ser criados via `POST /ap
 
 Em dev não há nginx: o `next.config.js` faz rewrite de `/api/*` para a API do Nest
 (`API_URL`, default `http://localhost:3002`), mantendo a mesma origem do navegador.
+Quando rodar pelo `docker-compose.dev.yml`, o frontend usa polling no watcher do Next para
+manter o Fast Refresh funcionando em bind mounts no Docker Desktop/Windows.
 
 ## Produção (Docker Compose)
 
