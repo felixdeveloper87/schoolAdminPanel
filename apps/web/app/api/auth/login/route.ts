@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server';
 const API_URL = process.env.API_URL ?? 'http://localhost:3002';
 
 export async function POST(request: Request) {
+  const protocol = request.headers.get('x-forwarded-proto') ?? 'http';
+  const host = request.headers.get('host') ?? new URL(request.url).host;
+  const origin = `${protocol}://${host}`;
   const contentType = request.headers.get('content-type') ?? '';
   const isFormPost = contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data');
   let body: unknown;
@@ -18,7 +21,7 @@ export async function POST(request: Request) {
     }
   } catch {
     return isFormPost
-      ? NextResponse.redirect(new URL('/login?error=invalid', request.url), 303)
+      ? NextResponse.redirect(new URL('/login?error=invalid', origin), 303)
       : NextResponse.json({ message: 'Dados de login inválidos.' }, { status: 400 });
   }
 
@@ -32,10 +35,10 @@ export async function POST(request: Request) {
     const payload = await apiRes.json().catch(() => null);
     if (isFormPost && !apiRes.ok) {
       const error = apiRes.status === 401 ? 'credentials' : 'unknown';
-      return NextResponse.redirect(new URL(`/login?error=${error}`, request.url), 303);
+      return NextResponse.redirect(new URL(`/login?error=${error}`, origin), 303);
     }
     if (isFormPost) {
-      const res = NextResponse.redirect(new URL('/', request.url), 303);
+      const res = NextResponse.redirect(new URL('/', origin), 303);
       const setCookie = apiRes.headers.get('set-cookie');
       if (setCookie) res.headers.set('set-cookie', setCookie);
       return res;
@@ -46,7 +49,7 @@ export async function POST(request: Request) {
     return res;
   } catch {
     if (isFormPost) {
-      return NextResponse.redirect(new URL('/login?error=api', request.url), 303);
+      return NextResponse.redirect(new URL('/login?error=api', origin), 303);
     }
     return NextResponse.json(
       { message: 'API indisponível. Confirme se o backend está rodando na porta 3002.' },
