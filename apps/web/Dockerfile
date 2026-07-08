@@ -7,7 +7,7 @@ WORKDIR /app
 # builder
 # ---------------------------------------------------------------------------
 FROM base AS builder
-COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/contracts ./packages/contracts
 COPY apps/web ./apps/web
 RUN pnpm install --frozen-lockfile --filter @escola/web...

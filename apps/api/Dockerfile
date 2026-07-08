@@ -8,7 +8,7 @@ WORKDIR /app
 # builder: instala tudo (incl. devDependencies) e compila
 # ---------------------------------------------------------------------------
 FROM base AS builder
-COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/contracts ./packages/contracts
 COPY apps/api ./apps/api
 RUN pnpm install --frozen-lockfile --filter @escola/api...
@@ -23,7 +23,7 @@ FROM base AS runner
 ENV NODE_ENV=production
 WORKDIR /app
 
-COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/contracts/package.json ./packages/contracts/package.json
 COPY apps/api/package.json ./apps/api/package.json
 RUN pnpm install --frozen-lockfile --prod --filter @escola/api...
