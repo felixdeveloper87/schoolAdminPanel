@@ -54,25 +54,29 @@ interface ClassroomPlan {
   birthYear: number;
 }
 
-// 6 turmas somando 43 vagas — 40 alunos ativos deixam espaço de ocupação real.
+// 6 turmas somando 64 vagas — 50 alunos ativos deixam espaço de ocupação real.
 // Turno determina a categoria de matrícula (e portanto a mensalidade fixa da turma).
 const CLASSROOMS_PLAN: ClassroomPlan[] = [
-  { name: 'Berçário 1 — Manhã', ageGroup: 'BERCARIO_1', shift: 'MORNING', capacity: 8, enrollmentType: 'HALF_DAY_MORNING', count: 6, birthYear: 2025 },
-  { name: 'Berçário 2 — Integral', ageGroup: 'BERCARIO_2', shift: 'FULL_DAY', capacity: 10, enrollmentType: 'FULL_TIME', count: 7, birthYear: 2024 },
-  { name: 'Maternal 1 — Integral', ageGroup: 'MATERNAL_1', shift: 'FULL_DAY', capacity: 12, enrollmentType: 'FULL_TIME', count: 8, birthYear: 2023 },
-  { name: 'Maternal 2 — Tarde', ageGroup: 'MATERNAL_2', shift: 'AFTERNOON', capacity: 12, enrollmentType: 'HALF_DAY_AFTERNOON', count: 7, birthYear: 2022 },
-  { name: 'Pré 1 — Manhã', ageGroup: 'PRE_1', shift: 'MORNING', capacity: 12, enrollmentType: 'HALF_DAY_MORNING', count: 7, birthYear: 2021 },
-  { name: 'Pré 2 — Integral', ageGroup: 'PRE_2', shift: 'FULL_DAY', capacity: 10, enrollmentType: 'FULL_TIME', count: 5, birthYear: 2020 },
+  { name: 'Berçário 1 — Manhã', ageGroup: 'BERCARIO_1', shift: 'MORNING', capacity: 8, enrollmentType: 'HALF_DAY_MORNING', count: 8, birthYear: 2025 },
+  { name: 'Berçário 2 — Integral', ageGroup: 'BERCARIO_2', shift: 'FULL_DAY', capacity: 10, enrollmentType: 'FULL_TIME', count: 9, birthYear: 2024 },
+  { name: 'Maternal 1 — Integral', ageGroup: 'MATERNAL_1', shift: 'FULL_DAY', capacity: 12, enrollmentType: 'FULL_TIME', count: 10, birthYear: 2023 },
+  { name: 'Maternal 2 — Tarde', ageGroup: 'MATERNAL_2', shift: 'AFTERNOON', capacity: 12, enrollmentType: 'HALF_DAY_AFTERNOON', count: 9, birthYear: 2022 },
+  { name: 'Pré 1 — Manhã', ageGroup: 'PRE_1', shift: 'MORNING', capacity: 12, enrollmentType: 'HALF_DAY_MORNING', count: 8, birthYear: 2021 },
+  { name: 'Pré 2 — Integral', ageGroup: 'PRE_2', shift: 'FULL_DAY', capacity: 10, enrollmentType: 'FULL_TIME', count: 6, birthYear: 2020 },
 ];
 
 const DUE_DAYS = [5, 10, 15, 20, 25] as const;
 
+// Em produção, passe SEED_SCHOOL_ID=<id da escola real> pra popular alunos de
+// teste na escola já existente em vez de criar uma "seed-school" separada.
+const SEED_SCHOOL_ID = process.env.SEED_SCHOOL_ID ?? 'seed-school';
+
 async function main() {
   const school = await prisma.school.upsert({
-    where: { id: 'seed-school' },
+    where: { id: SEED_SCHOOL_ID },
     update: {},
     create: {
-      id: 'seed-school',
+      id: SEED_SCHOOL_ID,
       name: 'Peniel Christian School',
       cnpj: '12345678000190',
       phone: '21999990000',
