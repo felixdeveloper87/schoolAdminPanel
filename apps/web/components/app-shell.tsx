@@ -213,6 +213,10 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const pathname = usePathname();
+  const mobileNavItems = NAV_GROUPS.flatMap((group) => group.items).filter(
+    (item) => !item.adminOnly || user.role === 'ADMIN',
+  );
 
   return (
     <div className="min-h-screen">
@@ -229,18 +233,67 @@ export function AppShell({
         </div>
       </aside>
 
-      {/* Topbar mobile */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#263149] bg-[#0e1728] px-4 py-4 shadow-sm md:hidden">
-        <Brand />
-        <DialogPrimitive.Root open={menuOpen} onOpenChange={setMenuOpen}>
+      <DialogPrimitive.Root open={menuOpen} onOpenChange={setMenuOpen}>
+        {/* Topbar mobile */}
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#263149] bg-[#0e1728] px-4 py-4 shadow-sm md:hidden">
+          <Brand />
           <DialogPrimitive.Trigger asChild>
-            <button className="rounded-lg border border-white/15 bg-white/[0.06] p-2 text-white hover:bg-white/10" aria-label="Abrir menu">
+            <button
+              className="rounded-lg border border-white/15 bg-white/[0.06] p-2 text-white hover:bg-white/10"
+              aria-label="Abrir menu"
+            >
               <Menu className="h-5 w-5" />
             </button>
           </DialogPrimitive.Trigger>
+        </header>
+
+        <nav
+          aria-label="Páginas do painel"
+          className="relative z-20 flex snap-x snap-mandatory gap-2 overflow-x-auto border-b border-[#263149] bg-gradient-to-b from-[#152139] to-[#0e1728] px-4 py-2 shadow-[0_6px_16px_rgba(3,8,18,.2)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:hidden"
+        >
+          {mobileNavItems.map(({ href, label, icon: Icon }) => {
+            const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+            const badge =
+              href === '/mensalidades' && overdueCount > 0
+                ? overdueCount > 99
+                  ? '99+'
+                  : String(overdueCount)
+                : null;
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={active ? 'page' : undefined}
+                className={cn(
+                  'group relative flex h-10 shrink-0 snap-start items-center gap-2 rounded-xl border px-2 pr-2.5 text-[11px] font-extrabold transition-all duration-200 first:ml-2',
+                  active
+                    ? 'border-[#a89bff]/70 bg-gradient-to-br from-[#7867e9] via-[#5549bd] to-[#302966] text-white shadow-[0_8px_20px_rgba(96,79,213,.32),inset_0_1px_0_rgba(255,255,255,.2)]'
+                    : 'border-white/[0.09] bg-white/[0.055] text-[#b3bfd2] shadow-[inset_0_1px_0_rgba(255,255,255,.04)] hover:-translate-y-0.5 hover:border-[#69758c] hover:bg-white/[0.1] hover:text-white',
+                )}
+              >
+                <span
+                  className={cn(
+                    'grid h-6 w-6 shrink-0 place-items-center rounded-lg transition-colors',
+                    active ? 'bg-white/15 text-white' : 'bg-[#202b40] text-[#b8c3d8] group-hover:bg-[#2a3852] group-hover:text-white',
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                </span>
+                <span>{label}</span>
+                {badge && (
+                  <span className="-mr-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-[#d9536c] px-1 text-[8px] font-extrabold text-white shadow-sm">
+                    {badge}
+                  </span>
+                )}
+                {active && <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-white/85" />}
+              </Link>
+            );
+          })}
+        </nav>
+
           <DialogPrimitive.Portal>
-            <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-slate-950/60" />
-            <DialogPrimitive.Content className="fixed inset-y-0 right-0 z-50 flex w-[264px] max-w-[86vw] flex-col border-l border-[#263149] bg-[#0e1728] p-4 text-white shadow-2xl">
+            <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-950/60 md:hidden" />
+            <DialogPrimitive.Content className="fixed inset-y-0 right-0 z-[60] flex w-[280px] max-w-[86vw] flex-col border-l border-[#263149] bg-[#0e1728] p-4 text-white shadow-2xl md:hidden">
               <div className="mb-6 flex items-center justify-between">
                 <DialogPrimitive.Title className="font-display font-bold">Menu</DialogPrimitive.Title>
                 <DialogPrimitive.Close className="rounded-lg border border-white/15 p-2 text-white hover:bg-white/10" aria-label="Fechar menu">
@@ -260,8 +313,7 @@ export function AppShell({
               </div>
             </DialogPrimitive.Content>
           </DialogPrimitive.Portal>
-        </DialogPrimitive.Root>
-      </header>
+      </DialogPrimitive.Root>
 
       <main className="px-4 py-6 md:ml-[264px] md:px-8 lg:px-10">{children}</main>
     </div>
