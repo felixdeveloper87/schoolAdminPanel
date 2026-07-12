@@ -29,7 +29,7 @@ export const StudentPhotoInterceptor = FileInterceptor('photo', {
     },
   }),
   limits: { fileSize: MAX_PHOTO_SIZE_BYTES },
-  fileFilter: (req, file, callback) => {
+  fileFilter: (_req, file, callback) => {
     if (!ALLOWED_PHOTO_MIME_TYPES.includes(file.mimetype)) {
       callback(new BadRequestException('Formato inválido — use JPEG, PNG ou WebP'), false);
       return;

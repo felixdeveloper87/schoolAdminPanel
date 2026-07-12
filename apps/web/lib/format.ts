@@ -9,11 +9,6 @@ export function brl(cents: number): string {
 }
 
 /** 'R$ 1.234,56' digitado no form → 123456 centavos */
-export function parseBrlToCents(value: string): number {
-  const digits = value.replace(/\D/g, '');
-  return digits ? Number.parseInt(digits, 10) : 0;
-}
-
 /** Date/ISO string (DATE UTC) → 'dd/mm/aaaa' */
 export function formatDate(value: string | Date): string {
   const d = typeof value === 'string' ? new Date(value) : value;
