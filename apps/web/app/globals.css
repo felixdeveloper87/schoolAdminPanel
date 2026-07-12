@@ -21,6 +21,8 @@
   --ring: 221 62% 39%;
   --success: 148 33% 36%;          /* --leaf-green #3E7C59 */
   --success-foreground: 0 0% 100%;
+  --violet: 243 62% 60%;           /* --lista-espera #6558E8 */
+  --violet-foreground: 0 0% 100%;
 }
 
 @layer base {

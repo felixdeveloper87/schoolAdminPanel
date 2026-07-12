@@ -1,86 +1,144 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import {
-  LayoutDashboard,
-  Users,
-  Receipt,
-  School,
-  Wallet,
-  Settings,
-  Menu,
+  ArrowDown,
+  BookOpen,
+  ChartNoAxesColumnIncreasing,
+  CreditCard,
+  FileText,
+  Home,
   LogOut,
-  X,
-  FileBarChart,
+  Menu,
+  Settings,
   Target,
-  Hourglass,
+  Users,
   UserX,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SessionUser } from '@/lib/server-api';
 import { ROLE_LABELS } from '@escola/contracts';
 
-const NAV_ITEMS = [
-  { href: '/', label: 'Painel', icon: LayoutDashboard },
-  { href: '/alunos', label: 'Alunos', icon: Users },
-  { href: '/ex-alunos', label: 'Ex-alunos', icon: UserX },
-  { href: '/mensalidades', label: 'Mensalidades', icon: Receipt },
-  { href: '/turmas', label: 'Turmas', icon: School },
-  { href: '/despesas', label: 'Despesas', icon: Wallet },
-  { href: '/relatorios', label: 'Relatórios', icon: FileBarChart },
-  { href: '/metas', label: 'Metas', icon: Target, adminOnly: true },
-  { href: '/lista-espera', label: 'Lista de espera', icon: Hourglass },
-  { href: '/configuracoes', label: 'Configurações', icon: Settings },
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+  adminOnly?: boolean;
+};
+
+const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+  {
+    label: 'Principal',
+    items: [
+      { href: '/', label: 'Visão geral', icon: Home },
+      { href: '/alunos', label: 'Alunos', icon: Users },
+      { href: '/ex-alunos', label: 'Ex-alunos', icon: UserX },
+      { href: '/mensalidades', label: 'Mensalidades', icon: CreditCard, badge: '14' },
+      { href: '/turmas', label: 'Turmas', icon: BookOpen },
+      { href: '/despesas', label: 'Despesas', icon: ArrowDown },
+      { href: '/metas', label: 'Metas', icon: Target, adminOnly: true },
+      { href: '/lista-espera', label: 'Lista de espera', icon: ChartNoAxesColumnIncreasing },
+    ],
+  },
+  {
+    label: 'Gestão',
+    items: [
+      { href: '/relatorios', label: 'Relatórios', icon: FileText },
+      { href: '/configuracoes', label: 'Configurações', icon: Settings },
+    ],
+  },
 ];
 
 function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
   const pathname = usePathname();
+
   return (
-    <nav className="flex flex-col gap-1.5">
-      {NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin).map(({ href, label, icon: Icon }) => {
-        const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+    <nav aria-label="Navegação principal" className="space-y-5">
+      {NAV_GROUPS.map((group) => {
+        const items = group.items.filter((item) => !item.adminOnly || isAdmin);
         return (
-          <Link
-            key={href}
-            href={href}
-            onClick={onNavigate}
-            className={cn(
-              'group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold transition-all',
-              active
-                ? 'bg-primary/10 text-primary shadow-sm'
-                : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
-            )}
-          >
-            <span
-              className={cn(
-                'grid h-8 w-8 place-items-center rounded-md transition-colors',
-                active ? 'bg-primary text-primary-foreground' : 'bg-card group-hover:bg-card',
-              )}
-            >
-              <Icon className="h-4 w-4" />
-            </span>
-            <span className="truncate">{label}</span>
-          </Link>
+          <div key={group.label}>
+            <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8390b1]">
+              {group.label}
+            </p>
+            <div className="space-y-1">
+              {items.map(({ href, label, icon: Icon, badge }) => {
+                const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={onNavigate}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'group relative flex min-h-11 items-center gap-3 rounded-2xl px-3 text-[14px] font-bold transition-colors',
+                      active
+                        ? 'border border-white/90 bg-[#25284e] text-white shadow-[inset_0_0_0_1px_rgba(126,106,255,0.55)]'
+                        : 'border border-transparent text-[#aeb8cd] hover:bg-white/[0.06] hover:text-white',
+                    )}
+                  >
+                    {active && <span className="absolute -left-1 h-7 w-1 rounded-full bg-[#8064ff]" />}
+                    <Icon className={cn('h-[18px] w-[18px] shrink-0', active ? 'text-white' : 'text-[#a5b0c5]')} />
+                    <span className="min-w-0 flex-1 truncate">{label}</span>
+                    {badge && (
+                      <span className="grid h-6 min-w-6 place-items-center rounded-full bg-[#41243e] px-1.5 text-[11px] font-bold text-[#e66d77]">
+                        {badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         );
       })}
     </nav>
   );
 }
 
-function LogoutButton({ className }: { className?: string }) {
+function Brand() {
+  return (
+    <div className="flex min-w-0 items-center gap-3 px-2">
+      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-[17px] bg-gradient-to-br from-[#7869f2] to-[#4f46c9] text-xl font-extrabold text-white shadow-lg shadow-indigo-950/25">
+        P
+      </div>
+      <div className="min-w-0 leading-tight">
+        <p className="truncate font-display text-[14px] font-extrabold text-white">Peniel Christian School</p>
+        <p className="mt-1 text-[11px] text-[#8994b0]">Painel administrativo</p>
+      </div>
+    </div>
+  );
+}
+
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+}
+
+function LogoutButton({ className, compact = false }: { className?: string; compact?: boolean }) {
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
+
   return (
     <button
       className={cn(
-        'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive',
+        'flex items-center gap-2 rounded-lg text-[#929db5] transition-colors hover:bg-white/[0.07] hover:text-white disabled:opacity-50',
+        compact ? 'h-9 w-9 justify-center' : 'px-3 py-2 text-sm font-bold',
         className,
       )}
       disabled={loading}
+      aria-label="Sair"
+      title="Sair"
       onClick={async () => {
         setLoading(true);
         await fetch('/api/auth/logout', { method: 'POST' });
@@ -89,25 +147,37 @@ function LogoutButton({ className }: { className?: string }) {
       }}
     >
       <LogOut className="h-4 w-4" />
-      Sair
+      {!compact && 'Sair'}
     </button>
   );
 }
 
-function Brand() {
+function OccupancyCard() {
   return (
-    <div className="flex min-w-0 items-center gap-3 px-3">
-      <Image
-        src="/logo.jpg"
-        alt="Peniel Christian School"
-        width={42}
-        height={42}
-        className="rounded-lg border bg-card shadow-sm"
-      />
-      <div className="leading-tight">
-        <p className="truncate font-display text-base font-bold">Peniel Christian School</p>
-        <p className="text-xs text-muted-foreground">Painel administrativo</p>
+    <div className="rounded-[20px] border border-[#303a51] bg-[#192338] px-4 py-3.5">
+      <div className="flex items-baseline justify-between gap-2 text-[13px] text-[#9ca8bf]">
+        <span>Ocupação atual <strong className="text-[17px] text-white">78%</strong></span>
+        <span className="text-[11px]">50 / 64</span>
       </div>
+      <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-[#394256]">
+        <div className="h-full w-[78%] rounded-full bg-gradient-to-r from-[#8164ff] to-[#c4b9ff]" />
+      </div>
+      <p className="mt-2 text-[11px] text-[#8d99b1]">14 vagas ainda disponíveis</p>
+    </div>
+  );
+}
+
+function UserFooter({ user }: { user: SessionUser }) {
+  return (
+    <div className="flex items-center gap-3 px-2">
+      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[13px] bg-gradient-to-br from-[#ffbf68] to-[#ef9851] text-sm font-extrabold text-white">
+        {getInitials(user.name)}
+      </div>
+      <div className="min-w-0 flex-1 leading-tight">
+        <p className="truncate text-[12px] font-extrabold text-white">{user.name}</p>
+        <p className="mt-1 text-[10px] text-[#8e9ab3]">{ROLE_LABELS[user.role]}</p>
+      </div>
+      <LogoutButton compact />
     </div>
   );
 }
@@ -118,49 +188,49 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
   return (
     <div className="min-h-screen">
       {/* Sidebar desktop */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[17rem] flex-col gap-6 border-r bg-card/90 py-5 shadow-xl shadow-slate-200/60 backdrop-blur md:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] flex-col border-r border-[#263149] bg-[#0e1728] px-3 py-6 text-white md:flex">
         <Brand />
-        <div className="flex-1 px-3">
+        <div className="mx-1 my-5 border-t border-[#263149]" />
+        <div className="min-h-0 flex-1 overflow-y-auto px-0.5">
           <NavLinks isAdmin={user.role === 'ADMIN'} />
         </div>
-        <div className="px-3 pt-4">
-          <p className="rounded-lg border bg-muted/60 px-3 py-3 text-sm">
-            <span className="block truncate font-bold">{user.name}</span>
-            <span className="text-xs font-semibold text-muted-foreground">{ROLE_LABELS[user.role]}</span>
-          </p>
-          <LogoutButton className="mt-2 w-full" />
+        <div className="mt-5 space-y-5">
+          <OccupancyCard />
+          <UserFooter user={user} />
         </div>
       </aside>
 
       {/* Topbar mobile */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-card/95 px-4 py-3 shadow-sm backdrop-blur md:hidden">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#263149] bg-[#0e1728] px-4 py-4 shadow-sm md:hidden">
         <Brand />
         <DialogPrimitive.Root open={menuOpen} onOpenChange={setMenuOpen}>
           <DialogPrimitive.Trigger asChild>
-            <button className="rounded-md border bg-card p-2 shadow-sm hover:bg-muted" aria-label="Abrir menu">
+            <button className="rounded-lg border border-white/15 bg-white/[0.06] p-2 text-white hover:bg-white/10" aria-label="Abrir menu">
               <Menu className="h-5 w-5" />
             </button>
           </DialogPrimitive.Trigger>
           <DialogPrimitive.Portal>
-            <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-foreground/40" />
-            <DialogPrimitive.Content className="fixed inset-y-0 right-0 z-50 flex w-80 max-w-[86vw] flex-col gap-6 border-l bg-card p-4 shadow-2xl">
-              <div className="flex items-center justify-between">
+            <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-slate-950/60" />
+            <DialogPrimitive.Content className="fixed inset-y-0 right-0 z-50 flex w-[264px] max-w-[86vw] flex-col border-l border-[#263149] bg-[#0e1728] p-4 text-white shadow-2xl">
+              <div className="mb-6 flex items-center justify-between">
                 <DialogPrimitive.Title className="font-display font-bold">Menu</DialogPrimitive.Title>
-                <DialogPrimitive.Close className="rounded-md border p-2 hover:bg-muted" aria-label="Fechar menu">
+                <DialogPrimitive.Close className="rounded-lg border border-white/15 p-2 text-white hover:bg-white/10" aria-label="Fechar menu">
                   <X className="h-5 w-5" />
                 </DialogPrimitive.Close>
               </div>
-              <NavLinks onNavigate={() => setMenuOpen(false)} isAdmin={user.role === 'ADMIN'} />
-              <div className="mt-auto border-t pt-4">
-                <p className="px-3 pb-2 text-sm font-bold">{user.name}</p>
-                <LogoutButton className="w-full" />
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <NavLinks onNavigate={() => setMenuOpen(false)} isAdmin={user.role === 'ADMIN'} />
+              </div>
+              <div className="mt-5 space-y-5 border-t border-[#263149] pt-5">
+                <OccupancyCard />
+                <UserFooter user={user} />
               </div>
             </DialogPrimitive.Content>
           </DialogPrimitive.Portal>
         </DialogPrimitive.Root>
       </header>
 
-      <main className="px-4 py-6 md:ml-[17rem] md:px-8 lg:px-10">{children}</main>
+      <main className="px-4 py-6 md:ml-[264px] md:px-8 lg:px-10">{children}</main>
     </div>
   );
 }

@@ -107,6 +107,46 @@ export function ActiveStudentsChart({ data }: { data: { competence: string; acti
   );
 }
 
+export function PaymentStatusDonut({
+  paid,
+  pending,
+  overdue,
+}: {
+  paid: number;
+  pending: number;
+  overdue: number;
+}) {
+  const total = paid + pending + overdue;
+  const data = [
+    { name: 'Pagos', value: paid, color: COLORS.success },
+    { name: 'Pendentes', value: pending, color: COLORS.accent },
+    { name: 'Em atraso', value: overdue, color: COLORS.destructive },
+  ];
+
+  if (total === 0) {
+    return <p className="py-10 text-center text-sm text-muted-foreground">Sem mensalidades neste mês.</p>;
+  }
+
+  return (
+    <div className="relative">
+      <ResponsiveContainer width="100%" height={220}>
+        <PieChart>
+          <Pie data={data} dataKey="value" nameKey="name" innerRadius={62} outerRadius={90} paddingAngle={3} startAngle={90} endAngle={-270}>
+            {data.map((entry) => (
+              <Cell key={entry.name} fill={entry.color} stroke="none" />
+            ))}
+          </Pie>
+          <Tooltip formatter={(value: number, name: string) => [`${value} (${Math.round((value / total) * 100)}%)`, name]} />
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="pointer-events-none absolute inset-0 top-0 grid place-content-center text-center" style={{ bottom: 0 }}>
+        <p className="font-display text-2xl font-bold">{total}</p>
+        <p className="text-[11px] text-muted-foreground">mensalidades</p>
+      </div>
+    </div>
+  );
+}
+
 export function GoalVsActualChart({
   data,
 }: {
