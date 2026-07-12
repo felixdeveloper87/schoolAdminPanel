@@ -4,7 +4,6 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import * as DialogPrimitive from '@radix-ui/react-dialog';
 import {
   ArrowDown,
   BookOpen,
@@ -13,12 +12,10 @@ import {
   FileText,
   Home,
   LogOut,
-  Menu,
   Settings,
   Target,
   Users,
   UserX,
-  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SessionUser } from '@/lib/server-api';
@@ -212,7 +209,6 @@ export function AppShell({
   overdueCount: number;
   children: React.ReactNode;
 }) {
-  const [menuOpen, setMenuOpen] = React.useState(false);
   const pathname = usePathname();
   const mobileNavItems = NAV_GROUPS.flatMap((group) => group.items).filter(
     (item) => !item.adminOnly || user.role === 'ADMIN',
@@ -233,21 +229,12 @@ export function AppShell({
         </div>
       </aside>
 
-      <DialogPrimitive.Root open={menuOpen} onOpenChange={setMenuOpen}>
-        {/* Topbar mobile */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#263149] bg-[#0e1728] px-4 py-4 shadow-sm md:hidden">
+      {/* Topbar mobile */}
+      <header className="sticky top-0 z-30 flex items-center border-b border-[#263149] bg-[#0e1728] px-4 py-4 shadow-sm md:hidden">
           <Brand />
-          <DialogPrimitive.Trigger asChild>
-            <button
-              className="rounded-lg border border-white/15 bg-white/[0.06] p-2 text-white hover:bg-white/10"
-              aria-label="Abrir menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-          </DialogPrimitive.Trigger>
-        </header>
+      </header>
 
-        <nav
+      <nav
           aria-label="Páginas do painel"
           className="relative z-20 flex snap-x snap-mandatory gap-2 overflow-x-auto border-b border-[#263149] bg-gradient-to-b from-[#152139] to-[#0e1728] px-4 py-2 shadow-[0_6px_16px_rgba(3,8,18,.2)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:hidden"
         >
@@ -289,31 +276,7 @@ export function AppShell({
               </Link>
             );
           })}
-        </nav>
-
-          <DialogPrimitive.Portal>
-            <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-950/60 md:hidden" />
-            <DialogPrimitive.Content className="fixed inset-y-0 right-0 z-[60] flex w-[280px] max-w-[86vw] flex-col border-l border-[#263149] bg-[#0e1728] p-4 text-white shadow-2xl md:hidden">
-              <div className="mb-6 flex items-center justify-between">
-                <DialogPrimitive.Title className="font-display font-bold">Menu</DialogPrimitive.Title>
-                <DialogPrimitive.Close className="rounded-lg border border-white/15 p-2 text-white hover:bg-white/10" aria-label="Fechar menu">
-                  <X className="h-5 w-5" />
-                </DialogPrimitive.Close>
-              </div>
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <NavLinks
-                  onNavigate={() => setMenuOpen(false)}
-                  isAdmin={user.role === 'ADMIN'}
-                  overdueCount={overdueCount}
-                />
-              </div>
-              <div className="mt-5 space-y-5 border-t border-[#263149] pt-5">
-                <OccupancyCard />
-                <UserFooter user={user} />
-              </div>
-            </DialogPrimitive.Content>
-          </DialogPrimitive.Portal>
-      </DialogPrimitive.Root>
+      </nav>
 
       <main className="px-4 py-6 md:ml-[264px] md:px-8 lg:px-10">{children}</main>
     </div>
