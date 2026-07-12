@@ -378,92 +378,98 @@ export default async function PainelPage() {
           </CardContent>
         </Card>
 
-        <Card className="notebook-card paper-panel">
-          <CardHeader className="flex-row items-center gap-2 space-y-0">
-            <Hourglass className="h-5 w-5 text-primary" />
-            <CardTitle>Ações rápidas</CardTitle>
+        <Card className="notebook-card overflow-hidden border-[#c9dced] bg-white shadow-[0_10px_30px_rgba(40,65,100,.07)]">
+          <CardHeader className="flex-row items-center gap-3 space-y-0 pb-5">
+            <Hourglass className="h-5 w-5 text-[#2b58b5]" />
+            <CardTitle className="text-xl text-[#10192a]">Ações rápidas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid gap-2.5 sm:grid-cols-2">
               <Link
                 href="/alunos/novo"
-                className="rounded-md border bg-muted/40 p-3 text-left transition-all hover:-translate-y-0.5 hover:bg-card hover:shadow-sm"
+                className="group rounded-lg border border-[#cbddeb] bg-[#f8fbff] p-3 text-left transition-all hover:-translate-y-0.5 hover:border-[#6c83d8] hover:bg-white hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
-                <span className="grid h-8 w-8 place-items-center rounded-md bg-primary/10 text-primary">
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#e8eef8] text-[#315db7]">
                   <UserPlus className="h-4 w-4" />
                 </span>
-                <p className="mt-2 text-xs font-bold">Novo aluno</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Cadastrar uma nova matrícula</p>
+                <p className="mt-2 text-xs font-extrabold text-[#10192a] group-hover:text-[#2b58b5]">Novo aluno</p>
+                <p className="mt-0.5 text-[10px] leading-snug text-[#657189]">Cadastrar uma nova matrícula</p>
               </Link>
               <Link
-                href="/mensalidades"
-                className="rounded-md border bg-muted/40 p-3 text-left transition-all hover:-translate-y-0.5 hover:bg-card hover:shadow-sm"
+                href="/mensalidades?status=PENDING"
+                className="group rounded-lg border border-[#cbddeb] bg-[#f8fbff] p-3 text-left transition-all hover:-translate-y-0.5 hover:border-[#6c83d8] hover:bg-white hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
-                <span className="grid h-8 w-8 place-items-center rounded-md bg-success/10 text-success">
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#e7f3ee] text-[#318767]">
                   <CheckCircle2 className="h-4 w-4" />
                 </span>
-                <p className="mt-2 text-xs font-bold">Registrar pagamento</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Dar baixa em uma mensalidade</p>
+                <p className="mt-2 text-xs font-extrabold text-[#10192a] group-hover:text-[#2b58b5]">Registrar pagamento</p>
+                <p className="mt-0.5 text-[10px] leading-snug text-[#657189]">Dar baixa em uma mensalidade</p>
               </Link>
               <Link
-                href="/despesas"
-                className="rounded-md border bg-muted/40 p-3 text-left transition-all hover:-translate-y-0.5 hover:bg-card hover:shadow-sm"
+                href="/despesas?new=1"
+                className="group rounded-lg border border-[#cbddeb] bg-[#f8fbff] p-3 text-left transition-all hover:-translate-y-0.5 hover:border-[#6c83d8] hover:bg-white hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
-                <span className="grid h-8 w-8 place-items-center rounded-md bg-destructive/10 text-destructive">
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#fae9eb] text-[#ec5760]">
                   <Wallet className="h-4 w-4" />
                 </span>
-                <p className="mt-2 text-xs font-bold">Nova despesa</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Adicionar um lançamento financeiro</p>
+                <p className="mt-2 text-xs font-extrabold text-[#10192a] group-hover:text-[#2b58b5]">Nova despesa</p>
+                <p className="mt-0.5 text-[10px] leading-snug text-[#657189]">Adicionar um lançamento financeiro</p>
               </Link>
               <Link
                 href="/relatorios"
-                className="rounded-md border bg-muted/40 p-3 text-left transition-all hover:-translate-y-0.5 hover:bg-card hover:shadow-sm"
+                className="group rounded-lg border border-[#cbddeb] bg-[#f8fbff] p-3 text-left transition-all hover:-translate-y-0.5 hover:border-[#6c83d8] hover:bg-white hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
-                <span className="grid h-8 w-8 place-items-center rounded-md bg-accent/10 text-accent">
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#fbf3e2] text-[#e5a522]">
                   <FileBarChart className="h-4 w-4" />
                 </span>
-                <p className="mt-2 text-xs font-bold">Gerar relatório</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Exportar os dados do período</p>
+                <p className="mt-2 text-xs font-extrabold text-[#10192a] group-hover:text-[#2b58b5]">Gerar relatório</p>
+                <p className="mt-0.5 text-[10px] leading-snug text-[#657189]">Exportar os dados do período</p>
               </Link>
             </div>
 
-            {(summary.overdueStudents > 0 || summary.waitlistCount > 0) && (
-              <div className="mt-4 space-y-1 border-t pt-3">
-                <p className="text-xs font-bold uppercase text-muted-foreground">Alertas importantes</p>
-                {summary.overdueStudents > 0 && (
+            <div className="mt-4 border-t border-[#d6e2ed] pt-3">
+              <p className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#53627a]">Alertas importantes</p>
+              {summary.overdueCount > 0 || summary.waitlistCount > 0 ? (
+                <div className="space-y-1">
+                  {summary.overdueCount > 0 && (
                   <Link
                     href="/mensalidades?status=OVERDUE"
-                    className="flex items-center gap-3 rounded-md px-1 py-2 text-sm transition-colors hover:bg-destructive/5"
+                    className="group flex items-center gap-3 rounded-lg px-1 py-2.5 text-sm transition-colors hover:bg-[#fff7f8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/20"
                   >
-                    <span className="grid h-8 w-8 flex-none place-items-center rounded-md bg-destructive/10 text-destructive">
+                    <span className="grid h-8 w-8 flex-none place-items-center rounded-lg bg-[#fff0f1] text-[#f05e67]">
                       <AlertTriangle className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-semibold">
-                        {summary.overdueStudents} mensalidade(s) em atraso
+                      <span className="block truncate text-xs font-extrabold text-[#10192a] group-hover:text-[#c8424c]">
+                        {summary.overdueCount}{' '}
+                        {summary.overdueCount === 1 ? 'mensalidade em atraso' : 'mensalidades em atraso'}
                       </span>
-                      <span className="block text-[11px] text-muted-foreground">Requerem acompanhamento da administração</span>
+                      <span className="mt-0.5 block text-[11px] text-[#657189]">Requerem acompanhamento da administração</span>
                     </span>
                   </Link>
-                )}
-                {summary.waitlistCount > 0 && (
+                  )}
+                  {summary.waitlistCount > 0 && (
                   <Link
                     href="/lista-espera"
-                    className="flex items-center gap-3 rounded-md px-1 py-2 text-sm transition-colors hover:bg-accent/5"
+                    className="group flex items-center gap-3 rounded-lg px-1 py-2.5 text-sm transition-colors hover:bg-[#fffbf3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
                   >
-                    <span className="grid h-8 w-8 flex-none place-items-center rounded-md bg-accent/10 text-accent">
+                    <span className="grid h-8 w-8 flex-none place-items-center rounded-lg bg-[#fff6e6] text-[#f0a929]">
                       <Hourglass className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-semibold">
-                        {summary.waitlistCount} criança(s) na lista de espera
+                      <span className="block truncate text-xs font-extrabold text-[#10192a] group-hover:text-[#b5780c]">
+                        {summary.waitlistCount}{' '}
+                        {summary.waitlistCount === 1 ? 'criança na lista de espera' : 'crianças na lista de espera'}
                       </span>
-                      <span className="block text-[11px] text-muted-foreground">Verifique disponibilidade de novas vagas</span>
+                      <span className="mt-0.5 block text-[11px] text-[#657189]">Verifique disponibilidade de novas vagas</span>
                     </span>
                   </Link>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              ) : (
+                <p className="py-3 text-xs text-[#657189]">Nenhum alerta importante para este mês.</p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -27,7 +27,6 @@ type NavItem = {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  badge?: string;
   adminOnly?: boolean;
 };
 
@@ -38,7 +37,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { href: '/', label: 'Visão geral', icon: Home },
       { href: '/alunos', label: 'Alunos', icon: Users },
       { href: '/ex-alunos', label: 'Ex-alunos', icon: UserX },
-      { href: '/mensalidades', label: 'Mensalidades', icon: CreditCard, badge: '14' },
+      { href: '/mensalidades', label: 'Mensalidades', icon: CreditCard },
       { href: '/turmas', label: 'Turmas', icon: BookOpen },
       { href: '/despesas', label: 'Despesas', icon: ArrowDown },
       { href: '/metas', label: 'Metas', icon: Target, adminOnly: true },
@@ -54,7 +53,15 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   },
 ];
 
-function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
+function NavLinks({
+  onNavigate,
+  isAdmin,
+  overdueCount,
+}: {
+  onNavigate?: () => void;
+  isAdmin: boolean;
+  overdueCount: number;
+}) {
   const pathname = usePathname();
 
   return (
@@ -67,8 +74,14 @@ function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: b
               {group.label}
             </p>
             <div className="space-y-1">
-              {items.map(({ href, label, icon: Icon, badge }) => {
+              {items.map(({ href, label, icon: Icon }) => {
                 const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+                const badge =
+                  href === '/mensalidades' && overdueCount > 0
+                    ? overdueCount > 99
+                      ? '99+'
+                      : String(overdueCount)
+                    : null;
                 return (
                   <Link
                     key={href}
@@ -182,7 +195,15 @@ function UserFooter({ user }: { user: SessionUser }) {
   );
 }
 
-export function AppShell({ user, children }: { user: SessionUser; children: React.ReactNode }) {
+export function AppShell({
+  user,
+  overdueCount,
+  children,
+}: {
+  user: SessionUser;
+  overdueCount: number;
+  children: React.ReactNode;
+}) {
   const [menuOpen, setMenuOpen] = React.useState(false);
 
   return (
@@ -192,7 +213,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
         <Brand />
         <div className="mx-1 my-5 border-t border-[#263149]" />
         <div className="min-h-0 flex-1 overflow-y-auto px-0.5">
-          <NavLinks isAdmin={user.role === 'ADMIN'} />
+          <NavLinks isAdmin={user.role === 'ADMIN'} overdueCount={overdueCount} />
         </div>
         <div className="mt-5 space-y-5">
           <OccupancyCard />
@@ -219,7 +240,11 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
                 </DialogPrimitive.Close>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto">
-                <NavLinks onNavigate={() => setMenuOpen(false)} isAdmin={user.role === 'ADMIN'} />
+                <NavLinks
+                  onNavigate={() => setMenuOpen(false)}
+                  isAdmin={user.role === 'ADMIN'}
+                  overdueCount={overdueCount}
+                />
               </div>
               <div className="mt-5 space-y-5 border-t border-[#263149] pt-5">
                 <OccupancyCard />

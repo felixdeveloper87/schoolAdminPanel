@@ -42,7 +42,7 @@ interface ExpensesResponse {
 export default async function DespesasPage({
   searchParams,
 }: {
-  searchParams: { competence?: string; categoryId?: string };
+  searchParams: { competence?: string; categoryId?: string; new?: string };
 }) {
   const competence = /^\d{4}-\d{2}$/.test(searchParams.competence ?? '')
     ? searchParams.competence!
@@ -84,6 +84,7 @@ export default async function DespesasPage({
             </div>
             <ExpenseDialog
               categories={categories}
+              defaultOpen={searchParams.new === '1'}
               trigger={
                 <Button className="w-full md:hidden">
                   <Plus className="h-4 w-4" /> Nova despesa

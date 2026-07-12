@@ -1,7 +1,17 @@
 import { AppShell } from '@/components/app-shell';
-import { getSessionUser } from '@/lib/server-api';
+import { apiGet, getSessionUser } from '@/lib/server-api';
+import { currentCompetence } from '@/lib/format';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const user = await getSessionUser();
-  return <AppShell user={user}>{children}</AppShell>;
+  const month = currentCompetence();
+  const [user, summary] = await Promise.all([
+    getSessionUser(),
+    apiGet<{ overdueCount: number }>(`/dashboard/summary?month=${month}`),
+  ]);
+
+  return (
+    <AppShell user={user} overdueCount={summary.overdueCount}>
+      {children}
+    </AppShell>
+  );
 }

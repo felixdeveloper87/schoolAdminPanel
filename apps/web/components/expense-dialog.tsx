@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -42,14 +42,28 @@ export function ExpenseDialog({
   categories,
   trigger,
   expense,
+  defaultOpen = false,
 }: {
   categories: { id: string; name: string }[];
   trigger: React.ReactNode;
   expense?: ExpenseToEdit;
+  defaultOpen?: boolean;
 }) {
   const router = useRouter();
-  const [open, setOpen] = React.useState(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [open, setOpen] = React.useState(defaultOpen);
   const [serverError, setServerError] = React.useState<string | null>(null);
+
+  const changeOpen = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen && defaultOpen && searchParams.get('new') === '1') {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('new');
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    }
+  };
 
   const {
     register,
@@ -90,12 +104,12 @@ export function ExpenseDialog({
       return;
     }
     reset();
-    setOpen(false);
+    changeOpen(false);
     router.refresh();
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={changeOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -140,7 +154,7 @@ export function ExpenseDialog({
           </div>
           {serverError && <p className="text-sm text-destructive">{serverError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => changeOpen(false)}>
               Cancelar
             </Button>
             <Button type="submit" disabled={isSubmitting}>
