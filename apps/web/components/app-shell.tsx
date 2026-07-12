@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
@@ -117,8 +118,15 @@ function NavLinks({
 function Brand() {
   return (
     <div className="flex min-w-0 items-center gap-3 px-2">
-      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-[17px] bg-gradient-to-br from-[#7869f2] to-[#4f46c9] text-xl font-extrabold text-white shadow-lg shadow-indigo-950/25">
-        P
+      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-[17px] border border-white/15 bg-white shadow-lg shadow-indigo-950/25">
+        <Image
+          src="/logo.jpg"
+          alt="Logo da Peniel Christian School"
+          width={48}
+          height={48}
+          priority
+          className="h-full w-full object-cover"
+        />
       </div>
       <div className="min-w-0 leading-tight">
         <p className="truncate font-display text-[14px] font-extrabold text-white">Peniel Christian School</p>
