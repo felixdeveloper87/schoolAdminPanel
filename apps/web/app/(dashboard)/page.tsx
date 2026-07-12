@@ -429,9 +429,9 @@ export default async function PainelPage() {
 
             <div className="mt-4 border-t border-[#d6e2ed] pt-3">
               <p className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#53627a]">Alertas importantes</p>
-              {summary.overdueCount > 0 || summary.waitlistCount > 0 ? (
+              {summary.overdueStudents > 0 || summary.waitlistCount > 0 ? (
                 <div className="space-y-1">
-                  {summary.overdueCount > 0 && (
+                  {summary.overdueStudents > 0 && (
                   <Link
                     href="/mensalidades?status=OVERDUE"
                     className="group flex items-center gap-3 rounded-lg px-1 py-2.5 text-sm transition-colors hover:bg-[#fff7f8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/20"
@@ -441,8 +441,10 @@ export default async function PainelPage() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-xs font-extrabold text-[#10192a] group-hover:text-[#c8424c]">
-                        {summary.overdueCount}{' '}
-                        {summary.overdueCount === 1 ? 'mensalidade em atraso' : 'mensalidades em atraso'}
+                        {summary.overdueStudents}{' '}
+                        {summary.overdueStudents === 1
+                          ? 'aluno com mensalidade em atraso'
+                          : 'alunos com mensalidades em atraso'}
                       </span>
                       <span className="mt-0.5 block text-[11px] text-[#657189]">Requerem acompanhamento da administração</span>
                     </span>

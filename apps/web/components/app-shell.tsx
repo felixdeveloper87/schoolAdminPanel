@@ -56,11 +56,11 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
 function NavLinks({
   onNavigate,
   isAdmin,
-  overdueCount,
+  overdueStudents,
 }: {
   onNavigate?: () => void;
   isAdmin: boolean;
-  overdueCount: number;
+  overdueStudents: number;
 }) {
   const pathname = usePathname();
 
@@ -77,10 +77,10 @@ function NavLinks({
               {items.map(({ href, label, icon: Icon }) => {
                 const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
                 const badge =
-                  href === '/mensalidades' && overdueCount > 0
-                    ? overdueCount > 99
+                  href === '/mensalidades' && overdueStudents > 0
+                    ? overdueStudents > 99
                       ? '99+'
-                      : String(overdueCount)
+                      : String(overdueStudents)
                     : null;
                 return (
                   <Link
@@ -197,11 +197,11 @@ function UserFooter({ user }: { user: SessionUser }) {
 
 export function AppShell({
   user,
-  overdueCount,
+  overdueStudents,
   children,
 }: {
   user: SessionUser;
-  overdueCount: number;
+  overdueStudents: number;
   children: React.ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -213,7 +213,7 @@ export function AppShell({
         <Brand />
         <div className="mx-1 my-5 border-t border-[#263149]" />
         <div className="min-h-0 flex-1 overflow-y-auto px-0.5">
-          <NavLinks isAdmin={user.role === 'ADMIN'} overdueCount={overdueCount} />
+          <NavLinks isAdmin={user.role === 'ADMIN'} overdueStudents={overdueStudents} />
         </div>
         <div className="mt-5 space-y-5">
           <OccupancyCard />
@@ -243,7 +243,7 @@ export function AppShell({
                 <NavLinks
                   onNavigate={() => setMenuOpen(false)}
                   isAdmin={user.role === 'ADMIN'}
-                  overdueCount={overdueCount}
+                  overdueStudents={overdueStudents}
                 />
               </div>
               <div className="mt-5 space-y-5 border-t border-[#263149] pt-5">
