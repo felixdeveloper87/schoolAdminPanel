@@ -27,6 +27,8 @@ interface StudentRow {
   classroom: { id: string; name: string } | null;
   monthlyFeeCents: number | null;
   hasOverdue: boolean;
+  inactiveReason: string | null;
+  inactiveAt: string | null;
   financialGuardian: { fullName: string; phoneWhatsapp: string } | null;
 }
 
@@ -42,7 +44,9 @@ export default async function AlunosPage({
 }: {
   searchParams: { q?: string; status?: string; classroomId?: string; page?: string };
 }) {
-  const status = searchParams.status === 'WAITLIST' ? 'WAITLIST' : 'ACTIVE';
+  const status = searchParams.status === 'WAITLIST' || searchParams.status === 'INACTIVE'
+    ? searchParams.status
+    : 'ACTIVE';
 
   const query = new URLSearchParams();
   if (searchParams.q) query.set('q', searchParams.q);
@@ -50,15 +54,16 @@ export default async function AlunosPage({
   if (searchParams.classroomId) query.set('classroomId', searchParams.classroomId);
   query.set('page', searchParams.page ?? '1');
 
-  const [data, classrooms, activeSummary, waitlistSummary] = await Promise.all([
+  const [data, classrooms, activeSummary, waitlistSummary, inactiveSummary] = await Promise.all([
     apiGet<StudentsResponse>(`/students?${query.toString()}`),
     apiGet<{ id: string; name: string }[]>('/classrooms'),
     apiGet<StudentsResponse>('/students?status=ACTIVE&pageSize=1'),
     apiGet<StudentsResponse>('/students?status=WAITLIST&pageSize=1'),
+    apiGet<StudentsResponse>('/students?status=INACTIVE&pageSize=1'),
   ]);
 
   const selectedClassroom = classrooms.find((classroom) => classroom.id === searchParams.classroomId);
-  const resultLabel = status === 'ACTIVE' ? 'alunos ativos' : 'alunos na lista de espera';
+  const resultLabel = status === 'ACTIVE' ? 'alunos ativos' : status === 'WAITLIST' ? 'alunos na lista de espera' : 'ex-alunos';
 
   return (
     <div className="space-y-5">
@@ -97,6 +102,7 @@ export default async function AlunosPage({
         classrooms={classrooms}
         activeCount={activeSummary.total}
         waitlistCount={waitlistSummary.total}
+        inactiveCount={inactiveSummary.total}
       />
 
       <Card className="overflow-hidden rounded-[22px] border-[#dce6f0] bg-white/95 shadow-[0_14px_40px_rgba(35,49,79,.07)]">
@@ -106,7 +112,9 @@ export default async function AlunosPage({
               <Users className="h-[18px] w-[18px]" />
             </span>
             <div>
-              <h2 className="font-display text-lg font-extrabold text-[#172033]">Lista de alunos</h2>
+              <h2 className="font-display text-lg font-extrabold text-[#172033]">
+                {status === 'INACTIVE' ? 'Ex-alunos' : 'Lista de alunos'}
+              </h2>
               <p className="text-xs text-[#778399]">
                 {data.total} {resultLabel}
                 {selectedClassroom ? ` em ${selectedClassroom.name}` : ''}
@@ -156,6 +164,11 @@ export default async function AlunosPage({
                       <p className="mt-0.5 truncate text-[11px] text-[#7a869a]">
                         {student.financialGuardian?.fullName ? `Resp. ${student.financialGuardian.fullName}` : 'Sem responsável financeiro'}
                       </p>
+                      {student.status === 'INACTIVE' && (
+                        <p className="mt-1 line-clamp-2 text-[11px] text-[#8a6670]">
+                          {student.inactiveAt ? `Desligado em ${formatDate(student.inactiveAt)}${student.inactiveReason ? ` · ${student.inactiveReason}` : ''}` : student.inactiveReason ?? 'Aluno desligado'}
+                        </p>
+                      )}
                       <div className="mt-1 flex gap-1 md:hidden">
                         <span className="text-[10px] text-[#657189]">{student.classroom?.name ?? 'Sem turma'}</span>
                       </div>

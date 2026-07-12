@@ -33,6 +33,60 @@ interface InvoiceActionsProps {
   isAdmin: boolean;
 }
 
+function ConfirmInvoiceAction({
+  title,
+  description,
+  confirmLabel,
+  variant = 'default',
+  disabled,
+  busy,
+  error,
+  onConfirm,
+}: {
+  title: string;
+  description: React.ReactNode;
+  confirmLabel: string;
+  variant?: 'default' | 'destructive';
+  disabled: boolean;
+  busy: boolean;
+  error: string | null;
+  onConfirm: () => Promise<boolean>;
+}) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" disabled={disabled}>
+          {confirmLabel}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={busy}>
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            variant={variant}
+            disabled={busy}
+            onClick={async () => {
+              if (await onConfirm()) setOpen(false);
+            }}
+          >
+            {busy ? 'Salvando…' : confirmLabel}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function InvoiceActions({ invoiceId, studentName, effectiveCents, status, isAdmin }: InvoiceActionsProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
@@ -69,9 +123,21 @@ export function InvoiceActions({ invoiceId, studentName, effectiveCents, status,
   if (status === 'PAID') {
     if (!isAdmin) return null;
     return (
-      <Button variant="ghost" size="sm" disabled={busy} onClick={() => patch('revert')}>
-        Desfazer
-      </Button>
+      <ConfirmInvoiceAction
+        title="Desfazer pagamento?"
+        description={
+          <>
+            O pagamento de <strong>{studentName}</strong> no valor de <span className="money font-semibold">{brl(effectiveCents)}</span>{' '}
+            voltará para pendente.
+          </>
+        }
+        confirmLabel="Desfazer"
+        variant="destructive"
+        disabled={busy}
+        busy={busy}
+        error={error}
+        onConfirm={() => patch('revert')}
+      />
     );
   }
 
@@ -80,9 +146,20 @@ export function InvoiceActions({ invoiceId, studentName, effectiveCents, status,
   return (
     <div className="flex items-center justify-end gap-1">
       {isAdmin && (
-        <Button variant="ghost" size="sm" disabled={busy} onClick={() => patch('exempt')}>
-          Isentar
-        </Button>
+        <ConfirmInvoiceAction
+          title="Isentar mensalidade?"
+          description={
+            <>
+              A mensalidade de <strong>{studentName}</strong> no valor de <span className="money font-semibold">{brl(effectiveCents)}</span>{' '}
+              será marcada como isenta e não poderá mais ser recebida.
+            </>
+          }
+          confirmLabel="Isentar"
+          disabled={busy}
+          busy={busy}
+          error={error}
+          onConfirm={() => patch('exempt')}
+        />
       )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>

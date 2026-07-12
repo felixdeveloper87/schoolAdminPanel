@@ -15,7 +15,6 @@ import {
   Settings,
   Target,
   Users,
-  UserX,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SessionUser } from '@/lib/server-api';
@@ -34,7 +33,6 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { href: '/', label: 'Visão geral', icon: Home },
       { href: '/alunos', label: 'Alunos', icon: Users },
-      { href: '/ex-alunos', label: 'Ex-alunos', icon: UserX },
       { href: '/mensalidades', label: 'Mensalidades', icon: CreditCard },
       { href: '/turmas', label: 'Turmas', icon: BookOpen },
       { href: '/despesas', label: 'Despesas', icon: ArrowDown },

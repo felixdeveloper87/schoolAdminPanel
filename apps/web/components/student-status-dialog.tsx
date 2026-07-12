@@ -40,7 +40,7 @@ export function DeactivateStudentDialog({ studentId, studentName }: { studentId:
       return;
     }
     setOpen(false);
-    router.push('/ex-alunos');
+    router.push('/alunos?status=INACTIVE');
     router.refresh();
   };
 

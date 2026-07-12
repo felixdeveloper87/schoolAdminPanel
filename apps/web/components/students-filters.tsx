@@ -2,27 +2,30 @@
 
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Hourglass, School, Search, Users, X } from 'lucide-react';
+import { Hourglass, School, Search, UserX, Users, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-type BoardStatus = 'ACTIVE' | 'WAITLIST';
+type BoardStatus = 'ACTIVE' | 'WAITLIST' | 'INACTIVE';
 
 export function StudentsFilters({
   classrooms,
   activeCount,
   waitlistCount,
+  inactiveCount,
 }: {
   classrooms: { id: string; name: string }[];
   activeCount: number;
   waitlistCount: number;
+  inactiveCount: number;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [q, setQ] = React.useState(searchParams.get('q') ?? '');
-  const status: BoardStatus = searchParams.get('status') === 'WAITLIST' ? 'WAITLIST' : 'ACTIVE';
-  const hasFilters = Boolean(searchParams.get('q') || searchParams.get('classroomId') || status === 'WAITLIST');
+  const requestedStatus = searchParams.get('status');
+  const status: BoardStatus = requestedStatus === 'WAITLIST' || requestedStatus === 'INACTIVE' ? requestedStatus : 'ACTIVE';
+  const hasFilters = Boolean(searchParams.get('q') || searchParams.get('classroomId') || status !== 'ACTIVE');
 
   React.useEffect(() => {
     setQ(searchParams.get('q') ?? '');
@@ -76,7 +79,7 @@ export function StudentsFilters({
           )}
         </form>
 
-        <div className="grid grid-cols-2 rounded-xl bg-[#f0f3f8] p-1 sm:flex">
+        <div className="flex max-w-full overflow-x-auto rounded-xl bg-[#f0f3f8] p-1">
           <button
             type="button"
             onClick={() => apply({ status: 'ACTIVE' })}
@@ -107,6 +110,22 @@ export function StudentsFilters({
             Lista de espera
             <span className={cn('rounded-full px-2 py-0.5 text-[10px]', status === 'WAITLIST' ? 'bg-[#fff5df]' : 'bg-white/70')}>
               {waitlistCount}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => apply({ status: 'INACTIVE' })}
+            className={cn(
+              'flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg px-3 text-xs font-extrabold transition-all',
+              status === 'INACTIVE'
+                ? 'bg-white text-[#68758b] shadow-sm'
+                : 'text-[#6b778e] hover:text-[#26344d]',
+            )}
+          >
+            <UserX className="h-4 w-4" />
+            Ex-alunos
+            <span className={cn('rounded-full px-2 py-0.5 text-[10px]', status === 'INACTIVE' ? 'bg-[#eef1f5]' : 'bg-white/70')}>
+              {inactiveCount}
             </span>
           </button>
         </div>
