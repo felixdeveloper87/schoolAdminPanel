@@ -2,18 +2,31 @@
 
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search } from 'lucide-react';
-import { STUDENT_STATUS_LABELS } from '@escola/contracts';
-
-// Quadro de alunos ativos: só ACTIVE/WAITLIST aqui — inativos têm o quadro próprio em /ex-alunos
-const BOARD_STATUSES = ['ACTIVE', 'WAITLIST'] as const;
+import { Hourglass, School, Search, Users, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
-export function StudentsFilters({ classrooms }: { classrooms: { id: string; name: string }[] }) {
+type BoardStatus = 'ACTIVE' | 'WAITLIST';
+
+export function StudentsFilters({
+  classrooms,
+  activeCount,
+  waitlistCount,
+}: {
+  classrooms: { id: string; name: string }[];
+  activeCount: number;
+  waitlistCount: number;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [q, setQ] = React.useState(searchParams.get('q') ?? '');
+  const status: BoardStatus = searchParams.get('status') === 'WAITLIST' ? 'WAITLIST' : 'ACTIVE';
+  const hasFilters = Boolean(searchParams.get('q') || searchParams.get('classroomId') || status === 'WAITLIST');
+
+  React.useEffect(() => {
+    setQ(searchParams.get('q') ?? '');
+  }, [searchParams]);
 
   const apply = (overrides: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -22,49 +35,109 @@ export function StudentsFilters({ classrooms }: { classrooms: { id: string; name
       else params.delete(key);
     }
     params.delete('page');
-    router.push(`/alunos?${params.toString()}`);
+    const query = params.toString();
+    router.push(query ? `/alunos?${query}` : '/alunos');
+  };
+
+  const reset = () => {
+    setQ('');
+    router.push('/alunos?status=ACTIVE');
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <form
-        className="relative min-w-52 flex-1"
-        onSubmit={(e) => {
-          e.preventDefault();
-          apply({ q });
-        }}
-      >
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          className="pl-9"
-          placeholder="Buscar por nome…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-      </form>
-      <Select
-        className="w-40"
-        value={searchParams.get('status') ?? 'ACTIVE'}
-        onChange={(e) => apply({ status: e.target.value })}
-      >
-        {BOARD_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {STUDENT_STATUS_LABELS[s]}
-          </option>
-        ))}
-      </Select>
-      <Select
-        className="w-48"
-        value={searchParams.get('classroomId') ?? ''}
-        onChange={(e) => apply({ classroomId: e.target.value })}
-      >
-        <option value="">Todas as turmas</option>
-        {classrooms.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </Select>
+    <div className="rounded-[22px] border border-[#dce6f0] bg-white/95 p-4 shadow-[0_12px_35px_rgba(35,49,79,.06)]">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
+        <form
+          className="relative min-w-0 flex-1"
+          onSubmit={(event) => {
+            event.preventDefault();
+            apply({ q: q.trim() });
+          }}
+        >
+          <Search className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#8995aa]" />
+          <Input
+            className="h-12 rounded-xl border-[#d7e1ec] bg-[#f8fafc] pl-11 pr-11 shadow-none placeholder:text-[#9ba5b6] focus-visible:bg-white"
+            placeholder="Buscar aluno por nome..."
+            value={q}
+            onChange={(event) => setQ(event.target.value)}
+          />
+          {q && (
+            <button
+              type="button"
+              onClick={() => {
+                setQ('');
+                apply({ q: '' });
+              }}
+              className="absolute right-3 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-lg text-[#8995aa] hover:bg-[#eaf0f6] hover:text-[#26344d]"
+              aria-label="Limpar busca"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </form>
+
+        <div className="grid grid-cols-2 rounded-xl bg-[#f0f3f8] p-1 sm:flex">
+          <button
+            type="button"
+            onClick={() => apply({ status: 'ACTIVE' })}
+            className={cn(
+              'flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-xs font-extrabold transition-all',
+              status === 'ACTIVE'
+                ? 'bg-white text-[#3157b7] shadow-sm'
+                : 'text-[#6b778e] hover:text-[#26344d]',
+            )}
+          >
+            <Users className="h-4 w-4" />
+            Ativos
+            <span className={cn('rounded-full px-2 py-0.5 text-[10px]', status === 'ACTIVE' ? 'bg-[#edf2ff]' : 'bg-white/70')}>
+              {activeCount}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => apply({ status: 'WAITLIST' })}
+            className={cn(
+              'flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-xs font-extrabold transition-all',
+              status === 'WAITLIST'
+                ? 'bg-white text-[#a66b08] shadow-sm'
+                : 'text-[#6b778e] hover:text-[#26344d]',
+            )}
+          >
+            <Hourglass className="h-4 w-4" />
+            Lista de espera
+            <span className={cn('rounded-full px-2 py-0.5 text-[10px]', status === 'WAITLIST' ? 'bg-[#fff5df]' : 'bg-white/70')}>
+              {waitlistCount}
+            </span>
+          </button>
+        </div>
+
+        <div className="relative min-w-[210px]">
+          <School className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-[#758198]" />
+          <Select
+            aria-label="Filtrar por turma"
+            className="h-12 rounded-xl border-[#d7e1ec] bg-[#f8fafc] pl-10 pr-9 shadow-none"
+            value={searchParams.get('classroomId') ?? ''}
+            onChange={(event) => apply({ classroomId: event.target.value })}
+          >
+            <option value="">Todas as turmas</option>
+            {classrooms.map((classroom) => (
+              <option key={classroom.id} value={classroom.id}>
+                {classroom.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={reset}
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[#69758b] hover:bg-[#f1f4f8] hover:text-[#28364d]"
+          >
+            <X className="h-3.5 w-3.5" /> Limpar
+          </button>
+        )}
+      </div>
     </div>
   );
 }

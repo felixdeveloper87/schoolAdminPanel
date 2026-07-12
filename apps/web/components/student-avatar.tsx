@@ -8,9 +8,9 @@ export function StudentAvatar({
 }: {
   photoUrl: string | null;
   name: string;
-  size?: 'sm' | 'lg';
+  size?: 'sm' | 'md' | 'lg';
 }) {
-  const dimension = size === 'sm' ? 'h-9 w-9' : 'h-20 w-20';
+  const dimension = size === 'sm' ? 'h-9 w-9' : size === 'md' ? 'h-11 w-11' : 'h-24 w-24';
   return (
     <div className={cn('shrink-0 overflow-hidden rounded-full border bg-muted shadow-sm', dimension)}>
       {photoUrl ? (
@@ -18,7 +18,7 @@ export function StudentAvatar({
         <img src={photoUrl} alt={name} className="h-full w-full object-cover" />
       ) : (
         <span className="grid h-full w-full place-items-center text-muted-foreground">
-          <User className={size === 'sm' ? 'h-4 w-4' : 'h-8 w-8'} />
+          <User className={size === 'sm' ? 'h-4 w-4' : size === 'md' ? 'h-5 w-5' : 'h-9 w-9'} />
         </span>
       )}
     </div>
