@@ -171,7 +171,13 @@ export default async function PainelPage() {
             {pct(summary.occupancyRate)}.
           </p>
           <div className="mt-6 flex flex-wrap gap-2.5">
-            <Link href="/relatorios" className={buttonVariants({ className: 'h-11 rounded-xl bg-white px-5 text-[#29226f] hover:bg-white/90' })}>
+            <Link
+              href="/relatorios"
+              className={buttonVariants({
+                variant: 'outline',
+                className: 'h-11 rounded-xl border-white/25 bg-white/10 px-5 text-white shadow-none hover:bg-white/20 hover:text-white',
+              })}
+            >
               Ver relatório completo
               <ArrowRight className="h-4 w-4" />
             </Link>
