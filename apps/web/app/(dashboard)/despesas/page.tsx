@@ -1,10 +1,20 @@
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Pencil, Plus, Repeat } from 'lucide-react';
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  CircleDollarSign,
+  Pencil,
+  Plus,
+  ReceiptText,
+  Repeat2,
+  Tags,
+} from 'lucide-react';
 import { apiGet } from '@/lib/server-api';
 import { addMonths, brl, currentCompetence, formatCompetence, formatDate } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatCard } from '@/components/stat-card';
 import { ExpenseDialog, DeleteExpenseButton } from '@/components/expense-dialog';
@@ -57,148 +67,171 @@ export default async function DespesasPage({
     apiGet<{ competence: string; totalCents: number }[]>('/expenses/monthly-trend?months=6'),
   ]);
 
-  const recurringCents = data.items.filter((e) => e.recurring).reduce((sum, e) => sum + e.amountCents, 0);
+  const recurringCents = data.items.filter((expense) => expense.recurring).reduce((sum, expense) => sum + expense.amountCents, 0);
   const topCategory = data.summaryByCategory[0] ?? null;
+  const recurringRate = data.totalCents > 0 ? Math.round((recurringCents / data.totalCents) * 100) : 0;
 
   return (
     <div className="space-y-7">
-      <div className="paper-panel overflow-hidden">
-        <div className="grid gap-5 p-5 md:grid-cols-[1fr_auto] md:items-end md:p-6">
+      <section className="relative overflow-hidden rounded-[28px] bg-[#432144] px-5 py-6 text-white shadow-[0_18px_45px_rgba(67,33,68,.2)] sm:px-7 sm:py-7">
+        <div aria-hidden="true" className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-[#dc7181]/30 blur-2xl" />
+        <div aria-hidden="true" className="absolute bottom-0 right-24 h-28 w-28 rounded-full border-[18px] border-[#f6c1b8]/10" />
+        <div className="relative flex flex-wrap items-end justify-between gap-5">
           <div>
-            <p className="page-kicker">Financeiro</p>
-            <h1 className="page-title mt-1">Despesas</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              {formatCompetence(competence)} · {data.total} lançamento(s) — acompanhe custos por categoria e a
-              tendência dos últimos meses.
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#f0c5d3]">Financeiro escolar</p>
+            <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight sm:text-[34px]">Despesas</h1>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-[#e9cbd6]">
+              Entenda onde os recursos estão sendo investidos e mantenha os custos sob controle.
             </p>
           </div>
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-            <Link href={`/despesas?competence=${addMonths(competence, -1)}${searchParams.categoryId ? `&categoryId=${searchParams.categoryId}` : ''}`} className="rounded-md border bg-card p-2 shadow-sm hover:bg-muted" aria-label="Mês anterior">
-              <ChevronLeft className="h-4 w-4" />
-            </Link>
-            <span className="min-w-[9rem] text-center font-bold">{formatCompetence(competence)}</span>
-            <Link href={`/despesas?competence=${addMonths(competence, 1)}${searchParams.categoryId ? `&categoryId=${searchParams.categoryId}` : ''}`} className="rounded-md border bg-card p-2 shadow-sm hover:bg-muted" aria-label="Próximo mês">
-              <ChevronRight className="h-4 w-4" />
-            </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 p-1.5 shadow-inner shadow-black/10">
+              <Link
+                href={`/despesas?competence=${addMonths(competence, -1)}${searchParams.categoryId ? `&categoryId=${searchParams.categoryId}` : ''}`}
+                className="grid h-9 w-9 place-items-center rounded-xl text-white transition hover:bg-white/15"
+                aria-label="Mês anterior"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Link>
+              <span className="flex min-w-[9rem] items-center justify-center gap-2 text-center text-sm font-extrabold">
+                <CalendarDays className="h-4 w-4 text-[#f4c8d8]" /> {formatCompetence(competence)}
+              </span>
+              <Link
+                href={`/despesas?competence=${addMonths(competence, 1)}${searchParams.categoryId ? `&categoryId=${searchParams.categoryId}` : ''}`}
+                className="grid h-9 w-9 place-items-center rounded-xl text-white transition hover:bg-white/15"
+                aria-label="Próximo mês"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Link>
             </div>
             <ExpenseDialog
               categories={categories}
               defaultOpen={searchParams.new === '1'}
               trigger={
-                <Button className="w-full md:hidden">
+                <Button className="h-10 rounded-xl bg-white px-4 text-[#5a294b] shadow-[0_8px_20px_rgba(0,0,0,.16)] hover:bg-[#fff0f5] hover:text-[#5a294b]">
                   <Plus className="h-4 w-4" /> Nova despesa
                 </Button>
               }
             />
           </div>
         </div>
-      </div>
+      </section>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <StatCard label="Total do mês" value={brl(data.totalCents)} hint={`${data.total} lançamento(s)`} accent="destructive" money />
         <StatCard
-          label="Recorrentes"
+          label="Total do mês"
+          value={brl(data.totalCents)}
+          hint={`${data.total} lançamento(s)`}
+          icon={CircleDollarSign}
+          accent="destructive"
+          money
+        />
+        <StatCard
+          label="Despesas recorrentes"
           value={brl(recurringCents)}
-          hint={data.totalCents > 0 ? `${Math.round((recurringCents / data.totalCents) * 100)}% do total` : 'Sem despesas'}
+          hint={data.totalCents > 0 ? `${recurringRate}% do total mensal` : 'Sem despesas recorrentes'}
+          icon={Repeat2}
           accent="primary"
           money
         />
         <StatCard
           label="Maior categoria"
           value={topCategory ? topCategory.name : '—'}
-          hint={topCategory ? brl(topCategory.totalCents) : 'Sem despesas neste mês'}
+          hint={topCategory ? `${brl(topCategory.totalCents)} · ${topCategory.count} lançamento(s)` : 'Sem despesas neste mês'}
+          icon={Tags}
           accent="accent"
         />
-        <StatCard label="Categorias com gasto" value={String(data.summaryByCategory.length)} hint={`de ${categories.length} cadastradas`} />
+        <StatCard
+          label="Categorias com gasto"
+          value={String(data.summaryByCategory.length)}
+          hint={`de ${categories.length} categorias cadastradas`}
+          icon={ReceiptText}
+          accent="violet"
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="paper-panel">
-          <CardHeader>
-            <CardTitle>Despesas por categoria</CardTitle>
-            <CardDescription>{formatCompetence(competence)}</CardDescription>
+        <Card className="overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
+          <CardHeader className="border-b border-[#edf0f5] p-5">
+            <CardTitle className="text-[#1d2940]">Despesas por categoria</CardTitle>
+            <CardDescription>{formatCompetence(competence)} · distribuição dos custos</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 pt-2">
             <ExpensesByCategoryChart data={data.summaryByCategory} />
           </CardContent>
         </Card>
-        <Card className="paper-panel">
-          <CardHeader>
-            <CardTitle>Tendência de despesas</CardTitle>
-            <CardDescription>Últimos 6 meses</CardDescription>
+        <Card className="overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
+          <CardHeader className="border-b border-[#edf0f5] p-5">
+            <CardTitle className="text-[#1d2940]">Tendência de despesas</CardTitle>
+            <CardDescription>Comparativo dos últimos 6 meses</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 pt-2">
             <ExpensesTrendChart data={trend} />
           </CardContent>
         </Card>
       </div>
 
       {data.summaryByCategory.length > 0 && (
-        <Card className="paper-panel overflow-hidden">
-          <CardHeader>
-            <CardTitle>Resumo por categoria</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Lançamentos</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead className="text-right">% do mês</TableHead>
+        <Card className="overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
+          <div className="flex items-center justify-between border-b border-[#e7edf5] px-5 py-4">
+            <div>
+              <h2 className="font-display text-lg font-extrabold text-[#1d2940]">Resumo por categoria</h2>
+              <p className="mt-0.5 text-xs text-[#778399]">Participação de cada tipo de despesa no mês.</p>
+            </div>
+            <span className="hidden rounded-full bg-[#fff0f2] px-3 py-1 text-xs font-bold text-[#c15468] sm:inline">{data.summaryByCategory.length} categorias</span>
+          </div>
+          <Table>
+            <TableHeader className="bg-[#f7f8fc]">
+              <TableRow>
+                <TableHead>Categoria</TableHead>
+                <TableHead>Lançamentos</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead className="text-right">% do mês</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.summaryByCategory.map((category) => (
+                <TableRow key={category.categoryId} className="hover:bg-[#fff7f9]">
+                  <TableCell className="font-semibold text-[#40506a]">
+                    <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle" style={{ backgroundColor: category.colorHex }} />
+                    {category.name}
+                  </TableCell>
+                  <TableCell className="money text-[#65738a]">{category.count}</TableCell>
+                  <TableCell className="money font-semibold text-[#26344b]">{brl(category.totalCents)}</TableCell>
+                  <TableCell className="money text-right font-semibold text-[#65738a]">
+                    {data.totalCents > 0 ? `${Math.round((category.totalCents / data.totalCents) * 100)}%` : '0%'}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.summaryByCategory.map((c) => (
-                  <TableRow key={c.categoryId}>
-                    <TableCell>
-                      <span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full align-middle" style={{ backgroundColor: c.colorHex }} />
-                      {c.name}
-                    </TableCell>
-                    <TableCell className="money">{c.count}</TableCell>
-                    <TableCell className="money font-semibold">{brl(c.totalCents)}</TableCell>
-                    <TableCell className="money text-right">
-                      {data.totalCents > 0 ? `${Math.round((c.totalCents / data.totalCents) * 100)}%` : '0%'}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
+              ))}
+            </TableBody>
+          </Table>
         </Card>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <ExpensesCategoryFilter categories={categories} />
-        <div className="flex gap-2">
-          <ExportCsvButton
-            filename={`despesas-${competence}.csv`}
-            rows={data.items.map((e) => ({
-              Descrição: e.description,
-              Categoria: e.category.name,
-              Valor: (e.amountCents / 100).toFixed(2),
-              Data: formatDate(e.expenseDate),
-              Fornecedor: e.supplier ?? '',
-              Recorrente: e.recurring ? 'Sim' : 'Não',
-            }))}
-          />
-          <div className="hidden md:block">
-            <ExpenseDialog
-              categories={categories}
-              trigger={
-                <Button>
-                  <Plus className="h-4 w-4" /> Nova despesa
-                </Button>
-              }
-            />
-          </div>
-        </div>
+        <ExportCsvButton
+          filename={`despesas-${competence}.csv`}
+          rows={data.items.map((expense) => ({
+            Descrição: expense.description,
+            Categoria: expense.category.name,
+            Valor: (expense.amountCents / 100).toFixed(2),
+            Data: formatDate(expense.expenseDate),
+            Fornecedor: expense.supplier ?? '',
+            Recorrente: expense.recurring ? 'Sim' : 'Não',
+          }))}
+        />
       </div>
 
-      <Card className="paper-panel overflow-hidden">
+      <Card className="overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
+        <div className="flex items-center justify-between border-b border-[#e7edf5] px-5 py-4">
+          <div>
+            <h2 className="font-display text-lg font-extrabold text-[#1d2940]">Lançamentos</h2>
+            <p className="mt-0.5 text-xs text-[#778399]">{data.total} despesa(s) encontrada(s) nesta competência.</p>
+          </div>
+        </div>
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-[#f7f8fc]">
             <TableRow>
               <TableHead>Descrição</TableHead>
               <TableHead className="hidden sm:table-cell">Categoria</TableHead>
@@ -210,33 +243,31 @@ export default async function DespesasPage({
           <TableBody>
             {data.items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={5} className="py-12 text-center text-muted-foreground">
                   Nenhuma despesa neste mês.
                 </TableCell>
               </TableRow>
             )}
             {data.items.map((expense) => (
-              <TableRow key={expense.id}>
+              <TableRow key={expense.id} className="hover:bg-[#fff7f9]">
                 <TableCell>
-                  <span className="font-semibold">{expense.description}</span>
-                  {expense.supplier && (
-                    <p className="text-xs text-muted-foreground">{expense.supplier}</p>
-                  )}
+                  <span className="font-bold text-[#36445d]">{expense.description}</span>
+                  {expense.supplier && <p className="text-xs text-muted-foreground">{expense.supplier}</p>}
                   {expense.recurring && (
-                    <Badge variant="secondary" className="mt-0.5">
-                      <Repeat className="mr-1 h-3 w-3" /> Recorrente
+                    <Badge variant="secondary" className="mt-1 border-[#dce7f6] bg-[#eef4fc] text-[#4d7098]">
+                      <Repeat2 className="mr-1 h-3 w-3" /> Recorrente
                     </Badge>
                   )}
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <span
-                    className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full align-middle"
+                    className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle"
                     style={{ backgroundColor: expense.category.colorHex ?? '#8A8F98' }}
                   />
-                  {expense.category.name}
+                  <span className="font-semibold text-[#59677e]">{expense.category.name}</span>
                 </TableCell>
-                <TableCell className="money font-semibold">{brl(expense.amountCents)}</TableCell>
-                <TableCell className="money hidden md:table-cell">{formatDate(expense.expenseDate)}</TableCell>
+                <TableCell className="money font-semibold text-[#28364d]">{brl(expense.amountCents)}</TableCell>
+                <TableCell className="money hidden text-[#65738a] md:table-cell">{formatDate(expense.expenseDate)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
                     <ExpenseDialog
@@ -252,7 +283,7 @@ export default async function DespesasPage({
                         notes: expense.notes,
                       }}
                       trigger={
-                        <Button variant="ghost" size="sm" aria-label="Editar despesa">
+                        <Button variant="ghost" size="sm" aria-label={`Editar ${expense.description}`} className="rounded-lg text-[#718099] hover:bg-[#f1f5fa] hover:text-[#4d5d76]">
                           <Pencil className="h-4 w-4" />
                         </Button>
                       }

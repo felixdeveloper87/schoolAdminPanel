@@ -97,7 +97,9 @@ export function RenewBatchDialog({ classrooms }: { classrooms: ClassroomOption[]
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Rematricular turma</Button>
+        <Button variant="outline" className="h-10 rounded-xl border-white/30 bg-white/15 px-4 text-white shadow-none hover:bg-white/25 hover:text-white">
+          Rematricular turma
+        </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
