@@ -66,37 +66,44 @@ export default async function AlunosPage({
   const resultLabel = status === 'ACTIVE' ? 'alunos ativos' : status === 'WAITLIST' ? 'alunos na lista de espera' : 'ex-alunos';
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-brand">Gestão acadêmica</p>
-          <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-foreground">Alunos</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">Consulte cadastros, turmas e situação financeira em um só lugar.</p>
+    <div className="space-y-7">
+      <section className="relative overflow-hidden rounded-[28px] bg-[#30275f] px-5 py-6 text-white shadow-[0_18px_45px_rgba(48,39,95,.22)] sm:px-7 sm:py-7">
+        <div aria-hidden="true" className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-[#8b7af2]/35 blur-2xl" />
+        <div aria-hidden="true" className="absolute bottom-0 right-24 h-28 w-28 rounded-full border-[18px] border-[#c7bfff]/10" />
+        <div className="relative flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#d0c9ff]">Gestão acadêmica</p>
+            <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight sm:text-[34px]">Alunos</h1>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-[#d8d3f0]">
+              Consulte cadastros, turmas e situação financeira em um só lugar.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <ExportCsvButton
+              className="h-10 rounded-xl border-white/15 bg-white/10 px-4 text-white shadow-none hover:border-white/25 hover:bg-white/15 hover:text-white"
+              filename={`alunos-${status.toLowerCase()}.csv`}
+              rows={data.items.map((student) => ({
+                Nome: student.fullName,
+                Idade: formatAge(student.birthDate),
+                Nascimento: formatDate(student.birthDate),
+                Turma: student.classroom?.name ?? '',
+                Período: ENROLLMENT_TYPE_LABELS[student.enrollmentType],
+                Mensalidade: student.monthlyFeeCents !== null ? (student.monthlyFeeCents / 100).toFixed(2) : '',
+                Status: STUDENT_STATUS_LABELS[student.status],
+                Inadimplente: student.hasOverdue ? 'Sim' : 'Não',
+                Responsável: student.financialGuardian?.fullName ?? '',
+                WhatsApp: student.financialGuardian?.phoneWhatsapp ?? '',
+              }))}
+            />
+            <Link
+              href="/alunos/novo"
+              className={buttonVariants({ className: 'h-10 rounded-xl bg-card px-4 text-brand shadow-[0_8px_20px_rgba(0,0,0,.16)] hover:bg-brand/10 hover:text-brand' })}
+            >
+              <Plus className="h-4 w-4" /> Novo aluno
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <ExportCsvButton
-            filename={`alunos-${status.toLowerCase()}.csv`}
-            rows={data.items.map((student) => ({
-              Nome: student.fullName,
-              Idade: formatAge(student.birthDate),
-              Nascimento: formatDate(student.birthDate),
-              Turma: student.classroom?.name ?? '',
-              Período: ENROLLMENT_TYPE_LABELS[student.enrollmentType],
-              Mensalidade: student.monthlyFeeCents !== null ? (student.monthlyFeeCents / 100).toFixed(2) : '',
-              Status: STUDENT_STATUS_LABELS[student.status],
-              Inadimplente: student.hasOverdue ? 'Sim' : 'Não',
-              Responsável: student.financialGuardian?.fullName ?? '',
-              WhatsApp: student.financialGuardian?.phoneWhatsapp ?? '',
-            }))}
-          />
-          <Link
-            href="/alunos/novo"
-            className={buttonVariants({ className: 'h-10 rounded-xl brand-gradient px-4 shadow-[0_8px_20px_rgba(101,84,232,.22)]' })}
-          >
-            <Plus className="h-4 w-4" /> Novo aluno
-          </Link>
-        </div>
-      </div>
+      </section>
 
       <StudentsFilters
         classrooms={classrooms}
@@ -105,7 +112,7 @@ export default async function AlunosPage({
         inactiveCount={inactiveSummary.total}
       />
 
-      <Card className="overflow-hidden rounded-[22px] border-border bg-white/95 shadow-[0_14px_40px_rgba(35,49,79,.07)]">
+      <Card className="overflow-hidden rounded-[22px] border-border bg-card/95 shadow-[0_14px_40px_rgba(35,49,79,.07)]">
         <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand/10 text-brand">

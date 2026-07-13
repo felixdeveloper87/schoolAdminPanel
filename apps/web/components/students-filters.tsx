@@ -48,7 +48,7 @@ export function StudentsFilters({
   };
 
   return (
-    <div className="rounded-[22px] border border-border bg-white/95 p-4 shadow-[0_12px_35px_rgba(35,49,79,.06)]">
+    <div className="rounded-[22px] border border-border bg-card/95 p-4 shadow-[0_12px_35px_rgba(35,49,79,.06)]">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
         <form
           className="relative min-w-0 flex-1"
@@ -59,7 +59,7 @@ export function StudentsFilters({
         >
           <Search className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground" />
           <Input
-            className="h-12 rounded-xl border-border bg-muted/60 pl-11 pr-11 shadow-none placeholder:text-muted-foreground focus-visible:bg-white"
+            className="h-12 rounded-xl border-border bg-muted/60 pl-11 pr-11 shadow-none placeholder:text-muted-foreground focus-visible:bg-card"
             placeholder="Buscar aluno por nome..."
             value={q}
             onChange={(event) => setQ(event.target.value)}
@@ -86,13 +86,13 @@ export function StudentsFilters({
             className={cn(
               'flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-xs font-extrabold transition-all',
               status === 'ACTIVE'
-                ? 'bg-white text-primary shadow-sm'
+                ? 'bg-card text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
             )}
           >
             <Users className="h-4 w-4" />
             Ativos
-            <span className={cn('rounded-full px-2 py-0.5 text-[10px]', status === 'ACTIVE' ? 'bg-brand/10' : 'bg-white/70')}>
+            <span className={cn('rounded-full px-2 py-0.5 text-[10px]', status === 'ACTIVE' ? 'bg-brand/10' : 'bg-card/70')}>
               {activeCount}
             </span>
           </button>
@@ -102,13 +102,13 @@ export function StudentsFilters({
             className={cn(
               'flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-xs font-extrabold transition-all',
               status === 'WAITLIST'
-                ? 'bg-white text-accent-deep shadow-sm'
+                ? 'bg-card text-accent-deep shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
             )}
           >
             <Hourglass className="h-4 w-4" />
             Lista de espera
-            <span className={cn('rounded-full px-2 py-0.5 text-[10px]', status === 'WAITLIST' ? 'bg-accent/15' : 'bg-white/70')}>
+            <span className={cn('rounded-full px-2 py-0.5 text-[10px]', status === 'WAITLIST' ? 'bg-accent/15' : 'bg-card/70')}>
               {waitlistCount}
             </span>
           </button>
@@ -118,13 +118,13 @@ export function StudentsFilters({
             className={cn(
               'flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg px-3 text-xs font-extrabold transition-all',
               status === 'INACTIVE'
-                ? 'bg-white text-muted-foreground shadow-sm'
+                ? 'bg-card text-muted-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
             )}
           >
             <UserX className="h-4 w-4" />
             Ex-alunos
-            <span className={cn('rounded-full px-2 py-0.5 text-[10px]', status === 'INACTIVE' ? 'bg-muted/60' : 'bg-white/70')}>
+            <span className={cn('rounded-full px-2 py-0.5 text-[10px]', status === 'INACTIVE' ? 'bg-muted/60' : 'bg-card/70')}>
               {inactiveCount}
             </span>
           </button>
