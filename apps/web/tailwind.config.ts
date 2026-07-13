@@ -42,10 +42,6 @@ const config: Config = {
           DEFAULT: 'hsl(var(--success))',
           foreground: 'hsl(var(--success-foreground))',
         },
-        violet: {
-          DEFAULT: 'hsl(var(--violet))',
-          foreground: 'hsl(var(--violet-foreground))',
-        },
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',

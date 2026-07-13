@@ -1,9 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ReceiptText } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -125,12 +123,6 @@ export function InvoiceActions({ invoiceId, studentName, effectiveCents, status,
   if (status === 'PAID') {
     return (
       <div className="flex items-center justify-end gap-1">
-        <Link
-          href={`/mensalidades/${invoiceId}/recibo`}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-primary transition hover:bg-primary/10"
-        >
-          <ReceiptText className="h-3.5 w-3.5" /> Recibo
-        </Link>
         {isAdmin && (
           <ConfirmInvoiceAction
             title="Desfazer pagamento?"
