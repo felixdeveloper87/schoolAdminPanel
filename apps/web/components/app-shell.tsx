@@ -229,7 +229,8 @@ export function AppShell({
 
       {/* Topbar mobile */}
       <header className="sticky top-0 z-30 flex items-center border-b border-[#263149] bg-[#0e1728] px-4 py-4 shadow-sm md:hidden">
-          <Brand />
+        <Brand />
+        <LogoutButton className="ml-auto shrink-0" />
       </header>
 
       <nav
