@@ -213,7 +213,7 @@ export function AppShell({
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       {/* Sidebar desktop */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] flex-col border-r border-[#263149] bg-[#0e1728] px-3 py-6 text-white md:flex">
         <Brand />
@@ -277,7 +277,7 @@ export function AppShell({
           })}
       </nav>
 
-      <main className="px-4 py-6 md:ml-[264px] md:px-8 lg:px-10">{children}</main>
+      <main className="min-w-0 px-4 py-6 md:ml-[264px] md:px-8 lg:px-10">{children}</main>
     </div>
   );
 }
