@@ -242,7 +242,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
               <div><CardTitle className="text-lg text-[#172033]">Mensalidades</CardTitle><p className="text-[11px] text-[#7a869a]">Últimos 12 lançamentos</p></div>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
+              <Table className="min-w-[560px]">
                 <TableHeader className="bg-[#f7f9fc]">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="pl-5">Competência</TableHead>
