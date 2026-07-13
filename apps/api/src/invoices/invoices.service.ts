@@ -70,6 +70,50 @@ export class InvoicesService {
     return { ...paged(mapped, total, pageParams), summaryByStatus };
   }
 
+  /** Detalhe de uma mensalidade com dados para o recibo (escola, aluno e responsável financeiro). */
+  async getOne(schoolId: string, id: string) {
+    const invoice = await this.prisma.tuitionInvoice.findFirst({
+      where: { id, schoolId },
+      include: {
+        school: { select: { name: true, cnpj: true, phone: true, address: true } },
+        enrollment: {
+          include: {
+            student: {
+              select: {
+                id: true,
+                fullName: true,
+                guardians: {
+                  where: { isFinancialResponsible: true },
+                  select: { fullName: true, cpf: true },
+                  take: 1,
+                },
+              },
+            },
+            classroom: { select: { id: true, name: true } },
+          },
+        },
+      },
+    });
+    if (!invoice) throw new NotFoundException('Mensalidade não encontrada');
+    const { guardians, ...student } = invoice.enrollment.student;
+    return {
+      id: invoice.id,
+      competence: invoice.competence,
+      amountCents: invoice.amountCents,
+      discountCents: invoice.discountCents,
+      effectiveCents: invoice.amountCents - invoice.discountCents,
+      dueDate: invoice.dueDate,
+      status: invoice.status,
+      paidAt: invoice.paidAt,
+      paymentMethod: invoice.paymentMethod,
+      receiptNote: invoice.receiptNote,
+      student,
+      classroom: invoice.enrollment.classroom,
+      financialGuardian: guardians[0] ?? null,
+      school: invoice.school,
+    };
+  }
+
   /** Geração idempotente das mensalidades da competência (unique + skipDuplicates). */
   async generate(schoolId: string, competence: Date) {
     const enrollments = await this.prisma.enrollment.findMany({

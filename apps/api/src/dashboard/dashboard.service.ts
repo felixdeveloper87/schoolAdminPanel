@@ -137,8 +137,14 @@ export class DashboardService {
   async charts(schoolId: string, competence: Date) {
     const months = Array.from({ length: 12 }, (_, i) => subMonths(competence, 11 - i));
 
-    const [revenueVsExpenses, activeStudentsEvolution, goalVsActual, expensesByCategoryRaw, categories] =
-      await Promise.all([
+    const [
+      revenueVsExpenses,
+      activeStudentsEvolution,
+      goalVsActual,
+      defaultRateEvolution,
+      expensesByCategoryRaw,
+      categories,
+    ] = await Promise.all([
         Promise.all(
           months.map(async (month) => {
             const { start, end } = monthRange(month);
@@ -187,6 +193,23 @@ export class DashboardService {
             };
           }),
         ),
+        // Inadimplência por competência: mesma métrica da projeção (faturas OVERDUE / total)
+        Promise.all(
+          months.map(async (month) => {
+            const [overdueCount, totalCount] = await Promise.all([
+              this.prisma.tuitionInvoice.count({
+                where: { schoolId, competence: month, status: 'OVERDUE' },
+              }),
+              this.prisma.tuitionInvoice.count({ where: { schoolId, competence: month } }),
+            ]);
+            return {
+              competence: competenceToString(month),
+              rate: totalCount > 0 ? overdueCount / totalCount : null,
+              overdueCount,
+              totalCount,
+            };
+          }),
+        ),
         this.prisma.expense.groupBy({
           by: ['categoryId'],
           where: { schoolId, ...monthRangeWhere(competence) },
@@ -204,7 +227,7 @@ export class DashboardService {
       }))
       .sort((a, b) => b.totalCents - a.totalCents);
 
-    return { revenueVsExpenses, activeStudentsEvolution, goalVsActual, expensesByCategory };
+    return { revenueVsExpenses, activeStudentsEvolution, goalVsActual, defaultRateEvolution, expensesByCategory };
   }
 }
 

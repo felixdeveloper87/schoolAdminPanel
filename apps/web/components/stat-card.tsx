@@ -56,17 +56,17 @@ export function StatCard({
   compact?: boolean;
 }) {
   const accentClasses = {
-    primary: { icon: 'bg-[#eef5ff] text-[#6497ff]', blob: 'bg-[#f1f6ff]', spark: 'text-[#5791ff]' },
-    success: { icon: 'bg-[#e9f8f3] text-[#2ebd91]', blob: 'bg-[#edf8f4]', spark: 'text-[#2ebd91]' },
-    destructive: { icon: 'bg-[#fff0f2] text-[#f06277]', blob: 'bg-[#fdf1f3]', spark: 'text-[#f06277]' },
-    accent: { icon: 'bg-[#fff6df] text-[#e9a516]', blob: 'bg-[#fff8e9]', spark: 'text-[#e9a516]' },
-    violet: { icon: 'bg-[#f0edff] text-[#7764f5]', blob: 'bg-[#f2f0ff]', spark: 'text-[#7764f5]' },
+    primary: { icon: 'bg-primary/10 text-primary', blob: 'bg-primary/[0.07]', spark: 'text-primary' },
+    success: { icon: 'bg-success/10 text-success', blob: 'bg-success/[0.07]', spark: 'text-success' },
+    destructive: { icon: 'bg-destructive/10 text-destructive', blob: 'bg-destructive/[0.07]', spark: 'text-destructive' },
+    accent: { icon: 'bg-accent/15 text-accent-deep', blob: 'bg-accent/[0.08]', spark: 'text-accent-deep' },
+    violet: { icon: 'bg-brand/10 text-brand', blob: 'bg-brand/[0.07]', spark: 'text-brand' },
   }[accent];
 
   return (
     <Card
       className={cn(
-        'group relative overflow-hidden rounded-[22px] border border-white/80 bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_12px_30px_rgba(34,45,75,.07)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_2px_rgba(16,24,40,.04),0_20px_40px_rgba(34,45,75,.10)]',
+        'group relative overflow-hidden rounded-[22px] border border-border/60 bg-card/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_12px_30px_rgba(34,45,75,.07)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_2px_rgba(16,24,40,.04),0_20px_40px_rgba(34,45,75,.10)]',
         compact ? 'min-h-[132px] p-4 sm:min-h-[158px] sm:p-5' : 'min-h-[142px] p-4 sm:min-h-[168px] sm:p-5',
       )}
     >
@@ -76,7 +76,7 @@ export function StatCard({
       />
       <div className={cn('relative flex h-full flex-col justify-between', compact ? 'gap-3' : 'gap-4')}>
         <div className="flex items-start justify-between gap-3">
-          <p className={cn('font-extrabold uppercase tracking-[0.09em] text-[#657189]', compact ? 'text-[10px]' : 'text-xs')}>
+          <p className={cn('font-extrabold uppercase tracking-[0.09em] text-muted-foreground', compact ? 'text-[10px]' : 'text-xs')}>
             {label}
           </p>
           {Icon && (
@@ -94,7 +94,7 @@ export function StatCard({
         <div>
           <p
             className={cn(
-              'break-words font-display font-extrabold leading-tight tabular-nums text-[#10192a]',
+              'break-words font-display font-extrabold leading-tight tabular-nums text-foreground',
               compact ? 'text-xl sm:text-[28px]' : 'text-2xl sm:text-3xl',
               money && 'tracking-tight',
             )}
@@ -104,7 +104,7 @@ export function StatCard({
           {(trend || hint) && (
             <p
               className={cn(
-                'text-[#6d7890]',
+                'text-muted-foreground',
                 compact ? 'mt-1.5 text-[11px] leading-snug' : 'mt-2 text-xs leading-relaxed',
               )}
             >

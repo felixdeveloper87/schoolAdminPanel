@@ -6,11 +6,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const month = currentCompetence();
   const [user, summary] = await Promise.all([
     getSessionUser(),
-    apiGet<{ overdueCount: number }>(`/dashboard/summary?month=${month}`),
+    apiGet<{ overdueCount: number; activeStudents: number; capacity: number; occupancyRate: number }>(
+      `/dashboard/summary?month=${month}`,
+    ),
   ]);
 
   return (
-    <AppShell user={user} overdueCount={summary.overdueCount}>
+    <AppShell
+      user={user}
+      overdueCount={summary.overdueCount}
+      occupancy={{
+        activeStudents: summary.activeStudents,
+        capacity: summary.capacity,
+        occupancyRate: summary.occupancyRate,
+      }}
+    >
       {children}
     </AppShell>
   );

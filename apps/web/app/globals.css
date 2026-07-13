@@ -12,6 +12,7 @@
   --primary-foreground: 0 0% 100%;
   --accent: 38 87% 58%;            /* --pencil-yellow #F2B33D */
   --accent-foreground: 205 25% 17%;
+  --accent-deep: 38 85% 36%;       /* âmbar legível como texto sobre fundo claro */
   --destructive: 4 68% 57%;        /* --margin-red #D9534F */
   --destructive-foreground: 0 0% 100%;
   --muted: 207 45% 95%;
@@ -23,6 +24,56 @@
   --success-foreground: 0 0% 100%;
   --violet: 243 62% 60%;           /* --lista-espera #6558E8 */
   --violet-foreground: 0 0% 100%;
+
+  /* Família da marca (violeta do painel) — texto, chips e ícones */
+  --brand: 247 77% 59%;            /* #6554e8 */
+  --brand-foreground: 0 0% 100%;
+
+  /* Sidebar e topbar mobile — escuras nos dois temas */
+  --sidebar: 217 48% 11%;          /* #0e1728 */
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-border: 219 31% 22%;   /* #263149 */
+  --sidebar-muted: 219 20% 64%;    /* texto secundário da sidebar */
+  --sidebar-active: 236 35% 23%;   /* #25284e */
+  --sidebar-card: 217 38% 16%;     /* #192338 */
+  --sidebar-card-border: 220 26% 25%; /* #303a51 */
+
+  /* Gradiente vertical do papel de fundo */
+  --paper-top: 210 50% 99%;
+  --paper-bottom: 207 44% 96%;
+
+  color-scheme: light;
+}
+
+.dark {
+  --background: 220 40% 7%;
+  --foreground: 213 28% 90%;
+  --card: 219 34% 11%;
+  --card-foreground: 213 28% 90%;
+  --primary: 221 78% 70%;
+  --primary-foreground: 222 45% 12%;
+  --accent: 38 90% 60%;
+  --accent-foreground: 33 45% 12%;
+  --accent-deep: 38 92% 64%;
+  --destructive: 4 80% 68%;
+  --destructive-foreground: 4 60% 12%;
+  --muted: 219 30% 14%;
+  --muted-foreground: 216 16% 68%;
+  --border: 218 26% 20%;
+  --input: 218 26% 27%;
+  --ring: 221 78% 70%;
+  --success: 148 42% 58%;
+  --success-foreground: 150 45% 10%;
+  --violet: 243 80% 75%;
+  --violet-foreground: 245 40% 12%;
+
+  --brand: 249 88% 74%;
+  --brand-foreground: 246 45% 12%;
+
+  --paper-top: 220 42% 9%;
+  --paper-bottom: 221 42% 5%;
+
+  color-scheme: dark;
 }
 
 @layer base {
@@ -33,7 +84,7 @@
     @apply bg-background text-foreground font-body antialiased;
     min-height: 100vh;
     background-image:
-      linear-gradient(180deg, hsl(210 50% 99%) 0%, hsl(var(--background)) 42%, hsl(207 44% 96%) 100%),
+      linear-gradient(180deg, hsl(var(--paper-top)) 0%, hsl(var(--background)) 42%, hsl(var(--paper-bottom)) 100%),
       linear-gradient(90deg, hsl(var(--border) / 0.45) 1px, transparent 1px),
       linear-gradient(180deg, hsl(var(--border) / 0.45) 1px, transparent 1px);
     background-size: auto, 32px 32px, 32px 32px;
@@ -79,6 +130,12 @@
     @apply flex items-center justify-between rounded-md border bg-card px-4 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:border-primary/35 hover:bg-primary/5 hover:text-primary hover:shadow-sm;
   }
 
+  /* Gradiente da marca — hero, botões de destaque e nav ativa.
+     Fixo nos dois temas (como a sidebar), sempre com texto branco. */
+  .brand-gradient {
+    background-image: linear-gradient(90deg, hsl(245 64% 56%), hsl(247 72% 61%), hsl(253 84% 69%));
+  }
+
   /* Carimbo "PAGO" */
   .stamp {
     @apply inline-block font-mono text-[11px] font-semibold uppercase;
@@ -92,5 +149,46 @@
   .money {
     @apply font-mono;
     font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Impressão: sempre em tema claro, sem fundo quadriculado nem sombras */
+@media print {
+  :root,
+  .dark {
+    --background: 0 0% 100%;
+    --foreground: 205 25% 17%;
+    --card: 0 0% 100%;
+    --card-foreground: 205 25% 17%;
+    --primary: 221 62% 39%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 38 87% 58%;
+    --accent-foreground: 205 25% 17%;
+    --accent-deep: 38 85% 36%;
+    --destructive: 4 68% 57%;
+    --destructive-foreground: 0 0% 100%;
+    --muted: 207 45% 95%;
+    --muted-foreground: 204 14% 42%;
+    --border: 207 46% 88%;
+    --input: 207 38% 82%;
+    --ring: 221 62% 39%;
+    --success: 148 33% 36%;
+    --success-foreground: 0 0% 100%;
+    --violet: 243 62% 60%;
+    --violet-foreground: 0 0% 100%;
+    --brand: 247 77% 59%;
+    --brand-foreground: 0 0% 100%;
+    color-scheme: light;
+  }
+
+  body {
+    background-image: none !important;
+    background-color: white !important;
+  }
+
+  .paper-panel,
+  .notebook-card,
+  [class*='shadow'] {
+    box-shadow: none !important;
   }
 }

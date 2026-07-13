@@ -51,7 +51,7 @@ export function WaitlistStatusSelect({ id, status }: { id: string; status: Waitl
   return (
     <>
       <Select
-        className="h-8 w-40 rounded-lg border-[#dce5ef] bg-white text-xs font-semibold text-[#526178]"
+        className="h-8 w-40 rounded-lg border-border bg-white text-xs font-semibold text-muted-foreground"
         value={selectedStatus}
         onChange={(event) => {
           const value = event.target.value as WaitlistStatus;

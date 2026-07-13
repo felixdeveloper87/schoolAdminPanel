@@ -59,7 +59,7 @@ export default async function TurmasPage() {
             )}
             <ClassroomDialog
               trigger={
-                <Button className="h-10 rounded-xl bg-white px-4 text-[#17425f] shadow-[0_8px_20px_rgba(0,0,0,.16)] hover:bg-[#eaf8ff] hover:text-[#17425f]">
+                <Button className="h-10 rounded-xl bg-card px-4 text-primary shadow-[0_8px_20px_rgba(0,0,0,.16)] hover:bg-primary/10 hover:text-primary">
                   <Plus className="h-4 w-4" /> Nova turma
                 </Button>
               }
@@ -100,12 +100,12 @@ export default async function TurmasPage() {
       </div>
 
       {classrooms.length === 0 ? (
-        <Card className="rounded-[24px] border-dashed border-[#cad7e5] bg-white/80 p-10 text-center shadow-none">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#edf5fa] text-[#477795]">
+        <Card className="rounded-[24px] border-dashed border-border bg-card/80 p-10 text-center shadow-none">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary">
             <GraduationCap className="h-6 w-6" />
           </span>
-          <h2 className="mt-4 font-display text-xl font-extrabold text-[#1c3044]">Nenhuma turma cadastrada</h2>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-[#718096]">Crie a primeira turma para começar a organizar alunos e vagas.</p>
+          <h2 className="mt-4 font-display text-xl font-extrabold text-primary">Nenhuma turma cadastrada</h2>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">Crie a primeira turma para começar a organizar alunos e vagas.</p>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -113,17 +113,17 @@ export default async function TurmasPage() {
             const occupancy = Math.round(classroom.occupancyRate * 100);
             const seatsLeft = Math.max(0, classroom.capacity - classroom.activeCount);
             const tone = !classroom.active
-              ? { ring: 'bg-[#8895a9]', soft: 'bg-[#f0f3f7]', text: 'text-[#68758a]', bar: 'bg-[#8a96a9]' }
+              ? { ring: 'bg-muted-foreground', soft: 'bg-muted/60', text: 'text-muted-foreground', bar: 'bg-muted-foreground' }
               : classroom.occupancyRate >= 1
-                ? { ring: 'bg-[#ef667b]', soft: 'bg-[#fff0f2]', text: 'text-[#c94b61]', bar: 'bg-[#ef667b]' }
+                ? { ring: 'bg-destructive', soft: 'bg-destructive/10', text: 'text-destructive', bar: 'bg-destructive' }
                 : classroom.occupancyRate >= 0.85
-                  ? { ring: 'bg-[#e8a51a]', soft: 'bg-[#fff7e5]', text: 'text-[#a86d06]', bar: 'bg-[#e8a51a]' }
-                  : { ring: 'bg-[#38a982]', soft: 'bg-[#ebf8f3]', text: 'text-[#287b60]', bar: 'bg-[#38a982]' };
+                  ? { ring: 'bg-accent', soft: 'bg-accent/15', text: 'text-accent-deep', bar: 'bg-accent' }
+                  : { ring: 'bg-success', soft: 'bg-success/10', text: 'text-success', bar: 'bg-success' };
 
             return (
               <Card
                 key={classroom.id}
-                className="group overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.07)] transition-all hover:-translate-y-1 hover:shadow-[0_1px_2px_rgba(16,24,40,.04),0_20px_42px_rgba(34,45,75,.11)]"
+                className="group overflow-hidden rounded-[24px] border-border/60 bg-card/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.07)] transition-all hover:-translate-y-1 hover:shadow-[0_1px_2px_rgba(16,24,40,.04),0_20px_42px_rgba(34,45,75,.11)]"
               >
                 <div className="flex items-start justify-between gap-3 p-5 pb-4">
                   <div className="flex min-w-0 items-start gap-3">
@@ -131,8 +131,8 @@ export default async function TurmasPage() {
                       <GraduationCap className="h-5 w-5" />
                     </span>
                     <div className="min-w-0">
-                      <h2 className="truncate font-display text-xl font-extrabold text-[#17233d]">{classroom.name}</h2>
-                      <p className="mt-0.5 truncate text-xs font-semibold text-[#78869b]">
+                      <h2 className="truncate font-display text-xl font-extrabold text-foreground">{classroom.name}</h2>
+                      <p className="mt-0.5 truncate text-xs font-semibold text-muted-foreground">
                         {AGE_GROUP_LABELS[classroom.ageGroup]} · {SHIFT_LABELS[classroom.shift]}
                       </p>
                     </div>
@@ -149,7 +149,7 @@ export default async function TurmasPage() {
                         active: classroom.active,
                       }}
                       trigger={
-                        <Button variant="ghost" size="icon" aria-label={`Editar ${classroom.name}`} className="h-9 w-9 rounded-xl text-[#7b879c] hover:bg-[#eef4fa] hover:text-[#315d82]">
+                        <Button variant="ghost" size="icon" aria-label={`Editar ${classroom.name}`} className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-primary/10 hover:text-primary">
                           <Pencil className="h-4 w-4" />
                         </Button>
                       }
@@ -157,20 +157,20 @@ export default async function TurmasPage() {
                   </div>
                 </div>
 
-                <div className="mx-5 rounded-2xl border border-[#e7eef5] bg-[#f9fbfd] p-4">
+                <div className="mx-5 rounded-2xl border border-border bg-muted/60 p-4">
                   <div className="flex items-end justify-between gap-3">
                     <div>
-                      <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#7d8ba0]">Ocupação</p>
-                      <p className="mt-1 font-display text-2xl font-extrabold tracking-tight text-[#1d2a40]">
-                        {classroom.activeCount}<span className="text-base text-[#8390a3]">/{classroom.capacity}</span>
+                      <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Ocupação</p>
+                      <p className="mt-1 font-display text-2xl font-extrabold tracking-tight text-foreground">
+                        {classroom.activeCount}<span className="text-base text-muted-foreground">/{classroom.capacity}</span>
                       </p>
                     </div>
                     <span className={`rounded-full px-2.5 py-1 text-xs font-extrabold ${tone.soft} ${tone.text}`}>{occupancy}%</span>
                   </div>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#e3eaf1]">
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted/60">
                     <div className={`h-full rounded-full transition-all ${tone.bar}`} style={{ width: `${Math.min(100, occupancy)}%` }} />
                   </div>
-                  <p className="mt-2 text-xs font-semibold text-[#718096]">
+                  <p className="mt-2 text-xs font-semibold text-muted-foreground">
                     {classroom.active ? (seatsLeft ? `${seatsLeft} vaga(s) disponível(is)` : 'Turma completa') : 'Turma inativa'}
                   </p>
                 </div>
@@ -178,14 +178,14 @@ export default async function TurmasPage() {
                 <div className="p-5 pt-4">
                   {classroom.students.length > 0 ? (
                     <details className="group/list">
-                      <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-bold text-[#315d82] marker:content-none">
+                      <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-bold text-primary marker:content-none">
                         <span>Alunos matriculados ({classroom.students.length})</span>
                         <ChevronRight className="h-4 w-4 transition-transform group-open/list:rotate-90" />
                       </summary>
-                      <ul className="mt-3 space-y-1 border-t border-[#edf1f5] pt-3">
+                      <ul className="mt-3 space-y-1 border-t border-border pt-3">
                         {classroom.students.map((student) => (
                           <li key={student.id}>
-                            <Link href={`/alunos/${student.id}`} className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm font-semibold text-[#53637a] hover:bg-[#f1f6fb] hover:text-[#315d82]">
+                            <Link href={`/alunos/${student.id}`} className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-muted/60 hover:text-primary">
                               <span className="truncate">{student.fullName}</span>
                               <ChevronRight className="h-3.5 w-3.5 shrink-0" />
                             </Link>
@@ -194,7 +194,7 @@ export default async function TurmasPage() {
                       </ul>
                     </details>
                   ) : (
-                    <p className="text-sm font-semibold text-[#8995a7]">Nenhum aluno matriculado.</p>
+                    <p className="text-sm font-semibold text-muted-foreground">Nenhum aluno matriculado.</p>
                   )}
                 </div>
               </Card>

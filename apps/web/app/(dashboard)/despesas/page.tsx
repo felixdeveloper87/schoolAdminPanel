@@ -75,7 +75,7 @@ export default async function DespesasPage({
     <div className="space-y-7">
       <section className="relative overflow-hidden rounded-[28px] bg-[#432144] px-5 py-6 text-white shadow-[0_18px_45px_rgba(67,33,68,.2)] sm:px-7 sm:py-7">
         <div aria-hidden="true" className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-[#dc7181]/30 blur-2xl" />
-        <div aria-hidden="true" className="absolute bottom-0 right-24 h-28 w-28 rounded-full border-[18px] border-[#f6c1b8]/10" />
+        <div aria-hidden="true" className="absolute bottom-0 right-24 h-28 w-28 rounded-full border-[18px] border-border/10" />
         <div className="relative flex flex-wrap items-end justify-between gap-5">
           <div>
             <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#f0c5d3]">Financeiro escolar</p>
@@ -108,7 +108,7 @@ export default async function DespesasPage({
               categories={categories}
               defaultOpen={searchParams.new === '1'}
               trigger={
-                <Button className="h-10 rounded-xl bg-white px-4 text-[#5a294b] shadow-[0_8px_20px_rgba(0,0,0,.16)] hover:bg-[#fff0f5] hover:text-[#5a294b]">
+                <Button className="h-10 rounded-xl bg-card px-4 text-destructive shadow-[0_8px_20px_rgba(0,0,0,.16)] hover:bg-destructive/10 hover:text-destructive">
                   <Plus className="h-4 w-4" /> Nova despesa
                 </Button>
               }
@@ -151,18 +151,18 @@ export default async function DespesasPage({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
-          <CardHeader className="border-b border-[#edf0f5] p-5">
-            <CardTitle className="text-[#1d2940]">Despesas por categoria</CardTitle>
+        <Card className="overflow-hidden rounded-[24px] border-border/60 bg-card/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
+          <CardHeader className="border-b border-border p-5">
+            <CardTitle className="text-foreground">Despesas por categoria</CardTitle>
             <CardDescription>{formatCompetence(competence)} · distribuição dos custos</CardDescription>
           </CardHeader>
           <CardContent className="p-5 pt-2">
             <ExpensesByCategoryChart data={data.summaryByCategory} />
           </CardContent>
         </Card>
-        <Card className="overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
-          <CardHeader className="border-b border-[#edf0f5] p-5">
-            <CardTitle className="text-[#1d2940]">Tendência de despesas</CardTitle>
+        <Card className="overflow-hidden rounded-[24px] border-border/60 bg-card/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
+          <CardHeader className="border-b border-border p-5">
+            <CardTitle className="text-foreground">Tendência de despesas</CardTitle>
             <CardDescription>Comparativo dos últimos 6 meses</CardDescription>
           </CardHeader>
           <CardContent className="p-5 pt-2">
@@ -172,16 +172,16 @@ export default async function DespesasPage({
       </div>
 
       {data.summaryByCategory.length > 0 && (
-        <Card className="overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
-          <div className="flex items-center justify-between border-b border-[#e7edf5] px-5 py-4">
+        <Card className="overflow-hidden rounded-[24px] border-border/60 bg-card/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
             <div>
-              <h2 className="font-display text-lg font-extrabold text-[#1d2940]">Resumo por categoria</h2>
-              <p className="mt-0.5 text-xs text-[#778399]">Participação de cada tipo de despesa no mês.</p>
+              <h2 className="font-display text-lg font-extrabold text-foreground">Resumo por categoria</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">Participação de cada tipo de despesa no mês.</p>
             </div>
-            <span className="hidden rounded-full bg-[#fff0f2] px-3 py-1 text-xs font-bold text-[#c15468] sm:inline">{data.summaryByCategory.length} categorias</span>
+            <span className="hidden rounded-full bg-destructive/10 px-3 py-1 text-xs font-bold text-destructive sm:inline">{data.summaryByCategory.length} categorias</span>
           </div>
           <Table>
-            <TableHeader className="bg-[#f7f8fc]">
+            <TableHeader className="bg-muted/60">
               <TableRow>
                 <TableHead>Categoria</TableHead>
                 <TableHead>Lançamentos</TableHead>
@@ -191,14 +191,14 @@ export default async function DespesasPage({
             </TableHeader>
             <TableBody>
               {data.summaryByCategory.map((category) => (
-                <TableRow key={category.categoryId} className="hover:bg-[#fff7f9]">
-                  <TableCell className="font-semibold text-[#40506a]">
+                <TableRow key={category.categoryId} className="hover:bg-destructive/10">
+                  <TableCell className="font-semibold text-muted-foreground">
                     <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle" style={{ backgroundColor: category.colorHex }} />
                     {category.name}
                   </TableCell>
-                  <TableCell className="money text-[#65738a]">{category.count}</TableCell>
-                  <TableCell className="money font-semibold text-[#26344b]">{brl(category.totalCents)}</TableCell>
-                  <TableCell className="money text-right font-semibold text-[#65738a]">
+                  <TableCell className="money text-muted-foreground">{category.count}</TableCell>
+                  <TableCell className="money font-semibold text-foreground">{brl(category.totalCents)}</TableCell>
+                  <TableCell className="money text-right font-semibold text-muted-foreground">
                     {data.totalCents > 0 ? `${Math.round((category.totalCents / data.totalCents) * 100)}%` : '0%'}
                   </TableCell>
                 </TableRow>
@@ -223,15 +223,15 @@ export default async function DespesasPage({
         />
       </div>
 
-      <Card className="overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
-        <div className="flex items-center justify-between border-b border-[#e7edf5] px-5 py-4">
+      <Card className="overflow-hidden rounded-[24px] border-border/60 bg-card/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div>
-            <h2 className="font-display text-lg font-extrabold text-[#1d2940]">Lançamentos</h2>
-            <p className="mt-0.5 text-xs text-[#778399]">{data.total} despesa(s) encontrada(s) nesta competência.</p>
+            <h2 className="font-display text-lg font-extrabold text-foreground">Lançamentos</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">{data.total} despesa(s) encontrada(s) nesta competência.</p>
           </div>
         </div>
         <Table>
-          <TableHeader className="bg-[#f7f8fc]">
+          <TableHeader className="bg-muted/60">
             <TableRow>
               <TableHead>Descrição</TableHead>
               <TableHead className="hidden sm:table-cell">Categoria</TableHead>
@@ -249,12 +249,12 @@ export default async function DespesasPage({
               </TableRow>
             )}
             {data.items.map((expense) => (
-              <TableRow key={expense.id} className="hover:bg-[#fff7f9]">
+              <TableRow key={expense.id} className="hover:bg-destructive/10">
                 <TableCell>
-                  <span className="font-bold text-[#36445d]">{expense.description}</span>
+                  <span className="font-bold text-muted-foreground">{expense.description}</span>
                   {expense.supplier && <p className="text-xs text-muted-foreground">{expense.supplier}</p>}
                   {expense.recurring && (
-                    <Badge variant="secondary" className="mt-1 border-[#dce7f6] bg-[#eef4fc] text-[#4d7098]">
+                    <Badge variant="secondary" className="mt-1 border-border bg-primary/10 text-primary">
                       <Repeat2 className="mr-1 h-3 w-3" /> Recorrente
                     </Badge>
                   )}
@@ -264,10 +264,10 @@ export default async function DespesasPage({
                     className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle"
                     style={{ backgroundColor: expense.category.colorHex ?? '#8A8F98' }}
                   />
-                  <span className="font-semibold text-[#59677e]">{expense.category.name}</span>
+                  <span className="font-semibold text-muted-foreground">{expense.category.name}</span>
                 </TableCell>
-                <TableCell className="money font-semibold text-[#28364d]">{brl(expense.amountCents)}</TableCell>
-                <TableCell className="money hidden text-[#65738a] md:table-cell">{formatDate(expense.expenseDate)}</TableCell>
+                <TableCell className="money font-semibold text-foreground">{brl(expense.amountCents)}</TableCell>
+                <TableCell className="money hidden text-muted-foreground md:table-cell">{formatDate(expense.expenseDate)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
                     <ExpenseDialog
@@ -283,7 +283,7 @@ export default async function DespesasPage({
                         notes: expense.notes,
                       }}
                       trigger={
-                        <Button variant="ghost" size="sm" aria-label={`Editar ${expense.description}`} className="rounded-lg text-[#718099] hover:bg-[#f1f5fa] hover:text-[#4d5d76]">
+                        <Button variant="ghost" size="sm" aria-label={`Editar ${expense.description}`} className="rounded-lg text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground">
                           <Pencil className="h-4 w-4" />
                         </Button>
                       }

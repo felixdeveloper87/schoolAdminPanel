@@ -17,12 +17,24 @@ import {
 } from 'recharts';
 import { brl, formatCompetence } from '@/lib/format';
 
+/* Cores por variável CSS: acompanham o tema claro/escuro automaticamente */
 const COLORS = {
-  primary: '#2B4C9B',
-  destructive: '#D9534F',
-  success: '#3E7C59',
-  accent: '#F2B33D',
-  muted: '#5B6B78',
+  primary: 'hsl(var(--primary))',
+  destructive: 'hsl(var(--destructive))',
+  success: 'hsl(var(--success))',
+  accent: 'hsl(var(--accent))',
+  muted: 'hsl(var(--muted-foreground))',
+};
+
+const GRID_STROKE = 'hsl(var(--border))';
+const TICK_STYLE = { fontSize: 12, fill: 'hsl(var(--muted-foreground))' };
+const TICK_STYLE_SM = { fontSize: 11, fill: 'hsl(var(--muted-foreground))' };
+const TOOLTIP_STYLE = {
+  backgroundColor: 'hsl(var(--card))',
+  border: '1px solid hsl(var(--border))',
+  borderRadius: 8,
+  fontSize: 12,
+  color: 'hsl(var(--foreground))',
 };
 
 const monthLabel = (competence: string) => formatCompetence(competence).split(' de ')[0].slice(0, 3);
@@ -50,10 +62,10 @@ export function RevenueVsExpensesChart({
   return (
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#DDE6EF" />
-        <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-        <YAxis tickFormatter={(v) => brl(v).replace(/ /g, ' ')} tick={{ fontSize: 11 }} width={70} />
-        <Tooltip content={<ChartTooltip />} />
+        <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+        <XAxis dataKey="label" tick={TICK_STYLE} />
+        <YAxis tickFormatter={(v) => brl(v).replace(/ /g, ' ')} tick={TICK_STYLE_SM} width={70} />
+        <Tooltip content={<ChartTooltip />} cursor={{ fill: "hsl(var(--muted) / 0.6)" }} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
         <Bar dataKey="receivedCents" name="Recebido" fill={COLORS.success} radius={[4, 4, 0, 0]} />
         <Bar dataKey="expensesCents" name="Despesas" fill={COLORS.destructive} radius={[4, 4, 0, 0]} />
@@ -78,7 +90,7 @@ export function ExpensesByCategoryChart({
             <Cell key={entry.name} fill={entry.colorHex} />
           ))}
         </Pie>
-        <Tooltip formatter={(value: number) => brl(value)} />
+        <Tooltip formatter={(value: number) => brl(value)} contentStyle={TOOLTIP_STYLE} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
       </PieChart>
     </ResponsiveContainer>
@@ -90,10 +102,10 @@ export function ActiveStudentsChart({ data }: { data: { competence: string; acti
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#DDE6EF" />
-        <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={30} />
-        <Tooltip content={<ChartTooltip />} />
+        <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+        <XAxis dataKey="label" tick={TICK_STYLE} />
+        <YAxis allowDecimals={false} tick={TICK_STYLE_SM} width={30} />
+        <Tooltip content={<ChartTooltip />} cursor={{ fill: "hsl(var(--muted) / 0.6)" }} />
         <Line
           type="monotone"
           dataKey="activeCount"
@@ -136,7 +148,10 @@ export function PaymentStatusDonut({
               <Cell key={entry.name} fill={entry.color} stroke="none" />
             ))}
           </Pie>
-          <Tooltip formatter={(value: number, name: string) => [`${value} (${Math.round((value / total) * 100)}%)`, name]} />
+          <Tooltip
+            formatter={(value: number, name: string) => [`${value} (${Math.round((value / total) * 100)}%)`, name]}
+            contentStyle={TOOLTIP_STYLE}
+          />
         </PieChart>
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 top-0 grid place-content-center text-center" style={{ bottom: 0 }}>
@@ -144,6 +159,48 @@ export function PaymentStatusDonut({
         <p className="text-[11px] text-muted-foreground">mensalidades</p>
       </div>
     </div>
+  );
+}
+
+export function DefaultRateChart({
+  data,
+}: {
+  data?: { competence: string; rate: number | null; overdueCount: number; totalCount: number }[];
+}) {
+  // `data` pode vir undefined enquanto a API ainda não expõe defaultRateEvolution (deploy/restart pendente)
+  const chartData = (data ?? []).map((d) => ({
+    ...d,
+    label: monthLabel(d.competence),
+    ratePct: d.rate === null ? null : Math.round(d.rate * 1000) / 10,
+  }));
+  const hasData = chartData.some((d) => d.ratePct !== null);
+  if (!hasData) {
+    return <p className="py-10 text-center text-sm text-muted-foreground">Sem mensalidades no período.</p>;
+  }
+  return (
+    <ResponsiveContainer width="100%" height={220}>
+      <LineChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+        <XAxis dataKey="label" tick={TICK_STYLE} />
+        <YAxis tickFormatter={(v) => `${v}%`} tick={TICK_STYLE_SM} width={40} domain={[0, 'auto']} />
+        <Tooltip
+          contentStyle={TOOLTIP_STYLE}
+          formatter={(value: number, _name: string, item: any) => [
+            `${value}% (${item.payload.overdueCount} de ${item.payload.totalCount})`,
+            'Inadimplência',
+          ]}
+        />
+        <Line
+          type="monotone"
+          dataKey="ratePct"
+          name="Inadimplência"
+          stroke={COLORS.destructive}
+          strokeWidth={2}
+          dot={{ r: 3 }}
+          connectNulls
+        />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }
 
@@ -156,10 +213,10 @@ export function GoalVsActualChart({
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#DDE6EF" />
-        <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={30} />
-        <Tooltip />
+        <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+        <XAxis dataKey="label" tick={TICK_STYLE} />
+        <YAxis allowDecimals={false} tick={TICK_STYLE_SM} width={30} />
+        <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'hsl(var(--muted) / 0.6)' }} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
         <Bar dataKey="target" name="Meta" fill={COLORS.muted} radius={[4, 4, 0, 0]} />
         <Bar dataKey="actual" name="Realizado" fill={COLORS.accent} radius={[4, 4, 0, 0]} />

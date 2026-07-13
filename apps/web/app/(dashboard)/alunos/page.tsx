@@ -69,9 +69,9 @@ export default async function AlunosPage({
     <div className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#6857ef]">Gestão acadêmica</p>
-          <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-[#10192a]">Alunos</h1>
-          <p className="mt-1.5 text-sm text-[#68758b]">Consulte cadastros, turmas e situação financeira em um só lugar.</p>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-brand">Gestão acadêmica</p>
+          <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-foreground">Alunos</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">Consulte cadastros, turmas e situação financeira em um só lugar.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <ExportCsvButton
@@ -91,7 +91,7 @@ export default async function AlunosPage({
           />
           <Link
             href="/alunos/novo"
-            className={buttonVariants({ className: 'h-10 rounded-xl bg-gradient-to-r from-[#6554e8] to-[#806bf5] px-4 shadow-[0_8px_20px_rgba(101,84,232,.22)]' })}
+            className={buttonVariants({ className: 'h-10 rounded-xl brand-gradient px-4 shadow-[0_8px_20px_rgba(101,84,232,.22)]' })}
           >
             <Plus className="h-4 w-4" /> Novo aluno
           </Link>
@@ -105,31 +105,31 @@ export default async function AlunosPage({
         inactiveCount={inactiveSummary.total}
       />
 
-      <Card className="overflow-hidden rounded-[22px] border-[#dce6f0] bg-white/95 shadow-[0_14px_40px_rgba(35,49,79,.07)]">
-        <div className="flex flex-col gap-2 border-b border-[#e3eaf2] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <Card className="overflow-hidden rounded-[22px] border-border bg-white/95 shadow-[0_14px_40px_rgba(35,49,79,.07)]">
+        <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#eef2ff] text-[#5c63d8]">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand/10 text-brand">
               <Users className="h-[18px] w-[18px]" />
             </span>
             <div>
-              <h2 className="font-display text-lg font-extrabold text-[#172033]">
+              <h2 className="font-display text-lg font-extrabold text-foreground">
                 {status === 'INACTIVE' ? 'Ex-alunos' : 'Lista de alunos'}
               </h2>
-              <p className="text-xs text-[#778399]">
+              <p className="text-xs text-muted-foreground">
                 {data.total} {resultLabel}
                 {selectedClassroom ? ` em ${selectedClassroom.name}` : ''}
               </p>
             </div>
           </div>
           {searchParams.q && (
-            <p className="text-xs text-[#778399]">
-              Resultados para <strong className="text-[#313d52]">“{searchParams.q}”</strong>
+            <p className="text-xs text-muted-foreground">
+              Resultados para <strong className="text-foreground">“{searchParams.q}”</strong>
             </p>
           )}
         </div>
 
         <Table>
-          <TableHeader className="bg-[#f7f9fc]">
+          <TableHeader className="bg-muted/60">
             <TableRow className="hover:bg-transparent">
               <TableHead className="h-12 pl-5 tracking-[0.08em]">Aluno</TableHead>
               <TableHead className="hidden h-12 tracking-[0.08em] md:table-cell">Turma</TableHead>
@@ -144,47 +144,47 @@ export default async function AlunosPage({
             {data.items.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="py-16 text-center">
-                  <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#f0f3f8] text-[#7f8ba0]">
+                  <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-muted/60 text-muted-foreground">
                     <UserRoundSearch className="h-5 w-5" />
                   </span>
-                  <p className="mt-3 font-bold text-[#27344a]">Nenhum aluno encontrado</p>
-                  <p className="mt-1 text-xs text-[#7a869b]">Tente alterar a busca ou os filtros selecionados.</p>
+                  <p className="mt-3 font-bold text-foreground">Nenhum aluno encontrado</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Tente alterar a busca ou os filtros selecionados.</p>
                 </TableCell>
               </TableRow>
             )}
             {data.items.map((student) => (
-              <TableRow key={student.id} className="group border-[#e8edf3] hover:bg-[#f8faff]">
+              <TableRow key={student.id} className="group border-border hover:bg-muted/60">
                 <TableCell className="py-4 pl-5">
                   <div className="flex min-w-[210px] items-center gap-3">
                     <StudentAvatar photoUrl={student.photoUrl} name={student.fullName} size="md" />
                     <div className="min-w-0">
-                      <Link href={`/alunos/${student.id}`} className="block truncate text-sm font-extrabold text-[#182238] hover:text-[#5b59d6]">
+                      <Link href={`/alunos/${student.id}`} className="block truncate text-sm font-extrabold text-foreground hover:text-brand">
                         {student.fullName}
                       </Link>
-                      <p className="mt-0.5 truncate text-[11px] text-[#7a869a]">
+                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
                         {student.financialGuardian?.fullName ? `Resp. ${student.financialGuardian.fullName}` : 'Sem responsável financeiro'}
                       </p>
                       {student.status === 'INACTIVE' && (
-                        <p className="mt-1 line-clamp-2 text-[11px] text-[#8a6670]">
+                        <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">
                           {student.inactiveAt ? `Desligado em ${formatDate(student.inactiveAt)}${student.inactiveReason ? ` · ${student.inactiveReason}` : ''}` : student.inactiveReason ?? 'Aluno desligado'}
                         </p>
                       )}
                       <div className="mt-1 flex gap-1 md:hidden">
-                        <span className="text-[10px] text-[#657189]">{student.classroom?.name ?? 'Sem turma'}</span>
+                        <span className="text-[10px] text-muted-foreground">{student.classroom?.name ?? 'Sem turma'}</span>
                       </div>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
                   {student.classroom ? (
-                    <span className="inline-flex rounded-lg bg-[#eef2f8] px-2.5 py-1 text-xs font-bold text-[#526078]">{student.classroom.name}</span>
+                    <span className="inline-flex rounded-lg bg-muted/60 px-2.5 py-1 text-xs font-bold text-muted-foreground">{student.classroom.name}</span>
                   ) : (
-                    <span className="text-xs text-[#9aa4b5]">Sem turma</span>
+                    <span className="text-xs text-muted-foreground">Sem turma</span>
                   )}
                 </TableCell>
-                <TableCell className="hidden text-sm text-[#667389] lg:table-cell">{formatAge(student.birthDate)}</TableCell>
-                <TableCell className="hidden text-sm text-[#667389] xl:table-cell">{ENROLLMENT_TYPE_LABELS[student.enrollmentType]}</TableCell>
-                <TableCell className="money hidden font-semibold text-[#27344a] sm:table-cell">
+                <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">{formatAge(student.birthDate)}</TableCell>
+                <TableCell className="hidden text-sm text-muted-foreground xl:table-cell">{ENROLLMENT_TYPE_LABELS[student.enrollmentType]}</TableCell>
+                <TableCell className="money hidden font-semibold text-foreground sm:table-cell">
                   {student.monthlyFeeCents !== null ? brl(student.monthlyFeeCents) : '—'}
                 </TableCell>
                 <TableCell>
@@ -203,7 +203,7 @@ export default async function AlunosPage({
                   <Link
                     href={`/alunos/${student.id}`}
                     aria-label={`Abrir ficha de ${student.fullName}`}
-                    className="inline-grid h-9 w-9 place-items-center rounded-xl text-[#8792a5] transition-all group-hover:bg-[#ecefff] group-hover:text-[#5b59d6]"
+                    className="inline-grid h-9 w-9 place-items-center rounded-xl text-muted-foreground transition-all group-hover:bg-brand/10 group-hover:text-brand"
                   >
                     <ArrowRight className="h-4 w-4" />
                   </Link>
@@ -214,13 +214,13 @@ export default async function AlunosPage({
         </Table>
 
         {data.totalPages > 1 && (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#e3eaf2] px-5 py-4 text-xs text-[#758196]">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4 text-xs text-muted-foreground">
             <span>Página {data.page} de {data.totalPages}</span>
             <div className="flex items-center gap-1.5">
               {data.page > 1 && (
                 <Link
                   href={`/alunos?${new URLSearchParams({ ...Object.fromEntries(query), page: String(data.page - 1) }).toString()}`}
-                  className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#d8e1eb] px-3 font-bold text-[#536078] hover:bg-[#f4f6fa]"
+                  className="inline-flex h-9 items-center gap-1 rounded-lg border border-border px-3 font-bold text-muted-foreground hover:bg-muted/60"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" /> Anterior
                 </Link>
@@ -234,8 +234,8 @@ export default async function AlunosPage({
                     href={`/alunos?${pageQuery.toString()}`}
                     className={
                       page === data.page
-                        ? 'grid h-9 min-w-9 place-items-center rounded-lg bg-[#6554e8] px-2 font-extrabold text-white'
-                        : 'grid h-9 min-w-9 place-items-center rounded-lg px-2 font-bold text-[#667389] hover:bg-[#f0f3f8]'
+                        ? 'grid h-9 min-w-9 place-items-center rounded-lg bg-brand px-2 font-extrabold text-white'
+                        : 'grid h-9 min-w-9 place-items-center rounded-lg px-2 font-bold text-muted-foreground hover:bg-muted/60'
                     }
                   >
                     {page}
@@ -245,7 +245,7 @@ export default async function AlunosPage({
               {data.page < data.totalPages && (
                 <Link
                   href={`/alunos?${new URLSearchParams({ ...Object.fromEntries(query), page: String(data.page + 1) }).toString()}`}
-                  className="inline-flex h-9 items-center gap-1 rounded-lg border border-[#d8e1eb] px-3 font-bold text-[#536078] hover:bg-[#f4f6fa]"
+                  className="inline-flex h-9 items-center gap-1 rounded-lg border border-border px-3 font-bold text-muted-foreground hover:bg-muted/60"
                 >
                   Próxima <ChevronRight className="h-3.5 w-3.5" />
                 </Link>

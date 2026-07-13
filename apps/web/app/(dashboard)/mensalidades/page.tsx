@@ -86,7 +86,7 @@ export default async function MensalidadesPage({
   return (
     <div className="space-y-7">
       <section className="relative overflow-hidden rounded-[28px] bg-[#18294d] px-5 py-6 text-white shadow-[0_18px_45px_rgba(28,49,91,.22)] sm:px-7 sm:py-7">
-        <div aria-hidden="true" className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-[#7764f5]/35 blur-2xl" />
+        <div aria-hidden="true" className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-brand/35 blur-2xl" />
         <div aria-hidden="true" className="absolute bottom-0 right-20 h-28 w-28 rounded-full border-[18px] border-[#93b5ff]/10" />
         <div className="relative flex flex-wrap items-end justify-between gap-5">
           <div>
@@ -161,7 +161,7 @@ export default async function MensalidadesPage({
               'rounded-xl border px-3 py-2 font-bold transition-all',
               !status
                 ? 'border-[#223e79] bg-[#223e79] text-white shadow-[0_6px_16px_rgba(34,62,121,.18)]'
-                : 'border-white bg-white/85 text-[#4d5a71] shadow-sm hover:-translate-y-0.5 hover:border-[#aab9d5] hover:text-[#223e79]',
+                : 'border-white bg-white/85 text-muted-foreground shadow-sm hover:-translate-y-0.5 hover:border-primary/40 hover:text-primary',
             )}
           >
             Todas <span className="ml-1 opacity-75">{totalInvoiceCount}</span>
@@ -169,11 +169,11 @@ export default async function MensalidadesPage({
           {(['PENDING', 'PAID', 'OVERDUE', 'EXEMPT'] as InvoiceStatus[]).map((s) => {
             const info = data.summaryByStatus[s];
             const color = {
-              PENDING: 'bg-[#e9a516]',
-              PAID: 'bg-[#2ebd91]',
-              OVERDUE: 'bg-[#f06277]',
-              EXEMPT: 'bg-[#8a96aa]',
-              CANCELLED: 'bg-[#8a96aa]',
+              PENDING: 'bg-accent',
+              PAID: 'bg-success',
+              OVERDUE: 'bg-destructive',
+              EXEMPT: 'bg-muted-foreground',
+              CANCELLED: 'bg-muted-foreground',
             }[s];
             return (
               <Link
@@ -183,7 +183,7 @@ export default async function MensalidadesPage({
                   'flex items-center gap-2 rounded-xl border px-3 py-2 font-bold transition-all',
                   status === s
                     ? 'border-[#223e79] bg-[#223e79] text-white shadow-[0_6px_16px_rgba(34,62,121,.18)]'
-                    : 'border-white bg-white/85 text-[#4d5a71] shadow-sm hover:-translate-y-0.5 hover:border-[#aab9d5] hover:text-[#223e79]',
+                    : 'border-white bg-white/85 text-muted-foreground shadow-sm hover:-translate-y-0.5 hover:border-primary/40 hover:text-primary',
                 )}
               >
                 <span className={cn('h-2 w-2 rounded-full', color)} />
@@ -210,18 +210,18 @@ export default async function MensalidadesPage({
         </div>
       </div>
 
-      <Card className="overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
-        <div className="flex items-center justify-between border-b border-[#e7edf7] px-4 py-4 sm:px-5">
+      <Card className="overflow-hidden rounded-[24px] border-border/60 bg-card/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
+        <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-5">
           <div>
-            <h2 className="font-display text-lg font-extrabold text-[#17233d]">Lançamentos do mês</h2>
-            <p className="mt-0.5 text-xs text-[#71809a]">
+            <h2 className="font-display text-lg font-extrabold text-foreground">Lançamentos do mês</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
               {status ? `Exibindo mensalidades ${INVOICE_STATUS_LABELS[status].toLowerCase()}.` : 'Todos os lançamentos desta competência.'}
             </p>
           </div>
-          {exempt?.count ? <span className="hidden rounded-full bg-[#eef1f6] px-3 py-1 text-xs font-bold text-[#67748a] sm:inline">{exempt.count} isenta(s)</span> : null}
+          {exempt?.count ? <span className="hidden rounded-full bg-muted/60 px-3 py-1 text-xs font-bold text-muted-foreground sm:inline">{exempt.count} isenta(s)</span> : null}
         </div>
         <Table>
-          <TableHeader className="bg-[#f4f7fc]">
+          <TableHeader className="bg-muted/60">
             <TableRow>
               <TableHead>Aluno</TableHead>
               <TableHead className="hidden md:table-cell">Turma</TableHead>
@@ -241,9 +241,9 @@ export default async function MensalidadesPage({
               </TableRow>
             )}
             {data.items.map((invoice) => (
-              <TableRow key={invoice.id} className="hover:bg-[#f5f8ff]">
+              <TableRow key={invoice.id} className="hover:bg-primary/10">
                 <TableCell>
-                  <Link href={`/alunos/${invoice.student.id}`} className="font-bold text-[#253b65] hover:text-primary">
+                  <Link href={`/alunos/${invoice.student.id}`} className="font-bold text-primary hover:text-primary">
                     {invoice.student.fullName}
                   </Link>
                   {invoice.receiptNote && (

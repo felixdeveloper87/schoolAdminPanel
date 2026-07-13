@@ -40,6 +40,11 @@ export class InvoicesController {
     );
   }
 
+  @Get(':id')
+  getOne(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.invoicesService.getOne(user.schoolId, id);
+  }
+
   @Post('generate')
   @Roles('ADMIN')
   generate(@CurrentUser() user: JwtPayload, @Query('competence') competence?: string) {

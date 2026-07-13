@@ -27,6 +27,7 @@ import {
   RevenueVsExpensesChart,
   ExpensesByCategoryChart,
   ActiveStudentsChart,
+  DefaultRateChart,
   GoalVsActualChart,
   PaymentStatusDonut,
 } from '@/components/charts/dashboard-charts';
@@ -55,6 +56,7 @@ interface DashboardCharts {
   revenueVsExpenses: { competence: string; receivedCents: number; expensesCents: number }[];
   activeStudentsEvolution: { competence: string; activeCount: number }[];
   goalVsActual: { competence: string; target: number | null; actual: number }[];
+  defaultRateEvolution: { competence: string; rate: number | null; overdueCount: number; totalCount: number }[];
   expensesByCategory: { name: string; colorHex: string; totalCents: number }[];
 }
 
@@ -101,39 +103,39 @@ export default async function PainelPage() {
       {/* Cabeçalho */}
       <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
         <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#6857ef]">Dashboard</p>
-          <h1 className="mt-1 font-display text-3xl font-extrabold leading-none tracking-tight text-[#0d1729] sm:text-[34px]">
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-brand">Dashboard</p>
+          <h1 className="mt-1 font-display text-3xl font-extrabold leading-none tracking-tight text-foreground sm:text-[34px]">
             Bom dia, {firstName} <span aria-hidden="true">👋</span>
           </h1>
-          <p className="mt-2 text-sm text-[#657189]">Resumo financeiro e operacional da escola em um só lugar.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Resumo financeiro e operacional da escola em um só lugar.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
           <form action="/alunos" className="relative min-w-[220px] flex-1 sm:w-[300px] sm:flex-none">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d98ae]" />
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               name="q"
               type="search"
               placeholder="Pesquisar..."
               aria-label="Pesquisar alunos"
-              className="h-11 w-full rounded-2xl border border-white/80 bg-white/90 pl-11 pr-4 text-sm text-foreground shadow-[0_8px_25px_rgba(44,55,91,.06)] outline-none placeholder:text-[#9ba5ba] focus:border-[#7968f2]/40 focus:ring-4 focus:ring-[#7968f2]/10"
+              className="h-11 w-full rounded-2xl border border-border/70 bg-card/90 pl-11 pr-4 text-sm text-foreground shadow-[0_8px_25px_rgba(44,55,91,.06)] outline-none placeholder:text-muted-foreground focus:border-brand/40 focus:ring-4 focus:ring-brand/10"
             />
           </form>
           <Link
             href="/mensalidades?status=OVERDUE"
             aria-label="Ver mensalidades atrasadas"
-            className="relative grid h-11 w-11 place-items-center rounded-2xl border border-white/80 bg-white/90 text-[#5d687d] shadow-[0_8px_25px_rgba(44,55,91,.06)] transition-colors hover:text-[#6857ef]"
+            className="relative grid h-11 w-11 place-items-center rounded-2xl border border-border/70 bg-card/90 text-muted-foreground shadow-[0_8px_25px_rgba(44,55,91,.06)] transition-colors hover:text-brand"
           >
             <Bell className="h-4 w-4" />
-            {summary.overdueCount > 0 && <span className="absolute right-2.5 top-2.5 h-1.5 w-1.5 rounded-full bg-[#f25f72]" />}
+            {summary.overdueCount > 0 && <span className="absolute right-2.5 top-2.5 h-1.5 w-1.5 rounded-full bg-destructive" />}
           </Link>
-          <div className="flex h-11 items-center gap-2 rounded-2xl border border-white/80 bg-white/90 px-4 text-xs font-bold text-[#172033] shadow-[0_8px_25px_rgba(44,55,91,.06)]">
-            <CalendarDays className="h-4 w-4 text-[#7564ef]" />
+          <div className="flex h-11 items-center gap-2 rounded-2xl border border-border/70 bg-card/90 px-4 text-xs font-bold text-foreground shadow-[0_8px_25px_rgba(44,55,91,.06)]">
+            <CalendarDays className="h-4 w-4 text-brand" />
             {competenceLabel}
           </div>
           <Link
             href="/mensalidades"
-            className="inline-flex h-11 items-center gap-2 rounded-2xl bg-gradient-to-r from-[#6554e8] to-[#806bf5] px-5 text-xs font-extrabold text-white shadow-[0_10px_24px_rgba(101,84,232,.28)] transition-transform hover:-translate-y-0.5"
+            className="inline-flex h-11 items-center gap-2 rounded-2xl brand-gradient px-5 text-xs font-extrabold text-white shadow-[0_10px_24px_rgba(101,84,232,.28)] transition-transform hover:-translate-y-0.5"
           >
             <Plus className="h-4 w-4" />
             Nova mensalidade
@@ -142,7 +144,7 @@ export default async function PainelPage() {
       </div>
 
       {/* Hero */}
-      <div className="relative grid min-h-[282px] gap-6 overflow-hidden rounded-[28px] bg-gradient-to-r from-[#5146d7] via-[#6854e5] to-[#8b6cf0] p-7 text-white shadow-[0_18px_45px_rgba(83,70,206,.18)] xl:grid-cols-[1.65fr_.85fr] xl:items-stretch">
+      <div className="relative grid min-h-[282px] gap-6 overflow-hidden rounded-[28px] brand-gradient p-7 text-white shadow-[0_18px_45px_rgba(83,70,206,.18)] xl:grid-cols-[1.65fr_.85fr] xl:items-stretch">
         <span className="pointer-events-none absolute -right-24 -top-52 h-[430px] w-[430px] rounded-full border-[54px] border-white/[0.035]" />
         <span className="pointer-events-none absolute -bottom-36 right-40 h-80 w-80 rounded-full bg-white/[0.025]" />
         <div className="relative z-10 flex flex-col justify-center">
@@ -202,7 +204,7 @@ export default async function PainelPage() {
                 <small className="ml-0.5 text-sm font-bold text-white/65">/100</small>
               </p>
             </div>
-            <span className="rounded-full bg-[#6a63d8] px-3 py-1.5 text-[10px] font-bold text-[#dcd9ff]">Atualizado</span>
+            <span className="rounded-full bg-white/15 px-3 py-1.5 text-[10px] font-bold text-white/90">Atualizado</span>
           </div>
           <svg viewBox="0 0 220 108" className="mt-1 h-[92px] w-full" aria-hidden="true">
             <circle
@@ -384,105 +386,105 @@ export default async function PainelPage() {
           </CardContent>
         </Card>
 
-        <Card className="notebook-card overflow-hidden border-[#c9dced] bg-white shadow-[0_10px_30px_rgba(40,65,100,.07)]">
+        <Card className="notebook-card overflow-hidden border-border bg-card shadow-[0_10px_30px_rgba(40,65,100,.07)]">
           <CardHeader className="flex-row items-center gap-3 space-y-0 pb-5">
-            <Hourglass className="h-5 w-5 text-[#2b58b5]" />
-            <CardTitle className="text-xl text-[#10192a]">Ações rápidas</CardTitle>
+            <Hourglass className="h-5 w-5 text-primary" />
+            <CardTitle className="text-xl text-foreground">Ações rápidas</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-2.5 sm:grid-cols-2">
               <Link
                 href="/alunos/novo"
-                className="group rounded-lg border border-[#cbddeb] bg-[#f8fbff] p-3 text-left transition-all hover:-translate-y-0.5 hover:border-[#6c83d8] hover:bg-white hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                className="group rounded-lg border border-border bg-muted/60 p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
-                <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#e8eef8] text-[#315db7]">
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
                   <UserPlus className="h-4 w-4" />
                 </span>
-                <p className="mt-2 text-xs font-extrabold text-[#10192a] group-hover:text-[#2b58b5]">Novo aluno</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-[#657189]">Cadastrar uma nova matrícula</p>
+                <p className="mt-2 text-xs font-extrabold text-foreground group-hover:text-primary">Novo aluno</p>
+                <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Cadastrar uma nova matrícula</p>
               </Link>
               <Link
                 href="/mensalidades?status=PENDING"
-                className="group rounded-lg border border-[#cbddeb] bg-[#f8fbff] p-3 text-left transition-all hover:-translate-y-0.5 hover:border-[#6c83d8] hover:bg-white hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                className="group rounded-lg border border-border bg-muted/60 p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
-                <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#e7f3ee] text-[#318767]">
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-success/10 text-success">
                   <CheckCircle2 className="h-4 w-4" />
                 </span>
-                <p className="mt-2 text-xs font-extrabold text-[#10192a] group-hover:text-[#2b58b5]">Registrar pagamento</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-[#657189]">Dar baixa em uma mensalidade</p>
+                <p className="mt-2 text-xs font-extrabold text-foreground group-hover:text-primary">Registrar pagamento</p>
+                <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Dar baixa em uma mensalidade</p>
               </Link>
               <Link
                 href="/despesas?new=1"
-                className="group rounded-lg border border-[#cbddeb] bg-[#f8fbff] p-3 text-left transition-all hover:-translate-y-0.5 hover:border-[#6c83d8] hover:bg-white hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                className="group rounded-lg border border-border bg-muted/60 p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
-                <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#fae9eb] text-[#ec5760]">
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-destructive/10 text-destructive">
                   <Wallet className="h-4 w-4" />
                 </span>
-                <p className="mt-2 text-xs font-extrabold text-[#10192a] group-hover:text-[#2b58b5]">Nova despesa</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-[#657189]">Adicionar um lançamento financeiro</p>
+                <p className="mt-2 text-xs font-extrabold text-foreground group-hover:text-primary">Nova despesa</p>
+                <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Adicionar um lançamento financeiro</p>
               </Link>
               <Link
                 href="/relatorios"
-                className="group rounded-lg border border-[#cbddeb] bg-[#f8fbff] p-3 text-left transition-all hover:-translate-y-0.5 hover:border-[#6c83d8] hover:bg-white hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                className="group rounded-lg border border-border bg-muted/60 p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
-                <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#fbf3e2] text-[#e5a522]">
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent/15 text-accent-deep">
                   <FileBarChart className="h-4 w-4" />
                 </span>
-                <p className="mt-2 text-xs font-extrabold text-[#10192a] group-hover:text-[#2b58b5]">Gerar relatório</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-[#657189]">Exportar os dados do período</p>
+                <p className="mt-2 text-xs font-extrabold text-foreground group-hover:text-primary">Gerar relatório</p>
+                <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Exportar os dados do período</p>
               </Link>
             </div>
 
-            <div className="mt-4 border-t border-[#d6e2ed] pt-3">
-              <p className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#53627a]">Alertas importantes</p>
+            <div className="mt-4 border-t border-border pt-3">
+              <p className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">Alertas importantes</p>
               {summary.overdueStudents > 0 || summary.waitlistCount > 0 ? (
                 <div className="space-y-1">
                   {summary.overdueStudents > 0 && (
                   <Link
                     href="/mensalidades?status=OVERDUE"
-                    className="group flex items-center gap-3 rounded-lg px-1 py-2.5 text-sm transition-colors hover:bg-[#fff7f8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/20"
+                    className="group flex items-center gap-3 rounded-lg px-1 py-2.5 text-sm transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/20"
                   >
-                    <span className="grid h-8 w-8 flex-none place-items-center rounded-lg bg-[#fff0f1] text-[#f05e67]">
+                    <span className="grid h-8 w-8 flex-none place-items-center rounded-lg bg-destructive/10 text-destructive">
                       <AlertTriangle className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-extrabold text-[#10192a] group-hover:text-[#c8424c]">
+                      <span className="block truncate text-xs font-extrabold text-foreground group-hover:text-destructive">
                         {summary.overdueStudents}{' '}
                         {summary.overdueStudents === 1
                           ? 'aluno com mensalidade em atraso'
                           : 'alunos com mensalidades em atraso'}
                       </span>
-                      <span className="mt-0.5 block text-[11px] text-[#657189]">Requerem acompanhamento da administração</span>
+                      <span className="mt-0.5 block text-[11px] text-muted-foreground">Requerem acompanhamento da administração</span>
                     </span>
                   </Link>
                   )}
                   {summary.waitlistCount > 0 && (
                   <Link
                     href="/lista-espera"
-                    className="group flex items-center gap-3 rounded-lg px-1 py-2.5 text-sm transition-colors hover:bg-[#fffbf3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
+                    className="group flex items-center gap-3 rounded-lg px-1 py-2.5 text-sm transition-colors hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
                   >
-                    <span className="grid h-8 w-8 flex-none place-items-center rounded-lg bg-[#fff6e6] text-[#f0a929]">
+                    <span className="grid h-8 w-8 flex-none place-items-center rounded-lg bg-accent/15 text-accent-deep">
                       <Hourglass className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-extrabold text-[#10192a] group-hover:text-[#b5780c]">
+                      <span className="block truncate text-xs font-extrabold text-foreground group-hover:text-accent-deep">
                         {summary.waitlistCount}{' '}
                         {summary.waitlistCount === 1 ? 'criança na lista de espera' : 'crianças na lista de espera'}
                       </span>
-                      <span className="mt-0.5 block text-[11px] text-[#657189]">Verifique disponibilidade de novas vagas</span>
+                      <span className="mt-0.5 block text-[11px] text-muted-foreground">Verifique disponibilidade de novas vagas</span>
                     </span>
                   </Link>
                   )}
                 </div>
               ) : (
-                <p className="py-3 text-xs text-[#657189]">Nenhum alerta importante para este mês.</p>
+                <p className="py-3 text-xs text-muted-foreground">Nenhum alerta importante para este mês.</p>
               )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card className="paper-panel">
           <CardHeader>
             <CardTitle>Despesas por categoria</CardTitle>
@@ -499,6 +501,15 @@ export default async function PainelPage() {
           </CardHeader>
           <CardContent>
             <ActiveStudentsChart data={charts.activeStudentsEvolution} />
+          </CardContent>
+        </Card>
+        <Card className="paper-panel">
+          <CardHeader>
+            <CardTitle>Evolução da inadimplência</CardTitle>
+            <CardDescription>Faturas vencidas sobre o total emitido, últimos 12 meses</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DefaultRateChart data={charts.defaultRateEvolution} />
           </CardContent>
         </Card>
         <Card className="paper-panel">

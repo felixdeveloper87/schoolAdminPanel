@@ -74,7 +74,7 @@ export default async function MetasPage() {
           </div>
           <GoalDialog
             trigger={
-              <Button className="h-10 rounded-xl bg-white px-4 text-[#245348] shadow-[0_8px_20px_rgba(0,0,0,.16)] hover:bg-[#edfff4] hover:text-[#245348]">
+              <Button className="h-10 rounded-xl bg-card px-4 text-success shadow-[0_8px_20px_rgba(0,0,0,.16)] hover:bg-success/10 hover:text-success">
                 <Plus className="h-4 w-4" /> Nova meta
               </Button>
             }
@@ -115,65 +115,65 @@ export default async function MetasPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.25fr_.75fr]">
-        <Card className="overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
-          <CardHeader className="border-b border-[#e8f0ec] p-5">
-            <CardTitle className="text-[#1d3c35]">Ritmo de {formatCompetence(competence)}</CardTitle>
+        <Card className="overflow-hidden rounded-[24px] border-border/60 bg-card/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
+          <CardHeader className="border-b border-success/20 p-5">
+            <CardTitle className="text-success">Ritmo de {formatCompetence(competence)}</CardTitle>
             <CardDescription>O quanto já foi realizado das metas definidas para este mês.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-5 p-5 sm:grid-cols-2">
-            <div className="rounded-2xl border border-[#e4efe9] bg-[#f8fcfa] p-4">
+            <div className="rounded-2xl border border-success/20 bg-success/10 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#718a7f]">Novos alunos</p>
-                  <p className="mt-1 font-display text-2xl font-extrabold text-[#1f4038]">
-                    {newStudentsActual}<span className="text-base text-[#799086]">/{newStudentsTarget || '—'}</span>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Novos alunos</p>
+                  <p className="mt-1 font-display text-2xl font-extrabold text-success">
+                    {newStudentsActual}<span className="text-base text-muted-foreground">/{newStudentsTarget || '—'}</span>
                   </p>
                 </div>
                 {newStudentsTarget > 0 && newStudentsProgress >= 100 && (
-                  <CheckCircle2 className="h-7 w-7 text-[#38a982]" />
+                  <CheckCircle2 className="h-7 w-7 text-success" />
                 )}
               </div>
-              <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#dfece6]">
-                <div className="h-full rounded-full bg-[#38a982]" style={{ width: `${newStudentsProgress}%` }} />
+              <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-success/10">
+                <div className="h-full rounded-full bg-success" style={{ width: `${newStudentsProgress}%` }} />
               </div>
-              <p className="mt-2 text-xs font-semibold text-[#688075]">
+              <p className="mt-2 text-xs font-semibold text-muted-foreground">
                 {currentGoal ? (studentsRemaining ? `Faltam ${studentsRemaining} matrícula(s)` : 'Meta atingida') : 'Sem meta cadastrada'}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-[#e8e4f3] bg-[#faf9fe] p-4">
+            <div className="rounded-2xl border border-brand/20 bg-brand/10 p-4">
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#7c7197]">Faturamento recebido</p>
-                <p className="money mt-1 font-display text-2xl font-extrabold tracking-tight text-[#30264f]">{brl(summary.receivedCents)}</p>
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Faturamento recebido</p>
+                <p className="money mt-1 font-display text-2xl font-extrabold tracking-tight text-brand">{brl(summary.receivedCents)}</p>
               </div>
-              <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#e8e4f1]">
-                <div className="h-full rounded-full bg-[#7764f5]" style={{ width: `${revenueProgress}%` }} />
+              <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-brand/10">
+                <div className="h-full rounded-full bg-brand" style={{ width: `${revenueProgress}%` }} />
               </div>
-              <p className="mt-2 text-xs font-semibold text-[#766a91]">
+              <p className="mt-2 text-xs font-semibold text-muted-foreground">
                 {currentGoal?.revenueTargetCents ? (revenueRemaining ? `Faltam ${brl(revenueRemaining)}` : 'Meta atingida') : 'Defina uma meta de faturamento'}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden rounded-[24px] border-[#e4dcec] bg-gradient-to-br from-[#fffefe] to-[#f8f3fc] shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(73,47,93,.08)]">
+        <Card className="overflow-hidden rounded-[24px] border-brand/20 bg-gradient-to-br from-card to-brand/10 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(73,47,93,.08)]">
           <CardContent className="p-5">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#eee7ff] text-[#7659df]">
+            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand/10 text-brand">
               <Lightbulb className="h-5 w-5" />
             </span>
-            <p className="mt-4 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#796d92]">Sugestão de foco</p>
-            <h2 className="mt-1 font-display text-xl font-extrabold text-[#342951]">Próxima melhor ação</h2>
-            <p className="mt-3 text-sm leading-relaxed text-[#6f6681]">{insight}</p>
-            <div className="mt-5 flex items-center gap-2 text-xs font-bold text-[#6953c6]">
+            <p className="mt-4 text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted-foreground">Sugestão de foco</p>
+            <h2 className="mt-1 font-display text-xl font-extrabold text-brand">Próxima melhor ação</h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{insight}</p>
+            <div className="mt-5 flex items-center gap-2 text-xs font-bold text-brand">
               <CalendarDays className="h-4 w-4" /> Revise este indicador semanalmente
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
-        <CardHeader className="border-b border-[#edf1f5] p-5">
-          <CardTitle className="text-[#233548]">Meta x realizado</CardTitle>
+      <Card className="overflow-hidden rounded-[24px] border-border/60 bg-card/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
+        <CardHeader className="border-b border-border p-5">
+          <CardTitle className="text-foreground">Meta x realizado</CardTitle>
           <CardDescription>Histórico dos últimos 12 meses para metas de novas matrículas.</CardDescription>
         </CardHeader>
         <CardContent className="p-5 pt-3">
@@ -181,16 +181,16 @@ export default async function MetasPage() {
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden rounded-[24px] border-white bg-white/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
-        <div className="flex items-center justify-between border-b border-[#e7edf5] px-5 py-4">
+      <Card className="overflow-hidden rounded-[24px] border-border/60 bg-card/95 shadow-[0_1px_2px_rgba(16,24,40,.03),0_14px_35px_rgba(34,45,75,.08)]">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div>
-            <h2 className="font-display text-lg font-extrabold text-[#233548]">Planejamento mensal</h2>
-            <p className="mt-0.5 text-xs text-[#778399]">Crie ou revise metas para manter o plano anual em movimento.</p>
+            <h2 className="font-display text-lg font-extrabold text-foreground">Planejamento mensal</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">Crie ou revise metas para manter o plano anual em movimento.</p>
           </div>
-          <span className="hidden rounded-full bg-[#eef8f3] px-3 py-1 text-xs font-bold text-[#387b60] sm:inline">{goals.length} meta(s)</span>
+          <span className="hidden rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success sm:inline">{goals.length} meta(s)</span>
         </div>
         <Table>
-          <TableHeader className="bg-[#f7f9fc]">
+          <TableHeader className="bg-muted/60">
             <TableRow>
               <TableHead>Mês</TableHead>
               <TableHead>Meta de novos alunos</TableHead>
@@ -210,15 +210,15 @@ export default async function MetasPage() {
               const month = goal.month.slice(0, 7);
               const isCurrent = month === competence;
               return (
-                <TableRow key={goal.id} className={isCurrent ? 'bg-[#f6fcf8] hover:bg-[#eff9f2]' : 'hover:bg-[#f7f9fc]'}>
-                  <TableCell className="font-bold text-[#36475e]">
+                <TableRow key={goal.id} className={isCurrent ? 'bg-success/10 hover:bg-success/10' : 'hover:bg-muted/60'}>
+                  <TableCell className="font-bold text-muted-foreground">
                     <span className="flex items-center gap-2">
                       {formatCompetence(month)}
-                      {isCurrent && <span className="rounded-full bg-[#dff4e8] px-2 py-0.5 text-[10px] font-extrabold text-[#287757]">Atual</span>}
+                      {isCurrent && <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-extrabold text-success">Atual</span>}
                     </span>
                   </TableCell>
-                  <TableCell className="money font-semibold text-[#34465b]">{goal.newStudentsTarget}</TableCell>
-                  <TableCell className="money font-semibold text-[#34465b]">
+                  <TableCell className="money font-semibold text-muted-foreground">{goal.newStudentsTarget}</TableCell>
+                  <TableCell className="money font-semibold text-muted-foreground">
                     {goal.revenueTargetCents !== null ? brl(goal.revenueTargetCents) : '—'}
                   </TableCell>
                   <TableCell className="text-right">
@@ -227,7 +227,7 @@ export default async function MetasPage() {
                       defaultTarget={goal.newStudentsTarget}
                       defaultRevenueCents={goal.revenueTargetCents}
                       trigger={
-                        <Button variant="ghost" size="sm" className="rounded-lg text-[#627389] hover:bg-[#edf5f0] hover:text-[#2b7659]">
+                        <Button variant="ghost" size="sm" className="rounded-lg text-muted-foreground hover:bg-success/10 hover:text-success">
                           <Pencil className="h-3.5 w-3.5" /> Editar
                         </Button>
                       }

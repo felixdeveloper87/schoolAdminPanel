@@ -20,11 +20,11 @@ export function ExpensesTrendChart({ data }: { data: { competence: string; total
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#DDE6EF" />
-        <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-        <YAxis tickFormatter={(v) => brl(v)} tick={{ fontSize: 11 }} width={70} />
-        <Tooltip content={<ChartTooltip />} />
-        <Bar dataKey="totalCents" name="Despesas" fill="#D9534F" radius={[4, 4, 0, 0]} />
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+        <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+        <YAxis tickFormatter={(v) => brl(v)} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={70} />
+        <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted) / 0.6)' }} />
+        <Bar dataKey="totalCents" name="Despesas" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

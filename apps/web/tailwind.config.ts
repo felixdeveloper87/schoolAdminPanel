@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  darkMode: ['class'],
   content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
   theme: {
     extend: {
@@ -14,6 +15,20 @@ const config: Config = {
         accent: {
           DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
+          deep: 'hsl(var(--accent-deep))',
+        },
+        brand: {
+          DEFAULT: 'hsl(var(--brand))',
+          foreground: 'hsl(var(--brand-foreground))',
+        },
+        sidebar: {
+          DEFAULT: 'hsl(var(--sidebar))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          border: 'hsl(var(--sidebar-border))',
+          muted: 'hsl(var(--sidebar-muted))',
+          active: 'hsl(var(--sidebar-active))',
+          card: 'hsl(var(--sidebar-card))',
+          'card-border': 'hsl(var(--sidebar-card-border))',
         },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
