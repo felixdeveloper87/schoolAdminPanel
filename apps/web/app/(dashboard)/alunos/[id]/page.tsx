@@ -242,12 +242,12 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
               <div><CardTitle className="text-lg text-[#172033]">Mensalidades</CardTitle><p className="text-[11px] text-[#7a869a]">Últimos 12 lançamentos</p></div>
             </CardHeader>
             <CardContent className="p-0">
-              <Table className="min-w-[560px]">
+              <Table className="min-w-[620px]">
                 <TableHeader className="bg-[#f7f9fc]">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="pl-5">Competência</TableHead>
                     <TableHead>Valor</TableHead>
-                    <TableHead className="hidden sm:table-cell">Vencimento</TableHead>
+                    <TableHead>Vencimento</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -258,7 +258,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
                     <TableRow key={invoice.id} className="border-[#e8edf3] hover:bg-[#f8faff]">
                       <TableCell className="money pl-5 font-semibold">{formatDate(invoice.competence).slice(3)}</TableCell>
                       <TableCell className="money font-extrabold text-[#263349]">{brl(invoice.amountCents - invoice.discountCents)}</TableCell>
-                      <TableCell className="money hidden text-[#68758b] sm:table-cell">{formatDate(invoice.dueDate)}</TableCell>
+                      <TableCell className="money text-[#68758b]">{formatDate(invoice.dueDate)}</TableCell>
                       <TableCell><InvoiceStatusBadge status={invoice.status} /></TableCell>
                       <TableCell className="text-right">
                         <InvoiceActions
