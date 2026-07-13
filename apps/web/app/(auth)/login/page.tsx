@@ -1,8 +1,9 @@
 import Image from 'next/image';
-import { GraduationCap, Layers, Lock, Mail, Wallet } from 'lucide-react';
+import { GraduationCap, Layers, Mail, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/password-input';
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid: 'Informe e-mail e senha para entrar.',
@@ -121,17 +122,7 @@ export default function LoginPage({ searchParams }: { searchParams: { error?: st
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="pl-9"
-                />
-              </div>
+              <PasswordInput />
             </div>
             {errorMessage && (
               <p className="rounded-md border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
