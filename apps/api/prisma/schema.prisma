@@ -16,12 +16,18 @@ enum Role {
 }
 
 enum AgeGroup {
-  BERCARIO_1
-  BERCARIO_2
+  INTEGRAL_1
+  INTEGRAL_2
+  INTEGRAL_3
   MATERNAL_1
   MATERNAL_2
   PRE_1
   PRE_2
+  ANO_1
+  ANO_2
+  ANO_3
+  ANO_4
+  ANO_5
 }
 
 enum Shift {

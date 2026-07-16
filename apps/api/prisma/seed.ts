@@ -57,12 +57,12 @@ interface ClassroomPlan {
 // 6 turmas somando 64 vagas — 50 alunos ativos deixam espaço de ocupação real.
 // Turno determina a categoria de matrícula (e portanto a mensalidade fixa da turma).
 const CLASSROOMS_PLAN: ClassroomPlan[] = [
-  { name: 'Berçário 1 — Manhã', ageGroup: 'BERCARIO_1', shift: 'MORNING', capacity: 8, enrollmentType: 'HALF_DAY_MORNING', count: 8, birthYear: 2025 },
-  { name: 'Berçário 2 — Integral', ageGroup: 'BERCARIO_2', shift: 'FULL_DAY', capacity: 10, enrollmentType: 'FULL_TIME', count: 9, birthYear: 2024 },
-  { name: 'Maternal 1 — Integral', ageGroup: 'MATERNAL_1', shift: 'FULL_DAY', capacity: 12, enrollmentType: 'FULL_TIME', count: 10, birthYear: 2023 },
-  { name: 'Maternal 2 — Tarde', ageGroup: 'MATERNAL_2', shift: 'AFTERNOON', capacity: 12, enrollmentType: 'HALF_DAY_AFTERNOON', count: 9, birthYear: 2022 },
-  { name: 'Pré 1 — Manhã', ageGroup: 'PRE_1', shift: 'MORNING', capacity: 12, enrollmentType: 'HALF_DAY_MORNING', count: 8, birthYear: 2021 },
-  { name: 'Pré 2 — Integral', ageGroup: 'PRE_2', shift: 'FULL_DAY', capacity: 10, enrollmentType: 'FULL_TIME', count: 6, birthYear: 2020 },
+  { name: 'Integral I — Manhã', ageGroup: 'INTEGRAL_1', shift: 'MORNING', capacity: 8, enrollmentType: 'HALF_DAY_MORNING', count: 8, birthYear: 2025 },
+  { name: 'Integral II — Integral', ageGroup: 'INTEGRAL_2', shift: 'FULL_DAY', capacity: 10, enrollmentType: 'FULL_TIME', count: 9, birthYear: 2024 },
+  { name: 'Maternal I — Integral', ageGroup: 'MATERNAL_1', shift: 'FULL_DAY', capacity: 12, enrollmentType: 'FULL_TIME', count: 10, birthYear: 2023 },
+  { name: 'Maternal II — Tarde', ageGroup: 'MATERNAL_2', shift: 'AFTERNOON', capacity: 12, enrollmentType: 'HALF_DAY_AFTERNOON', count: 9, birthYear: 2022 },
+  { name: 'Pré I — Manhã', ageGroup: 'PRE_1', shift: 'MORNING', capacity: 12, enrollmentType: 'HALF_DAY_MORNING', count: 8, birthYear: 2021 },
+  { name: 'Pré II — Integral', ageGroup: 'PRE_2', shift: 'FULL_DAY', capacity: 10, enrollmentType: 'FULL_TIME', count: 6, birthYear: 2020 },
 ];
 
 const DUE_DAYS = [5, 10, 15, 20, 25] as const;
@@ -312,11 +312,11 @@ async function main() {
   // ---------------------------------------------------------------------------
   await prisma.waitlistEntry.createMany({
     data: [
-      { schoolId, childName: 'Manuela Freitas', birthDate: utcDate(2025, 4, 10), guardianName: 'Camila Freitas', phoneWhatsapp: '21977770001', desiredAgeGroup: 'BERCARIO_2', desiredShift: 'FULL_DAY', status: 'WAITING' },
+      { schoolId, childName: 'Manuela Freitas', birthDate: utcDate(2025, 4, 10), guardianName: 'Camila Freitas', phoneWhatsapp: '21977770001', desiredAgeGroup: 'INTEGRAL_2', desiredShift: 'FULL_DAY', status: 'WAITING' },
       { schoolId, childName: 'Otávio Mendes', birthDate: utcDate(2023, 10, 2), guardianName: 'Paulo Mendes', phoneWhatsapp: '21977770002', desiredAgeGroup: 'MATERNAL_1', desiredShift: 'MORNING', status: 'WAITING' },
       { schoolId, childName: 'Beatriz Nogueira', birthDate: utcDate(2022, 6, 15), guardianName: 'Sandra Nogueira', phoneWhatsapp: '21977770003', desiredAgeGroup: 'MATERNAL_2', desiredShift: 'AFTERNOON', status: 'CONTACTED' },
       { schoolId, childName: 'Caio Monteiro', birthDate: utcDate(2021, 3, 22), guardianName: 'Felipe Monteiro', phoneWhatsapp: '21977770004', desiredAgeGroup: 'PRE_1', desiredShift: 'MORNING', status: 'WAITING' },
-      { schoolId, childName: 'Larissa Campos', birthDate: utcDate(2024, 1, 5), guardianName: 'Michele Campos', phoneWhatsapp: '21977770005', desiredAgeGroup: 'BERCARIO_2', desiredShift: 'FULL_DAY', status: 'GAVE_UP' },
+      { schoolId, childName: 'Larissa Campos', birthDate: utcDate(2024, 1, 5), guardianName: 'Michele Campos', phoneWhatsapp: '21977770005', desiredAgeGroup: 'INTEGRAL_2', desiredShift: 'FULL_DAY', status: 'GAVE_UP' },
     ],
   });
 

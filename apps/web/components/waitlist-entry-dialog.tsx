@@ -30,7 +30,7 @@ export function WaitlistEntryDialog({ trigger }: { trigger: React.ReactNode }) {
     formState: { errors, isSubmitting },
   } = useForm<CreateWaitlistEntryInput>({
     resolver: zodResolver(createWaitlistEntrySchema),
-    defaultValues: { desiredAgeGroup: 'BERCARIO_1', desiredShift: 'FULL_DAY' },
+    defaultValues: { desiredAgeGroup: 'INTEGRAL_1', desiredShift: 'FULL_DAY' },
   });
 
   const onSubmit = async (data: CreateWaitlistEntryInput) => {

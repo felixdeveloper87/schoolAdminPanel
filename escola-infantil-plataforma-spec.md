@@ -97,7 +97,7 @@ Convenção Prisma: models em `PascalCase`, campos em `camelCase`. Onde fizer se
 `id, schoolId, name, email (unique por escola), passwordHash, role (ADMIN|STAFF), active`
 
 ### Classroom (turma)
-`id, schoolId, name, ageGroup (BERCARIO_1, BERCARIO_2, MATERNAL_1, MATERNAL_2, PRE_1, PRE_2), shift (MORNING, AFTERNOON, FULL_DAY), capacity (Int), active`
+`id, schoolId, name, ageGroup (INTEGRAL_1, INTEGRAL_2, INTEGRAL_3, MATERNAL_1, MATERNAL_2, PRE_1, PRE_2, ANO_1, ANO_2, ANO_3, ANO_4, ANO_5), shift (MORNING, AFTERNOON, FULL_DAY), capacity (Int), active`
 - Taxa de ocupação da turma = matrículas ativas / capacity.
 
 ### Student (aluno)

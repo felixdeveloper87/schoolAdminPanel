@@ -42,7 +42,7 @@ export function ClassroomDialog({ classroom, trigger }: ClassroomDialogProps) {
     resolver: zodResolver(createClassroomSchema),
     defaultValues: classroom ?? {
       name: '',
-      ageGroup: 'BERCARIO_1',
+      ageGroup: 'INTEGRAL_1',
       shift: 'FULL_DAY',
       capacity: 10,
       active: true,

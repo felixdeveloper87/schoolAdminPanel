@@ -7,12 +7,18 @@ export const ROLES = ['ADMIN', 'STAFF'] as const;
 export type Role = (typeof ROLES)[number];
 
 export const AGE_GROUPS = [
-  'BERCARIO_1',
-  'BERCARIO_2',
+  'INTEGRAL_1',
+  'INTEGRAL_2',
+  'INTEGRAL_3',
   'MATERNAL_1',
   'MATERNAL_2',
   'PRE_1',
   'PRE_2',
+  'ANO_1',
+  'ANO_2',
+  'ANO_3',
+  'ANO_4',
+  'ANO_5',
 ] as const;
 export type AgeGroup = (typeof AGE_GROUPS)[number];
 
@@ -52,12 +58,18 @@ export const ROLE_LABELS: Record<Role, string> = {
 };
 
 export const AGE_GROUP_LABELS: Record<AgeGroup, string> = {
-  BERCARIO_1: 'Berçário 1',
-  BERCARIO_2: 'Berçário 2',
-  MATERNAL_1: 'Maternal 1',
-  MATERNAL_2: 'Maternal 2',
-  PRE_1: 'Pré 1',
-  PRE_2: 'Pré 2',
+  INTEGRAL_1: 'Integral I',
+  INTEGRAL_2: 'Integral II',
+  INTEGRAL_3: 'Integral III',
+  MATERNAL_1: 'Maternal I',
+  MATERNAL_2: 'Maternal II',
+  PRE_1: 'Pré I',
+  PRE_2: 'Pré II',
+  ANO_1: '1 ano',
+  ANO_2: '2 ano',
+  ANO_3: '3 ano',
+  ANO_4: '4 ano',
+  ANO_5: '5 ano',
 };
 
 export const SHIFT_LABELS: Record<Shift, string> = {
