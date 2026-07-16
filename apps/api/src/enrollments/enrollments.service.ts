@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEnrollmentInput, EndEnrollmentInput, RenewBatchInput } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
-import { dueDateFor, parseDateString } from '../common/dates';
+import { currentCompetenceSaoPaulo, dueDateFor, monthRange, parseDateString } from '../common/dates';
 
 const oneDayBefore = (date: Date) => new Date(date.getTime() - 24 * 60 * 60 * 1000);
 
@@ -42,13 +42,17 @@ export class EnrollmentsService {
       throw new BadRequestException(`Turma lotada (${activeCount}/${classroom.capacity}).`);
     }
 
+    const startDate = parseDateString(input.startDate);
+    const currentCompetence = currentCompetenceSaoPaulo();
+    const { end: nextMonth } = monthRange(currentCompetence);
+
     return this.prisma.$transaction(async (tx) => {
       const enrollment = await tx.enrollment.create({
         data: {
           schoolId,
           studentId: input.studentId,
           classroomId: input.classroomId,
-          startDate: parseDateString(input.startDate),
+          startDate,
           monthlyFeeCents: input.monthlyFeeCents,
           discountCents: input.discountCents,
           discountReason: input.discountReason,
@@ -60,6 +64,20 @@ export class EnrollmentsService {
       if (student.status !== 'ACTIVE') {
         await tx.student.update({ where: { id: student.id }, data: { status: 'ACTIVE' } });
       }
+
+      if (startDate < nextMonth) {
+        await tx.tuitionInvoice.create({
+          data: {
+            schoolId,
+            enrollmentId: enrollment.id,
+            competence: currentCompetence,
+            amountCents: input.monthlyFeeCents,
+            discountCents: input.discountCents,
+            dueDate: dueDateFor(currentCompetence, input.dueDay),
+          },
+        });
+      }
+
       return enrollment;
     });
   }

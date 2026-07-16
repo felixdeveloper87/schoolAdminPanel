@@ -14,7 +14,7 @@ export class InvoicesCron {
   ) {}
 
   /** Dia 1º às 05:00 (São Paulo): gera as mensalidades do mês para todas as escolas. */
-  @Cron('0 5 1 * *', { timeZone: 'America/Sao_Paulo' })
+  @Cron('0 5 * * *', { timeZone: 'America/Sao_Paulo' })
   async generateMonthlyInvoices() {
     const competence = currentCompetenceSaoPaulo();
     const schools = await this.prisma.school.findMany({ select: { id: true, name: true } });

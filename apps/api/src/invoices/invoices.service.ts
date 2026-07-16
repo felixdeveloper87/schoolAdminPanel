@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InvoiceStatus, Prisma } from '@prisma/client';
 import { PayInvoiceInput } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
-import { dueDateFor, parseDateString, todaySaoPaulo } from '../common/dates';
+import { dueDateFor, monthRange, parseDateString, todaySaoPaulo } from '../common/dates';
 import { PageParams, paged } from '../common/pagination';
 
 @Injectable()
@@ -116,8 +116,14 @@ export class InvoicesService {
 
   /** Geração idempotente das mensalidades da competência (unique + skipDuplicates). */
   async generate(schoolId: string, competence: Date) {
+    const { end: nextMonth } = monthRange(competence);
     const enrollments = await this.prisma.enrollment.findMany({
-      where: { schoolId, status: 'ACTIVE' },
+      where: {
+        schoolId,
+        status: 'ACTIVE',
+        // Matrículas iniciadas em meses posteriores não podem ser cobradas retroativamente.
+        startDate: { lt: nextMonth },
+      },
     });
     const result = await this.prisma.tuitionInvoice.createMany({
       data: enrollments.map((e) => ({

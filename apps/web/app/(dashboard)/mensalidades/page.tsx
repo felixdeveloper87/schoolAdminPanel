@@ -21,7 +21,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card } from '@/components/ui/card';
 import { InvoiceStatusBadge } from '@/components/invoice-status-badge';
 import { InvoiceActions } from '@/components/invoice-actions';
-import { GenerateInvoicesButton } from '@/components/generate-invoices-button';
 import { ExportCsvButton } from '@/components/export-csv-button';
 import { StatCard } from '@/components/stat-card';
 import { cn } from '@/lib/utils';
@@ -206,7 +205,6 @@ export default async function MensalidadesPage({
               Observação: i.receiptNote ?? '',
             }))}
           />
-          {isAdmin && <GenerateInvoicesButton competence={competence} />}
         </div>
       </div>
 
@@ -236,7 +234,6 @@ export default async function MensalidadesPage({
               <TableRow>
                 <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                   Nenhuma mensalidade nesta competência.
-                  {isAdmin && ' Use “Gerar mensalidades do mês” acima.'}
                 </TableCell>
               </TableRow>
             )}
