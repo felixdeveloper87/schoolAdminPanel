@@ -185,7 +185,7 @@ export default async function DespesasPage({
               <TableRow>
                 <TableHead>Categoria</TableHead>
                 <TableHead>Lançamentos  </TableHead>
-                <TableHead>Total</TableHead>
+                <TableHead>Total </TableHead>
                 <TableHead className="text-right">% do mês</TableHead>
               </TableRow>
             </TableHeader>
