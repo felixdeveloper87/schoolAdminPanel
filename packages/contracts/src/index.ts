@@ -239,7 +239,7 @@ export type UpdateStudentStatusInput = z.infer<typeof updateStudentStatusSchema>
 // Classroom (turma)
 // ---------------------------------------------------------------------------
 export const createClassroomSchema = z.object({
-  name: z.string().min(1, 'Nome obrigatório'),
+  name: z.string().trim().max(100, 'Máximo de 100 caracteres').optional().or(z.literal('').transform(() => undefined)),
   ageGroup: z.enum(AGE_GROUPS),
   shift: z.enum(SHIFTS),
   capacity: z.number().int().min(1, 'Capacidade mínima 1').max(100),

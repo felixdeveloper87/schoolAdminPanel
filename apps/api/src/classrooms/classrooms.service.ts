@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateClassroomInput, UpdateClassroomInput } from '@escola/contracts';
+import { AGE_GROUP_LABELS, CreateClassroomInput, SHIFT_LABELS, UpdateClassroomInput } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -31,7 +31,8 @@ export class ClassroomsService {
   }
 
   create(schoolId: string, input: CreateClassroomInput) {
-    return this.prisma.classroom.create({ data: { schoolId, ...input } });
+    const name = input.name?.trim() || `${AGE_GROUP_LABELS[input.ageGroup]} — ${SHIFT_LABELS[input.shift]}`;
+    return this.prisma.classroom.create({ data: { schoolId, ...input, name } });
   }
 
   async update(schoolId: string, id: string, input: UpdateClassroomInput) {

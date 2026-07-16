@@ -73,7 +73,7 @@ export function ClassroomDialog({ classroom, trigger }: ClassroomDialogProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="space-y-1.5">
-            <Label>Nome da turma</Label>
+            <Label>Nome da turma (opcional)</Label>
             <Input placeholder="ex.: Maternal 1 — Integral" {...register('name')} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
