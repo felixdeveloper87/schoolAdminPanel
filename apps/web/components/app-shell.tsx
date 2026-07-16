@@ -88,15 +88,15 @@ function NavLinks({
                     className={cn(
                       'group relative flex min-h-11 items-center gap-3 rounded-2xl px-3 text-[14px] font-bold transition-colors',
                       active
-                        ? 'border border-white/90 bg-sidebar-active text-white shadow-[inset_0_0_0_1px_rgba(126,106,255,0.55)]'
-                        : 'border border-transparent text-sidebar-muted hover:bg-white/[0.06] hover:text-white',
+                        ? 'border border-brand/40 bg-sidebar-active text-sidebar-foreground shadow-[inset_0_0_0_1px_rgba(126,106,255,0.25)]'
+                        : 'border border-transparent text-sidebar-muted hover:bg-sidebar-foreground/[0.06] hover:text-sidebar-foreground',
                     )}
                   >
                     {active && <span className="absolute -left-1 h-7 w-1 rounded-full bg-[#8064ff]" />}
-                    <Icon className={cn('h-[18px] w-[18px] shrink-0', active ? 'text-white' : 'text-sidebar-muted')} />
+                    <Icon className={cn('h-[18px] w-[18px] shrink-0', active ? 'text-sidebar-foreground' : 'text-sidebar-muted')} />
                     <span className="min-w-0 flex-1 truncate">{label}</span>
                     {badge && (
-                      <span className="grid h-6 min-w-6 place-items-center rounded-full bg-[#41243e] px-1.5 text-[11px] font-bold text-[#e66d77]">
+                      <span className="grid h-6 min-w-6 place-items-center rounded-full bg-destructive/15 px-1.5 text-[11px] font-bold text-destructive">
                         {badge}
                       </span>
                     )}
@@ -114,7 +114,7 @@ function NavLinks({
 function Brand() {
   return (
     <div className="flex min-w-0 items-center gap-3 px-2">
-      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-[17px] border border-white/15 bg-white shadow-lg shadow-indigo-950/25">
+      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-[17px] border border-sidebar-border bg-white shadow-lg shadow-indigo-950/15">
         <Image
           src="/logo.jpg"
           alt="Logo da Peniel Christian School"
@@ -125,7 +125,7 @@ function Brand() {
         />
       </div>
       <div className="min-w-0 leading-tight">
-        <p className="truncate font-display text-[14px] font-extrabold text-white">Peniel Christian School</p>
+        <p className="truncate font-display text-[14px] font-extrabold text-sidebar-foreground">Peniel Christian School</p>
         <p className="mt-1 text-[11px] text-sidebar-muted">Painel administrativo</p>
       </div>
     </div>
@@ -149,7 +149,7 @@ function LogoutButton({ className, compact = false }: { className?: string; comp
   return (
     <button
       className={cn(
-        'flex items-center gap-2 rounded-lg text-sidebar-muted transition-colors hover:bg-white/[0.07] hover:text-white disabled:opacity-50',
+        'flex items-center gap-2 rounded-lg text-sidebar-muted transition-colors hover:bg-sidebar-foreground/[0.07] hover:text-sidebar-foreground disabled:opacity-50',
         compact ? 'h-9 w-9 justify-center' : 'px-3 py-2 text-sm font-bold',
         className,
       )}
@@ -181,10 +181,10 @@ function OccupancyCard({ occupancy }: { occupancy: OccupancyInfo }) {
   return (
     <div className="rounded-[20px] border border-sidebar-card-border bg-sidebar-card px-4 py-3.5">
       <div className="flex items-baseline justify-between gap-2 text-[13px] text-sidebar-muted">
-        <span>Ocupação atual <strong className="text-[17px] text-white">{pct}%</strong></span>
+        <span>Ocupação atual <strong className="text-[17px] text-sidebar-foreground">{pct}%</strong></span>
         <span className="text-[11px]">{occupancy.activeStudents} / {occupancy.capacity}</span>
       </div>
-      <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-white/10">
+      <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-sidebar-foreground/10">
         <div
           className="h-full rounded-full bg-gradient-to-r from-[#8164ff] to-[#c4b9ff]"
           style={{ width: `${pct}%` }}
@@ -204,7 +204,7 @@ function UserFooter({ user }: { user: SessionUser }) {
         {getInitials(user.name)}
       </div>
       <div className="min-w-0 flex-1 leading-tight">
-        <p className="truncate text-[12px] font-extrabold text-white">{user.name}</p>
+        <p className="truncate text-[12px] font-extrabold text-sidebar-foreground">{user.name}</p>
         <p className="mt-1 text-[10px] text-sidebar-muted">{ROLE_LABELS[user.role]}</p>
       </div>
       <ThemeToggle />
@@ -232,7 +232,7 @@ export function AppShell({
   return (
     <div className="min-h-screen overflow-x-hidden">
       {/* Sidebar desktop */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] flex-col border-r border-sidebar-border bg-sidebar px-3 py-6 text-white print:!hidden md:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] flex-col border-r border-sidebar-border bg-sidebar px-3 py-6 text-sidebar-foreground print:!hidden md:flex">
         <Brand />
         <div className="mx-1 my-5 border-t border-sidebar-border" />
         <div className="min-h-0 flex-1 overflow-y-auto px-0.5">
@@ -253,7 +253,7 @@ export function AppShell({
 
       <nav
           aria-label="Páginas do painel"
-          className="relative z-20 flex snap-x snap-mandatory gap-2 overflow-x-auto border-b border-sidebar-border bg-gradient-to-b from-[#152139] to-sidebar px-4 py-2 shadow-[0_6px_16px_rgba(3,8,18,.2)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden print:!hidden md:hidden"
+          className="relative z-20 flex snap-x snap-mandatory gap-2 overflow-x-auto border-b border-sidebar-border bg-sidebar px-4 py-2 shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden print:!hidden md:hidden"
         >
           {mobileNavItems.map(({ href, label, icon: Icon }) => {
             const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
@@ -272,13 +272,13 @@ export function AppShell({
                   'group relative flex h-10 shrink-0 snap-start items-center gap-2 rounded-xl border px-2 pr-2.5 text-[11px] font-extrabold transition-all duration-200 first:ml-2',
                   active
                     ? 'border-[#a89bff]/70 bg-gradient-to-br from-[#7867e9] via-[#5549bd] to-[#302966] text-white shadow-[0_8px_20px_rgba(96,79,213,.32),inset_0_1px_0_rgba(255,255,255,.2)]'
-                    : 'border-white/[0.09] bg-white/[0.055] text-[#b3bfd2] shadow-[inset_0_1px_0_rgba(255,255,255,.04)] hover:-translate-y-0.5 hover:border-[#69758c] hover:bg-white/[0.1] hover:text-white',
+                    : 'border-sidebar-border bg-sidebar-card text-sidebar-muted shadow-sm hover:-translate-y-0.5 hover:border-brand/40 hover:bg-sidebar-active hover:text-sidebar-foreground',
                 )}
               >
                 <span
                   className={cn(
                     'grid h-6 w-6 shrink-0 place-items-center rounded-lg transition-colors',
-                    active ? 'bg-white/15 text-white' : 'bg-[#202b40] text-[#b8c3d8] group-hover:bg-[#2a3852] group-hover:text-white',
+                    active ? 'bg-white/15 text-white' : 'bg-sidebar-active text-sidebar-muted group-hover:text-sidebar-foreground',
                   )}
                 >
                   <Icon className="h-3.5 w-3.5" />

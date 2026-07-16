@@ -21,7 +21,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label="Alternar tema claro/escuro"
       title="Alternar tema"
       className={cn(
-        'grid h-9 w-9 place-items-center rounded-lg text-sidebar-muted transition-colors hover:bg-white/[0.07] hover:text-white',
+        'grid h-9 w-9 place-items-center rounded-lg text-sidebar-muted transition-colors hover:bg-sidebar-foreground/[0.07] hover:text-sidebar-foreground',
         className,
       )}
     >
