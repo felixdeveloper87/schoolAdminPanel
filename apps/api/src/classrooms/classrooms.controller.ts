@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import {
   createClassroomSchema,
   CreateClassroomInput,
@@ -8,6 +8,7 @@ import {
 import { ClassroomsService } from './classrooms.service';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { Roles } from '../auth/roles.decorator';
 import { JwtPayload } from '../auth/jwt-payload';
 
 @Controller('classrooms')
@@ -34,5 +35,11 @@ export class ClassroomsController {
     @Body(new ZodValidationPipe(updateClassroomSchema)) body: UpdateClassroomInput,
   ) {
     return this.classroomsService.update(user.schoolId, id, body);
+  }
+
+  @Delete(':id')
+  @Roles('ADMIN')
+  remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.classroomsService.remove(user.schoolId, id);
   }
 }

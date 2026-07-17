@@ -143,6 +143,30 @@ export class StudentsService {
     });
   }
 
+  async remove(schoolId: string, id: string) {
+    const student = await this.prisma.student.findFirst({
+      where: { id, schoolId },
+      select: { photoUrl: true },
+    });
+    if (!student) throw new NotFoundException('Aluno não encontrado');
+
+    // Exclusão definitiva: apaga mensalidades e matrículas antes do aluno
+    // (responsáveis caem em cascata via onDelete: Cascade).
+    await this.prisma.$transaction([
+      this.prisma.tuitionInvoice.deleteMany({ where: { schoolId, enrollment: { studentId: id } } }),
+      this.prisma.enrollment.deleteMany({ where: { schoolId, studentId: id } }),
+      this.prisma.student.delete({ where: { id } }),
+    ]);
+
+    if (student.photoUrl) {
+      const photoFilename = student.photoUrl.split('/').pop();
+      if (photoFilename) {
+        await unlink(join(STUDENT_PHOTOS_DIR, photoFilename)).catch(() => undefined);
+      }
+    }
+    return { deleted: true };
+  }
+
   async updatePhoto(schoolId: string, id: string, filename: string) {
     const student = await this.prisma.student.findFirst({
       where: { id, schoolId },

@@ -10,6 +10,7 @@ import {
   School,
   ShieldAlert,
   Stethoscope,
+  Trash2,
   UserRound,
   Utensils,
   Wallet,
@@ -33,13 +34,14 @@ import {
 import { apiGet, getSessionUser } from '@/lib/server-api';
 import { brl, formatAge, formatDate } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { InvoiceStatusBadge } from '@/components/invoice-status-badge';
 import { InvoiceActions } from '@/components/invoice-actions';
 import { EnrollmentDialog, EndEnrollmentButton } from '@/components/enrollment-dialog';
 import { DeactivateStudentDialog, ReactivateStudentButton } from '@/components/student-status-dialog';
+import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog';
 import { StudentAvatar } from '@/components/student-avatar';
 
 interface StudentDetail {
@@ -166,6 +168,24 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
               <ReactivateStudentButton studentId={student.id} />
             ) : (
               <DeactivateStudentDialog studentId={student.id} studentName={student.fullName} />
+            )}
+            {user.role === 'ADMIN' && (
+              <DeleteConfirmDialog
+                url={`/api/students/${student.id}`}
+                title="Excluir aluno"
+                description={`${student.fullName} será excluído(a) junto com responsáveis, matrículas e mensalidades. Para manter o histórico, prefira “Marcar como ex-aluno”.`}
+                confirmLabel="Excluir aluno"
+                redirectTo="/alunos"
+                trigger={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 rounded-xl border-destructive/30 bg-card text-destructive hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" /> Excluir
+                  </Button>
+                }
+              />
             )}
           </div>
         </div>

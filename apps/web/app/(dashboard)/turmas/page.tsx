@@ -1,11 +1,12 @@
 import Link from 'next/link';
-import { Armchair, ChevronRight, GraduationCap, Pencil, Plus, School, TriangleAlert, UsersRound } from 'lucide-react';
+import { Armchair, ChevronRight, GraduationCap, Pencil, Plus, School, Trash2, TriangleAlert, UsersRound } from 'lucide-react';
 import { AGE_GROUP_LABELS, AgeGroup, SHIFT_LABELS, Shift } from '@escola/contracts';
 import { apiGet, getSessionUser } from '@/lib/server-api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ClassroomDialog } from '@/components/classroom-dialog';
+import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog';
 import { RenewBatchDialog } from '@/components/renew-batch-dialog';
 import { StatCard } from '@/components/stat-card';
 
@@ -154,6 +155,19 @@ export default async function TurmasPage() {
                         </Button>
                       }
                     />
+                    {user.role === 'ADMIN' && (
+                      <DeleteConfirmDialog
+                        url={`/api/classrooms/${classroom.id}`}
+                        title="Excluir turma"
+                        description={`A turma ${classroom.name} será excluída. Só é possível excluir turmas sem matrículas vinculadas — se houver histórico, desative a turma em vez de excluí-la.`}
+                        confirmLabel="Excluir turma"
+                        trigger={
+                          <Button variant="ghost" size="icon" aria-label={`Excluir ${classroom.name}`} className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                    )}
                   </div>
                 </div>
 

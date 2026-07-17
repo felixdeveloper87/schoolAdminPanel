@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { AGE_GROUP_LABELS, CreateClassroomInput, SHIFT_LABELS, UpdateClassroomInput } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -39,5 +39,21 @@ export class ClassroomsService {
     const found = await this.prisma.classroom.findFirst({ where: { id, schoolId }, select: { id: true } });
     if (!found) throw new NotFoundException('Turma não encontrada');
     return this.prisma.classroom.update({ where: { id }, data: input });
+  }
+
+  async remove(schoolId: string, id: string) {
+    const found = await this.prisma.classroom.findFirst({
+      where: { id, schoolId },
+      select: { id: true, _count: { select: { enrollments: true } } },
+    });
+    if (!found) throw new NotFoundException('Turma não encontrada');
+    // Matrículas (mesmo encerradas) carregam o histórico financeiro dos alunos.
+    if (found._count.enrollments > 0) {
+      throw new BadRequestException(
+        'A turma possui matrículas vinculadas e não pode ser excluída. Desative a turma para tirá-la de uso.',
+      );
+    }
+    await this.prisma.classroom.delete({ where: { id } });
+    return { deleted: true };
   }
 }

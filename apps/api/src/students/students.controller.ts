@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -24,6 +25,7 @@ import {
 import { StudentsService } from './students.service';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { Roles } from '../auth/roles.decorator';
 import { JwtPayload } from '../auth/jwt-payload';
 import { parsePageParams } from '../common/pagination';
 import { StudentPhotoInterceptor } from '../uploads/student-photo.interceptor';
@@ -80,6 +82,12 @@ export class StudentsController {
     @Body(new ZodValidationPipe(updateStudentStatusSchema)) body: UpdateStudentStatusInput,
   ) {
     return this.studentsService.updateStatus(user.schoolId, id, body.status, body.reason);
+  }
+
+  @Delete(':id')
+  @Roles('ADMIN')
+  remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.studentsService.remove(user.schoolId, id);
   }
 
   @Post(':id/photo')
