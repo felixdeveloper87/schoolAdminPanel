@@ -22,6 +22,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { apiGet, getSessionUser } from '@/lib/server-api';
 import { brl, currentCompetence, formatCompetence } from '@/lib/format';
 import { StatCard } from '@/components/stat-card';
+import { HealthScoreDialog } from '@/components/health-score-dialog';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   RevenueVsExpensesChart,
@@ -233,6 +234,16 @@ export default async function PainelPage() {
             />
           </svg>
           <p className="text-[10px] text-white/65">Baseado em ocupação, caixa e inadimplência.</p>
+          <HealthScoreDialog
+            healthScore={healthScore}
+            occScore={occScore}
+            defaultScore={defaultScore}
+            netScore={netScore}
+            occupancyRate={summary.occupancyRate}
+            overdueStudentsRate={summary.overdueStudentsRate}
+            netCents={summary.netCents}
+            activeStudents={summary.activeStudents}
+          />
         </div>
       </div>
 
