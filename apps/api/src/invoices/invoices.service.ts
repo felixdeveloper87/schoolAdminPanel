@@ -14,6 +14,9 @@ export class InvoicesService {
     filters: { competence?: Date; status?: InvoiceStatus },
     pageParams: PageParams,
   ) {
+    // Recupera faturas cujo cron diário não tenha sido executado (por exemplo, durante um reinício).
+    await this.markOverdue(schoolId);
+
     const where: Prisma.TuitionInvoiceWhereInput = {
       schoolId,
       ...(filters.competence ? { competence: filters.competence } : {}),
