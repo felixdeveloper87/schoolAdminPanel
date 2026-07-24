@@ -98,7 +98,7 @@ interface ClassroomOption {
   active: boolean;
 }
 
-const panelClassName = 'overflow-hidden rounded-[22px] border-border bg-white/95 shadow-[0_12px_35px_rgba(35,49,79,.06)]';
+const panelClassName = 'overflow-hidden rounded-[22px] border-border bg-card/95 shadow-[0_12px_35px_rgba(35,49,79,.06)]';
 
 export default async function AlunoPage({ params }: { params: { id: string } }) {
   const [user, student, classrooms] = await Promise.all([
@@ -127,7 +127,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
         <ArrowLeft className="h-4 w-4" /> Voltar para alunos
       </Link>
 
-      <section className="relative overflow-hidden rounded-[26px] border border-border bg-gradient-to-br from-white via-white to-brand/10 p-5 shadow-[0_16px_45px_rgba(37,49,79,.08)] sm:p-6">
+      <section className="relative overflow-hidden rounded-[26px] border border-border bg-gradient-to-br from-card via-card to-brand/10 p-5 shadow-[0_16px_45px_rgba(37,49,79,.08)] sm:p-6">
         <span className="pointer-events-none absolute -right-20 -top-28 h-64 w-64 rounded-full bg-brand/[0.07]" />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
@@ -192,22 +192,22 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
       </section>
 
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <div className="rounded-[18px] border border-border bg-white/95 p-4 shadow-[0_8px_25px_rgba(35,49,79,.05)]">
+        <div className="rounded-[18px] border border-border bg-card/95 p-4 shadow-[0_8px_25px_rgba(35,49,79,.05)]">
           <div className="flex items-center gap-2 text-muted-foreground"><School className="h-4 w-4 text-brand" /><span className="text-[10px] font-extrabold uppercase tracking-wide">Turma</span></div>
           <p className="mt-2 truncate font-display text-lg font-extrabold text-foreground">{activeEnrollment?.classroom.name ?? 'Sem turma'}</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">{activeEnrollment ? `${AGE_GROUP_LABELS[activeEnrollment.classroom.ageGroup]} · ${SHIFT_LABELS[activeEnrollment.classroom.shift]}` : 'Sem matrícula ativa'}</p>
         </div>
-        <div className="rounded-[18px] border border-border bg-white/95 p-4 shadow-[0_8px_25px_rgba(35,49,79,.05)]">
+        <div className="rounded-[18px] border border-border bg-card/95 p-4 shadow-[0_8px_25px_rgba(35,49,79,.05)]">
           <div className="flex items-center gap-2 text-muted-foreground"><Wallet className="h-4 w-4 text-success" /><span className="text-[10px] font-extrabold uppercase tracking-wide">Mensalidade</span></div>
           <p className="money mt-2 truncate text-lg font-extrabold text-foreground">{effectiveMonthlyFee !== null ? brl(effectiveMonthlyFee) : '—'}</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">{activeEnrollment?.discountCents ? `${brl(activeEnrollment.discountCents)} de desconto` : 'Valor efetivo mensal'}</p>
         </div>
-        <div className="rounded-[18px] border border-border bg-white/95 p-4 shadow-[0_8px_25px_rgba(35,49,79,.05)]">
+        <div className="rounded-[18px] border border-border bg-card/95 p-4 shadow-[0_8px_25px_rgba(35,49,79,.05)]">
           <div className="flex items-center gap-2 text-muted-foreground"><CalendarDays className="h-4 w-4 text-accent-deep" /><span className="text-[10px] font-extrabold uppercase tracking-wide">Vencimento</span></div>
           <p className="mt-2 font-display text-lg font-extrabold text-foreground">{activeEnrollment ? `Dia ${activeEnrollment.dueDay}` : '—'}</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">Da mensalidade</p>
         </div>
-        <div className="rounded-[18px] border border-border bg-white/95 p-4 shadow-[0_8px_25px_rgba(35,49,79,.05)]">
+        <div className="rounded-[18px] border border-border bg-card/95 p-4 shadow-[0_8px_25px_rgba(35,49,79,.05)]">
           <div className="flex items-center gap-2 text-muted-foreground"><UserRound className="h-4 w-4 text-brand" /><span className="text-[10px] font-extrabold uppercase tracking-wide">Responsável financeiro</span></div>
           <p className="mt-2 truncate font-display text-lg font-extrabold text-foreground">{financial?.fullName ?? 'Não informado'}</p>
           <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{financial?.phoneWhatsapp ?? 'Sem contato cadastrado'}</p>
@@ -299,7 +299,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
 
         <div className="space-y-5">
           {hasHealthNotes && (
-            <Card className="overflow-hidden rounded-[22px] border-destructive/20 bg-white/95 shadow-[0_12px_35px_rgba(74,45,48,.05)]">
+            <Card className="overflow-hidden rounded-[22px] border-destructive/20 bg-card/95 shadow-[0_12px_35px_rgba(74,45,48,.05)]">
               <CardHeader className="flex-row items-center gap-3 space-y-0 border-b border-destructive/20">
                 <span className="grid h-9 w-9 place-items-center rounded-xl bg-destructive/10 text-destructive"><Stethoscope className="h-4 w-4" /></span>
                 <div><CardTitle className="text-lg text-foreground">Saúde e alimentação</CardTitle><p className="text-[11px] text-muted-foreground">Informações que exigem atenção</p></div>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, ChevronLeft, ChevronRight, Plus, UserRoundSearch, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, UserRoundSearch, Users } from 'lucide-react';
 import {
   ENROLLMENT_TYPE_LABELS,
   EnrollmentType,
@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { StudentsFilters } from '@/components/students-filters';
 import { ExportCsvButton } from '@/components/export-csv-button';
 import { StudentAvatar } from '@/components/student-avatar';
+import { ClickableTableRow } from '@/components/clickable-table-row';
 
 interface StudentRow {
   id: string;
@@ -144,13 +145,12 @@ export default async function AlunosPage({
               <TableHead className="hidden h-12 tracking-[0.08em] xl:table-cell">Período</TableHead>
               <TableHead className="hidden h-12 tracking-[0.08em] sm:table-cell">Mensalidade</TableHead>
               <TableHead className="h-12 tracking-[0.08em]">Situação</TableHead>
-              <TableHead className="h-12 w-14" aria-label="Ações" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-16 text-center">
+                <TableCell colSpan={6} className="py-16 text-center">
                   <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-muted/60 text-muted-foreground">
                     <UserRoundSearch className="h-5 w-5" />
                   </span>
@@ -160,14 +160,19 @@ export default async function AlunosPage({
               </TableRow>
             )}
             {data.items.map((student) => (
-              <TableRow key={student.id} className="group border-border hover:bg-muted/60">
+              <ClickableTableRow
+                key={student.id}
+                href={`/alunos/${student.id}`}
+                ariaLabel={`Abrir ficha de ${student.fullName}`}
+                className="group border-border hover:bg-muted/60"
+              >
                 <TableCell className="py-4 pl-5">
                   <div className="flex min-w-[210px] items-center gap-3">
                     <StudentAvatar photoUrl={student.photoUrl} name={student.fullName} size="md" />
                     <div className="min-w-0">
-                      <Link href={`/alunos/${student.id}`} className="block truncate text-sm font-extrabold text-foreground hover:text-brand">
+                      <p className="truncate text-sm font-extrabold text-foreground group-hover:text-brand">
                         {student.fullName}
-                      </Link>
+                      </p>
                       <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
                         {student.financialGuardian?.fullName ? `Resp. ${student.financialGuardian.fullName}` : 'Sem responsável financeiro'}
                       </p>
@@ -206,16 +211,7 @@ export default async function AlunosPage({
                     {student.allergies && <Badge variant="warning" className="hidden whitespace-nowrap text-[10px] lg:inline-flex">Alergia</Badge>}
                   </div>
                 </TableCell>
-                <TableCell className="pr-4 text-right">
-                  <Link
-                    href={`/alunos/${student.id}`}
-                    aria-label={`Abrir ficha de ${student.fullName}`}
-                    className="inline-grid h-9 w-9 place-items-center rounded-xl text-muted-foreground transition-all group-hover:bg-brand/10 group-hover:text-brand"
-                  >
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </TableCell>
-              </TableRow>
+              </ClickableTableRow>
             ))}
           </TableBody>
         </Table>
