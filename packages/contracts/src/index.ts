@@ -253,6 +253,23 @@ export type UpdateClassroomInput = z.infer<typeof updateClassroomSchema>;
 // ---------------------------------------------------------------------------
 // Enrollment (matrícula)
 // ---------------------------------------------------------------------------
+
+/**
+ * O que fazer com os meses entre o início da matrícula e a competência atual
+ * quando a matrícula é retroativa (aluno que já estudava antes da plataforma).
+ */
+export const BACKFILL_MODES = ['PAID', 'OPEN', 'NONE'] as const;
+export type BackfillMode = (typeof BACKFILL_MODES)[number];
+
+export const BACKFILL_MODE_LABELS: Record<BackfillMode, string> = {
+  PAID: 'Gerar como já pagas',
+  OPEN: 'Gerar como em aberto',
+  NONE: 'Não gerar histórico',
+};
+
+/** Teto de meses retroativos por matrícula — evita gerar centenas de lançamentos por data errada. */
+export const MAX_BACKFILL_MONTHS = 36;
+
 export const createEnrollmentSchema = z.object({
   studentId: z.string().min(1),
   classroomId: z.string().min(1, 'Escolha a turma'),
@@ -262,6 +279,7 @@ export const createEnrollmentSchema = z.object({
   discountReason: z.enum(DISCOUNT_REASONS).default('NONE'),
   dueDay: z.number().int().min(1, 'Entre 1 e 28').max(28, 'Entre 1 e 28'),
   enrollmentFeeCents: cents.default(0),
+  backfillMode: z.enum(BACKFILL_MODES).default('NONE'),
   notes: z.string().max(500).optional().or(z.literal('').transform(() => undefined)),
 });
 export type CreateEnrollmentInput = z.infer<typeof createEnrollmentSchema>;

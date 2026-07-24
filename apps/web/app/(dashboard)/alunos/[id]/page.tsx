@@ -111,7 +111,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
   const invoices = student.enrollments
     .flatMap((enrollment) => enrollment.invoices)
     .sort((a, b) => b.competence.localeCompare(a.competence))
-    .slice(0, 12);
+    .slice(0, 36);
   const financial = student.guardians.find((guardian) => guardian.isFinancialResponsible);
   const effectiveMonthlyFee = activeEnrollment
     ? activeEnrollment.monthlyFeeCents - activeEnrollment.discountCents
@@ -259,7 +259,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
           <Card className={panelClassName}>
             <CardHeader className="flex-row items-center gap-3 space-y-0 border-b border-border">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-success/10 text-success"><ReceiptText className="h-4 w-4" /></span>
-              <div><CardTitle className="text-lg text-foreground">Mensalidades</CardTitle><p className="text-[11px] text-muted-foreground">Últimos 12 lançamentos</p></div>
+              <div><CardTitle className="text-lg text-foreground">Mensalidades</CardTitle><p className="text-[11px] text-muted-foreground">{invoices.length > 0 ? `${invoices.length} ${invoices.length === 1 ? 'lançamento' : 'lançamentos'} · mais recentes primeiro` : 'Histórico de cobranças'}</p></div>
             </CardHeader>
             <CardContent className="p-0">
               <Table className="min-w-[620px]">

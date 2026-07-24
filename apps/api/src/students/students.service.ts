@@ -81,7 +81,7 @@ export class StudentsService {
           orderBy: { startDate: 'desc' },
           include: {
             classroom: true,
-            invoices: { orderBy: { competence: 'desc' }, take: 12 },
+            invoices: { orderBy: { competence: 'desc' }, take: 36 },
           },
         },
       },

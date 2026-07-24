@@ -25,7 +25,17 @@
       "Skill(run)",
       "Skill(run:*)",
       "Read(//c//**)",
-      "Bash(npm ls *)"
+      "Bash(npm ls *)",
+      "PowerShell(pnpm --filter @escola/contracts build)",
+      "PowerShell(@\\(\"node_modules\",\"apps\\\\api\\\\node_modules\",\"apps\\\\web\\\\node_modules\",\"packages\\\\contracts\\\\node_modules\",\"packages\\\\contracts\\\\dist\"\\) | ForEach-Object { [PSCustomObject]@{ Path=$_; Exists=\\(Test-Path \"c:\\\\Users\\\\Leandro\\\\Desktop\\\\schoolAdminPanel\\\\$_\"\\) } } | Format-Table -AutoSize)",
+      "PowerShell(\"---\")",
+      "PowerShell(Push-Location \"c:\\\\Users\\\\Leandro\\\\Desktop\\\\schoolAdminPanel\\\\packages\\\\contracts\"; & \".\\\\node_modules\\\\.bin\\\\tsc.cmd\" -p tsconfig.json; $code = $LASTEXITCODE; Pop-Location; \"contracts build exit: $code\")",
+      "PowerShell(Push-Location \"c:\\\\Users\\\\Leandro\\\\Desktop\\\\schoolAdminPanel\\\\apps\\\\api\"; & \".\\\\node_modules\\\\.bin\\\\tsc.cmd\" --noEmit -p tsconfig.json; $code = $LASTEXITCODE; Pop-Location; \"== api typecheck exit: $code ==\")",
+      "PowerShell(Push-Location \"c:\\\\Users\\\\Leandro\\\\Desktop\\\\schoolAdminPanel\\\\apps\\\\web\"; & \".\\\\node_modules\\\\.bin\\\\tsc.cmd\" --noEmit -p tsconfig.json; $code = $LASTEXITCODE; Pop-Location; \"== web typecheck exit: $code ==\")",
+      "PowerShell(docker compose -f \"c:\\\\Users\\\\Leandro\\\\Desktop\\\\schoolAdminPanel\\\\docker-compose.dev.yml\" ps)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Leandro\\.claude\\projects\\c--Users-Leandro-Desktop-schoolAdminPanel\\memory"
     ]
   }
 }

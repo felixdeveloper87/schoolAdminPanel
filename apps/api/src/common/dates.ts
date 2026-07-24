@@ -43,3 +43,19 @@ export function monthRange(competence: Date): { start: Date; end: Date } {
   const end = new Date(Date.UTC(competence.getUTCFullYear(), competence.getUTCMonth() + 1, 1));
   return { start, end };
 }
+
+/** Competência (dia 1º do mês) a que uma data pertence */
+export function competenceOf(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
+}
+
+/** Competências de `from` até `to`, inclusive nas duas pontas. Vazia quando `from` é posterior a `to`. */
+export function competenceRange(from: Date, to: Date): Date[] {
+  const last = competenceOf(to);
+  const competences: Date[] = [];
+  for (let cursor = competenceOf(from); cursor <= last; ) {
+    competences.push(cursor);
+    cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
+  }
+  return competences;
+}

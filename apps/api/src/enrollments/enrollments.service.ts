@@ -1,9 +1,43 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateEnrollmentInput, EndEnrollmentInput, RenewBatchInput } from '@escola/contracts';
+import { Prisma } from '@prisma/client';
+import {
+  BackfillMode,
+  CreateEnrollmentInput,
+  EndEnrollmentInput,
+  MAX_BACKFILL_MONTHS,
+  RenewBatchInput,
+} from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
-import { currentCompetenceSaoPaulo, dueDateFor, monthRange, parseDateString } from '../common/dates';
+import {
+  competenceRange,
+  currentCompetenceSaoPaulo,
+  dueDateFor,
+  parseDateString,
+  todaySaoPaulo,
+} from '../common/dates';
 
 const oneDayBefore = (date: Date) => new Date(date.getTime() - 24 * 60 * 60 * 1000);
+
+const BACKFILL_RECEIPT_NOTE = 'Histórico anterior à plataforma (lançado na matrícula)';
+
+/**
+ * Status de uma mensalidade retroativa criada junto com a matrícula.
+ * 'PAID' assume o mês já quitado (migração de aluno antigo); 'OPEN' trata como dívida real e,
+ * como o vencimento já passou, nasce OVERDUE em vez de esperar o cron diário.
+ */
+function backfillFields(
+  mode: BackfillMode,
+  dueDate: Date,
+  today: Date,
+): Pick<Prisma.TuitionInvoiceCreateManyInput, 'status' | 'paidAt' | 'receiptNote'> {
+  if (mode === 'PAID') {
+    return { status: 'PAID', paidAt: dueDate, receiptNote: BACKFILL_RECEIPT_NOTE };
+  }
+  if (mode === 'OPEN' && dueDate < today) {
+    return { status: 'OVERDUE' };
+  }
+  return {};
+}
 
 @Injectable()
 export class EnrollmentsService {
@@ -44,7 +78,17 @@ export class EnrollmentsService {
 
     const startDate = parseDateString(input.startDate);
     const currentCompetence = currentCompetenceSaoPaulo();
-    const { end: nextMonth } = monthRange(currentCompetence);
+
+    // Da competência de início até a atual. Vazia quando a matrícula começa num mês futuro —
+    // nesse caso o cron mensal gera a primeira mensalidade quando o mês chegar.
+    const competences = competenceRange(startDate, currentCompetence);
+    const pastCompetences = competences.slice(0, -1);
+    if (input.backfillMode !== 'NONE' && pastCompetences.length > MAX_BACKFILL_MONTHS) {
+      throw new BadRequestException(
+        `Início retroativo de ${pastCompetences.length} meses excede o limite de ${MAX_BACKFILL_MONTHS}. Confira a data de início.`,
+      );
+    }
+    const invoicesToCreate = input.backfillMode === 'NONE' ? competences.slice(-1) : competences;
 
     return this.prisma.$transaction(async (tx) => {
       const enrollment = await tx.enrollment.create({
@@ -65,20 +109,26 @@ export class EnrollmentsService {
         await tx.student.update({ where: { id: student.id }, data: { status: 'ACTIVE' } });
       }
 
-      if (startDate < nextMonth) {
-        await tx.tuitionInvoice.create({
-          data: {
-            schoolId,
-            enrollmentId: enrollment.id,
-            competence: currentCompetence,
-            amountCents: input.monthlyFeeCents,
-            discountCents: input.discountCents,
-            dueDate: dueDateFor(currentCompetence, input.dueDay),
-          },
+      if (invoicesToCreate.length > 0) {
+        const today = todaySaoPaulo();
+        await tx.tuitionInvoice.createMany({
+          data: invoicesToCreate.map((competence) => {
+            const dueDate = dueDateFor(competence, input.dueDay);
+            const retroactive = competence < currentCompetence;
+            return {
+              schoolId,
+              enrollmentId: enrollment.id,
+              competence,
+              amountCents: input.monthlyFeeCents,
+              discountCents: input.discountCents,
+              dueDate,
+              ...backfillFields(retroactive ? input.backfillMode : 'NONE', dueDate, today),
+            };
+          }),
         });
       }
 
-      return enrollment;
+      return { ...enrollment, backfilledMonths: Math.max(invoicesToCreate.length - 1, 0) };
     });
   }
 

@@ -6,9 +6,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
+  BackfillMode,
+  BACKFILL_MODE_LABELS,
   createEnrollmentSchema,
   DISCOUNT_REASONS,
   DISCOUNT_REASON_LABELS,
+  MAX_BACKFILL_MONTHS,
 } from '@escola/contracts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +25,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { todayDateInput, brl } from '@/lib/format';
+import { todayDateInput, brl, competenceDiff, currentCompetence } from '@/lib/format';
 
 // No formulário os valores são digitados em reais e convertidos para centavos no submit
 const formSchema = createEnrollmentSchema.omit({ studentId: true, monthlyFeeCents: true, discountCents: true, enrollmentFeeCents: true }).extend({
@@ -33,6 +36,27 @@ const formSchema = createEnrollmentSchema.omit({ studentId: true, monthlyFeeCent
 type FormValues = z.infer<typeof formSchema>;
 
 const toCents = (value: string) => Math.round(Number(value.replace(/\./g, '').replace(',', '.')) * 100) || 0;
+
+/** Quantos meses fechados existem entre o início da matrícula e a competência atual. */
+const retroactiveMonths = (startDate: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return 0;
+  return Math.max(competenceDiff(startDate.slice(0, 7), currentCompetence()), 0);
+};
+
+const BACKFILL_OPTIONS: { value: BackfillMode; hint: string }[] = [
+  {
+    value: 'PAID',
+    hint: 'Aluno antigo migrando para a plataforma — o histórico entra quitado e não conta como inadimplência.',
+  },
+  {
+    value: 'OPEN',
+    hint: 'A escola ainda vai receber esses meses — entram como atrasadas e aparecem na inadimplência.',
+  },
+  {
+    value: 'NONE',
+    hint: 'Só a mensalidade do mês atual é criada. Os meses anteriores ficam fora do sistema.',
+  },
+];
 
 export function EnrollmentDialog({
   studentId,
@@ -64,6 +88,7 @@ export function EnrollmentDialog({
       enrollmentFee: '0',
       discountReason: 'NONE',
       dueDay: 5,
+      backfillMode: 'PAID',
     },
   });
 
@@ -87,6 +112,10 @@ export function EnrollmentDialog({
   const discount = watch('discount');
   const effective = toCents(monthlyFee) - toCents(discount);
 
+  const backfillMode = watch('backfillMode');
+  const pastMonths = retroactiveMonths(watch('startDate'));
+  const backfillTotal = backfillMode === 'NONE' ? 0 : pastMonths * effective;
+
   const onSubmit = async (data: FormValues) => {
     setServerError(null);
     const res = await fetch('/api/enrollments', {
@@ -101,6 +130,7 @@ export function EnrollmentDialog({
         discountReason: data.discountReason,
         dueDay: Number(data.dueDay),
         enrollmentFeeCents: toCents(data.enrollmentFee),
+        backfillMode: data.backfillMode,
         notes: data.notes,
       }),
     });
@@ -177,6 +207,51 @@ export function EnrollmentDialog({
             <p className="text-sm text-muted-foreground">
               Valor efetivo da mensalidade: <span className="money font-semibold text-foreground">{brl(effective)}</span>
             </p>
+          )}
+
+          {pastMonths > 0 && (
+            <div className="space-y-3 rounded-xl border border-accent/40 bg-accent/10 p-3.5">
+              <div>
+                <p className="text-sm font-extrabold text-foreground">
+                  Início retroativo: {pastMonths} {pastMonths === 1 ? 'mês anterior' : 'meses anteriores'}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  A mensalidade do mês atual sempre é criada. Escolha o que fazer com o histórico.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                {BACKFILL_OPTIONS.map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex cursor-pointer gap-2.5 rounded-lg border border-transparent bg-card/70 p-2.5 transition-colors hover:border-border has-[:checked]:border-brand has-[:checked]:bg-card"
+                  >
+                    <input
+                      type="radio"
+                      value={option.value}
+                      {...register('backfillMode')}
+                      className="mt-0.5 h-4 w-4 flex-none accent-brand"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-xs font-extrabold text-foreground">{BACKFILL_MODE_LABELS[option.value]}</span>
+                      <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">{option.hint}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+
+              {backfillTotal > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Serão lançados {pastMonths} + 1 lançamentos, somando{' '}
+                  <span className="money font-semibold text-foreground">{brl(backfillTotal + effective)}</span>.
+                </p>
+              )}
+              {pastMonths > MAX_BACKFILL_MONTHS && backfillMode !== 'NONE' && (
+                <p className="text-xs font-semibold text-destructive">
+                  Acima do limite de {MAX_BACKFILL_MONTHS} meses retroativos. Confira a data de início ou escolha “Não gerar”.
+                </p>
+              )}
+            </div>
           )}
           {serverError && <p className="text-sm text-destructive">{serverError}</p>}
           <div className="flex justify-end gap-2">

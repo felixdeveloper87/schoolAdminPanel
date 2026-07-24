@@ -43,6 +43,13 @@ export function currentCompetence(): string {
     .slice(0, 7);
 }
 
+/** Quantos meses separam duas competências 'AAAA-MM' (negativo se `to` for anterior a `from`) */
+export function competenceDiff(from: string, to: string): number {
+  const [fy, fm] = from.split('-').map(Number);
+  const [ty, tm] = to.split('-').map(Number);
+  return (ty - fy) * 12 + (tm - fm);
+}
+
 export function addMonths(competence: string, delta: number): string {
   const [y, m] = competence.split('-').map(Number);
   const total = y * 12 + (m - 1) + delta;
