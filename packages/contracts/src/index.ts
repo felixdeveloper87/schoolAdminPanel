@@ -284,6 +284,11 @@ export const createEnrollmentSchema = z.object({
 });
 export type CreateEnrollmentInput = z.infer<typeof createEnrollmentSchema>;
 
+export const updateEnrollmentStartDateSchema = z.object({
+  startDate: dateString,
+});
+export type UpdateEnrollmentStartDateInput = z.infer<typeof updateEnrollmentStartDateSchema>;
+
 export const endEnrollmentSchema = z.object({
   endDate: dateString,
   status: z.enum(['ENDED', 'CANCELLED']).default('ENDED'),

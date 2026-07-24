@@ -6,6 +6,8 @@ import {
   EndEnrollmentInput,
   renewBatchSchema,
   RenewBatchInput,
+  updateEnrollmentStartDateSchema,
+  UpdateEnrollmentStartDateInput,
 } from '@escola/contracts';
 import { EnrollmentsService } from './enrollments.service';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
@@ -42,6 +44,16 @@ export class EnrollmentsController {
     @Body(new ZodValidationPipe(endEnrollmentSchema)) body: EndEnrollmentInput,
   ) {
     return this.enrollmentsService.end(user.schoolId, id, body);
+  }
+
+  @Patch(':id/start-date')
+  @Roles('ADMIN')
+  updateStartDate(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateEnrollmentStartDateSchema)) body: UpdateEnrollmentStartDateInput,
+  ) {
+    return this.enrollmentsService.updateStartDate(user.schoolId, id, body);
   }
 
   @Post('renew-batch')

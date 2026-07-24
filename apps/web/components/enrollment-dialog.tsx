@@ -25,7 +25,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { todayDateInput, brl, competenceDiff, currentCompetence } from '@/lib/format';
+import { todayDateInput, brl, competenceDiff, currentCompetence, toDateInput } from '@/lib/format';
 
 // No formulário os valores são digitados em reais e convertidos para centavos no submit
 const formSchema = createEnrollmentSchema.omit({ studentId: true, monthlyFeeCents: true, discountCents: true, enrollmentFeeCents: true }).extend({
@@ -314,6 +314,73 @@ export function EndEnrollmentButton({ enrollmentId }: { enrollmentId: string }) 
             }}
           >
             Encerrar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function EditEnrollmentStartDateButton({
+  enrollmentId,
+  startDate,
+}: {
+  enrollmentId: string;
+  startDate: string;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  const [date, setDate] = React.useState(toDateInput(startDate));
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const save = async () => {
+    setBusy(true);
+    setError(null);
+    const res = await fetch(`/api/enrollments/${enrollmentId}/start-date`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ startDate: date }),
+    });
+    setBusy(false);
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      setError(typeof body?.message === 'string' ? body.message : 'Não foi possível atualizar a data');
+      return;
+    }
+
+    setOpen(false);
+    router.refresh();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">Editar data</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar data da matrícula</DialogTitle>
+          <DialogDescription>
+            As mensalidades serão recalculadas de acordo com o novo período. Lançamentos fora dele serão excluídos,
+            inclusive se já estiverem pagos.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-1.5">
+          <Label htmlFor="enrollmentStartDate">Data de início</Label>
+          <Input
+            id="enrollmentStartDate"
+            type="date"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+          />
+        </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button disabled={busy || !date} onClick={save}>
+            {busy ? 'Salvando…' : 'Salvar e recalcular'}
           </Button>
         </div>
       </DialogContent>

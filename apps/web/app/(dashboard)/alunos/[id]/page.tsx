@@ -39,7 +39,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { InvoiceStatusBadge } from '@/components/invoice-status-badge';
 import { InvoiceActions } from '@/components/invoice-actions';
-import { EnrollmentDialog, EndEnrollmentButton } from '@/components/enrollment-dialog';
+import {
+  EditEnrollmentStartDateButton,
+  EnrollmentDialog,
+  EndEnrollmentButton,
+} from '@/components/enrollment-dialog';
 import { DeactivateStudentDialog, ReactivateStudentButton } from '@/components/student-status-dialog';
 import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog';
 import { StudentAvatar } from '@/components/student-avatar';
@@ -232,7 +236,17 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
                 <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand/10 text-brand"><School className="h-4 w-4" /></span>
                 <div><CardTitle className="text-lg text-foreground">Matrícula atual</CardTitle><p className="text-[11px] text-muted-foreground">Dados acadêmicos e financeiros</p></div>
               </div>
-              {activeEnrollment && <EndEnrollmentButton enrollmentId={activeEnrollment.id} />}
+              {activeEnrollment && (
+                <div className="flex items-center gap-2">
+                  {user.role === 'ADMIN' && (
+                    <EditEnrollmentStartDateButton
+                      enrollmentId={activeEnrollment.id}
+                      startDate={activeEnrollment.startDate}
+                    />
+                  )}
+                  <EndEnrollmentButton enrollmentId={activeEnrollment.id} />
+                </div>
+              )}
             </CardHeader>
             <CardContent className="pt-5">
               {activeEnrollment ? (

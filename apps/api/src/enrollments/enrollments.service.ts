@@ -6,6 +6,7 @@ import {
   EndEnrollmentInput,
   MAX_BACKFILL_MONTHS,
   RenewBatchInput,
+  UpdateEnrollmentStartDateInput,
 } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -140,6 +141,65 @@ export class EnrollmentsService {
     return this.prisma.enrollment.update({
       where: { id },
       data: { status: input.status, endDate: parseDateString(input.endDate) },
+    });
+  }
+
+  async updateStartDate(schoolId: string, id: string, input: UpdateEnrollmentStartDateInput) {
+    const enrollment = await this.prisma.enrollment.findFirst({
+      where: { id, schoolId },
+      include: { invoices: { select: { competence: true } } },
+    });
+    if (!enrollment) throw new NotFoundException('Matrícula não encontrada');
+
+    const startDate = parseDateString(input.startDate);
+    if (enrollment.endDate && startDate > enrollment.endDate) {
+      throw new BadRequestException('A data de início não pode ser posterior ao encerramento da matrícula.');
+    }
+
+    const currentCompetence = currentCompetenceSaoPaulo();
+    const expectedCompetences = competenceRange(startDate, currentCompetence);
+    const expectedKeys = new Set(expectedCompetences.map((competence) => competence.toISOString()));
+    const existingKeys = new Set(enrollment.invoices.map((invoice) => invoice.competence.toISOString()));
+    const invoicesToCreate = expectedCompetences.filter((competence) => !existingKeys.has(competence.toISOString()));
+
+    return this.prisma.$transaction(async (tx) => {
+      // A data de matrícula determina quais competências existem. Ao corrigi-la,
+      // removemos lançamentos fora do novo período e criamos os que estiverem faltando.
+      if (expectedCompetences.length === 0) {
+        await tx.tuitionInvoice.deleteMany({ where: { schoolId, enrollmentId: id } });
+      } else {
+        await tx.tuitionInvoice.deleteMany({
+          where: {
+            schoolId,
+            enrollmentId: id,
+            competence: { notIn: expectedCompetences },
+          },
+        });
+      }
+
+      if (invoicesToCreate.length > 0) {
+        const today = todaySaoPaulo();
+        await tx.tuitionInvoice.createMany({
+          data: invoicesToCreate.map((competence) => {
+            const dueDate = dueDateFor(competence, enrollment.dueDay);
+            const retroactive = competence < currentCompetence;
+            return {
+              schoolId,
+              enrollmentId: id,
+              competence,
+              amountCents: enrollment.monthlyFeeCents,
+              discountCents: enrollment.discountCents,
+              dueDate,
+              ...backfillFields(retroactive ? 'OPEN' : 'NONE', dueDate, today),
+            };
+          }),
+        });
+      }
+
+      return tx.enrollment.update({
+        where: { id },
+        data: { startDate },
+      });
     });
   }
 
