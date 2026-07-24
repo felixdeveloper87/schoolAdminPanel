@@ -159,8 +159,8 @@ export default async function MensalidadesPage({
             className={cn(
               'rounded-xl border px-3 py-2 font-bold transition-all',
               !status
-                ? 'border-[#223e79] bg-[#223e79] text-white shadow-[0_6px_16px_rgba(34,62,121,.18)]'
-                : 'border-white bg-white/85 text-muted-foreground shadow-sm hover:-translate-y-0.5 hover:border-primary/40 hover:text-primary',
+                ? 'border-primary bg-primary text-primary-foreground shadow-[0_6px_16px_hsl(var(--primary)/.22)]'
+                : 'border-border bg-card/90 text-muted-foreground shadow-sm hover:-translate-y-0.5 hover:border-primary/40 hover:text-primary',
             )}
           >
             Todas <span className="ml-1 opacity-75">{totalInvoiceCount}</span>
@@ -181,8 +181,8 @@ export default async function MensalidadesPage({
                 className={cn(
                   'flex items-center gap-2 rounded-xl border px-3 py-2 font-bold transition-all',
                   status === s
-                    ? 'border-[#223e79] bg-[#223e79] text-white shadow-[0_6px_16px_rgba(34,62,121,.18)]'
-                    : 'border-white bg-white/85 text-muted-foreground shadow-sm hover:-translate-y-0.5 hover:border-primary/40 hover:text-primary',
+                    ? 'border-primary bg-primary text-primary-foreground shadow-[0_6px_16px_hsl(var(--primary)/.22)]'
+                    : 'border-border bg-card/90 text-muted-foreground shadow-sm hover:-translate-y-0.5 hover:border-primary/40 hover:text-primary',
                 )}
               >
                 <span className={cn('h-2 w-2 rounded-full', color)} />
