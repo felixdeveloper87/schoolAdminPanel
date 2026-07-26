@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InvoiceStatus, InvoiceType, Prisma } from '@prisma/client';
-import { CreateAdditionalInvoiceInput, PayInvoiceInput } from '@escola/contracts';
+import { CreateRenewalInvoiceInput, PayInvoiceInput } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import { dueDateFor, monthRange, parseDateString, todaySaoPaulo } from '../common/dates';
 import { PageParams, paged } from '../common/pagination';
@@ -41,7 +41,7 @@ export class InvoicesService {
 
   async list(
     schoolId: string,
-    filters: { competence?: Date; status?: InvoiceStatus; type?: InvoiceType },
+    filters: { competence?: Date; status?: InvoiceStatus },
     pageParams: PageParams,
   ) {
     // Recupera faturas cujo cron diário não tenha sido executado (por exemplo, durante um reinício).
@@ -51,7 +51,6 @@ export class InvoicesService {
       schoolId,
       ...(filters.competence ? { competence: filters.competence } : {}),
       ...(filters.status ? { status: filters.status } : {}),
-      ...(filters.type ? { type: filters.type } : {}),
     };
 
     const [items, total, summary] = await this.prisma.$transaction([
@@ -72,7 +71,10 @@ export class InvoicesService {
       this.prisma.tuitionInvoice.count({ where }),
       this.prisma.tuitionInvoice.groupBy({
         by: ['status'],
-        where: { schoolId, ...(filters.competence ? { competence: filters.competence } : {}) },
+        where: {
+          schoolId,
+          ...(filters.competence ? { competence: filters.competence } : {}),
+        },
         orderBy: { status: 'asc' },
         _sum: { amountCents: true, discountCents: true },
         _count: true,
@@ -180,7 +182,7 @@ export class InvoicesService {
     return { generated: result.count, activeEnrollments: enrollments.length };
   }
 
-  async createAdditional(schoolId: string, input: CreateAdditionalInvoiceInput) {
+  async createRenewal(schoolId: string, input: CreateRenewalInvoiceInput) {
     const enrollment = await this.prisma.enrollment.findFirst({
       where: { id: input.enrollmentId, schoolId },
       select: { id: true },
@@ -191,7 +193,7 @@ export class InvoicesService {
     const invoices = splitAdditionalCharge({
       schoolId,
       enrollmentId: enrollment.id,
-      type: input.type,
+      type: 'RENEWAL_FEE',
       amountCents: input.amountCents,
       competence,
       dueDate: parseDateString(input.dueDate),
@@ -201,7 +203,7 @@ export class InvoicesService {
       where: {
         schoolId,
         enrollmentId: enrollment.id,
-        type: input.type,
+        type: 'RENEWAL_FEE',
         competence: { in: invoices.map((invoice) => new Date(invoice.competence)) },
       },
       select: { id: true },

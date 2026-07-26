@@ -1,10 +1,8 @@
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Plus, UserRoundSearch, Users } from 'lucide-react';
+import { ArrowUpRight, ChevronLeft, ChevronRight, CircleCheckBig, Plus, UserRoundSearch, Users } from 'lucide-react';
 import {
   ENROLLMENT_TYPE_LABELS,
   EnrollmentType,
-  INVOICE_STATUS_LABELS,
-  InvoiceStatus,
   STUDENT_STATUS_LABELS,
   StudentStatus,
 } from '@escola/contracts';
@@ -17,7 +15,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { StudentsFilters } from '@/components/students-filters';
 import { ExportCsvButton } from '@/components/export-csv-button';
 import { StudentAvatar } from '@/components/student-avatar';
-import { ClickableTableRow } from '@/components/clickable-table-row';
 
 interface StudentRow {
   id: string;
@@ -30,7 +27,6 @@ interface StudentRow {
   classroom: { id: string; name: string } | null;
   monthlyFeeCents: number | null;
   hasOverdue: boolean;
-  renewalStatus: InvoiceStatus | null;
   inactiveReason: string | null;
   inactiveAt: string | null;
   financialGuardian: { fullName: string; phoneWhatsapp: string } | null;
@@ -95,11 +91,16 @@ export default async function AlunosPage({
                 Mensalidade: student.monthlyFeeCents !== null ? (student.monthlyFeeCents / 100).toFixed(2) : '',
                 Status: STUDENT_STATUS_LABELS[student.status],
                 Inadimplente: student.hasOverdue ? 'Sim' : 'Não',
-                Rematrícula: student.renewalStatus ? INVOICE_STATUS_LABELS[student.renewalStatus] : 'Não registrada',
                 Responsável: student.financialGuardian?.fullName ?? '',
                 WhatsApp: student.financialGuardian?.phoneWhatsapp ?? '',
               }))}
             />
+            <Link
+              href="/rematricula"
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-sm font-bold text-white shadow-none transition hover:border-white/25 hover:bg-white/15"
+            >
+              <CircleCheckBig className="h-4 w-4" /> Acompanhar rematrículas <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
             <Link
               href="/alunos/novo"
               className={buttonVariants({ className: 'h-10 rounded-xl bg-card px-4 text-brand shadow-[0_8px_20px_rgba(0,0,0,.16)] hover:bg-brand/10 hover:text-brand' })}
@@ -148,14 +149,13 @@ export default async function AlunosPage({
               <TableHead className="hidden h-12 tracking-[0.08em] lg:table-cell">Idade</TableHead>
               <TableHead className="hidden h-12 tracking-[0.08em] xl:table-cell">Período</TableHead>
               <TableHead className="hidden h-12 tracking-[0.08em] sm:table-cell">Mensalidade</TableHead>
-              <TableHead className="hidden h-12 tracking-[0.08em] lg:table-cell">Rematrícula</TableHead>
               <TableHead className="h-12 tracking-[0.08em]">Situação</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-16 text-center">
+                <TableCell colSpan={6} className="py-16 text-center">
                   <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-muted/60 text-muted-foreground">
                     <UserRoundSearch className="h-5 w-5" />
                   </span>
@@ -165,17 +165,13 @@ export default async function AlunosPage({
               </TableRow>
             )}
             {data.items.map((student) => (
-              <ClickableTableRow
-                key={student.id}
-                href={`/alunos/${student.id}`}
-                ariaLabel={`Abrir ficha de ${student.fullName}`}
-                className="group border-border hover:bg-muted/60"
-              >
+              <TableRow key={student.id} className="group border-border hover:bg-muted/60">
                 <TableCell className="py-4 pl-5">
-                  <div className="flex min-w-[210px] items-center gap-3">
+                  <div className="min-w-[210px]">
+                    <Link href={`/alunos/${student.id}`} className="flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <StudentAvatar photoUrl={student.photoUrl} name={student.fullName} size="md" />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-extrabold text-foreground group-hover:text-brand">
+                      <p className="truncate text-sm font-extrabold text-foreground group-hover:text-brand group-hover:underline">
                         {student.fullName}
                       </p>
                       <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
@@ -186,11 +182,11 @@ export default async function AlunosPage({
                           {student.inactiveAt ? `Desligado em ${formatDate(student.inactiveAt)}${student.inactiveReason ? ` · ${student.inactiveReason}` : ''}` : student.inactiveReason ?? 'Aluno desligado'}
                         </p>
                       )}
-                      {student.renewalStatus && <Badge variant="success" className="mt-1 text-[10px] lg:hidden">Rematrícula registrada</Badge>}
+                    </div>
+                    </Link>
                       <div className="mt-1 flex gap-1 md:hidden">
                         <span className="text-[10px] text-muted-foreground">{student.classroom?.name ?? 'Sem turma'}</span>
                       </div>
-                    </div>
                   </div>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
@@ -205,13 +201,6 @@ export default async function AlunosPage({
                 <TableCell className="money hidden font-semibold text-foreground sm:table-cell">
                   {student.monthlyFeeCents !== null ? brl(student.monthlyFeeCents) : '—'}
                 </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  {student.renewalStatus ? (
-                    <div className="flex flex-col items-start gap-1"><Badge variant="success" className="text-[10px]">Registrada</Badge><span className="text-[11px] text-muted-foreground">{INVOICE_STATUS_LABELS[student.renewalStatus]}</span></div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Pendente</span>
-                  )}
-                </TableCell>
                 <TableCell>
                   <div className="flex flex-col items-start gap-1.5">
                     <Badge
@@ -224,7 +213,7 @@ export default async function AlunosPage({
                     {student.allergies && <Badge variant="warning" className="hidden whitespace-nowrap text-[10px] lg:inline-flex">Alergia</Badge>}
                   </div>
                 </TableCell>
-              </ClickableTableRow>
+              </TableRow>
             ))}
           </TableBody>
         </Table>

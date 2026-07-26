@@ -14,6 +14,7 @@ import {
   LogOut,
   Settings,
   Target,
+  RefreshCw,
   Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { href: '/', label: 'Visão geral', icon: Home },
       { href: '/alunos', label: 'Alunos', icon: Users },
+      { href: '/rematricula', label: 'Rematrícula', icon: RefreshCw },
       { href: '/mensalidades', label: 'Mensalidades', icon: CreditCard },
       { href: '/turmas', label: 'Turmas', icon: BookOpen },
       { href: '/despesas', label: 'Despesas', icon: ArrowDown },

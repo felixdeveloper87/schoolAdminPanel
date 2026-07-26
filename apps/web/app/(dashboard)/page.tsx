@@ -1,14 +1,11 @@
 import Link from 'next/link';
 import {
-  ArrowRight,
   Cake,
   Hourglass,
   TrendingUp,
   TrendingDown,
   UserPlus,
-  CheckCircle2,
   Wallet,
-  FileBarChart,
   AlertTriangle,
   Users,
   Clock,
@@ -18,16 +15,13 @@ import {
   Plus,
   Search,
 } from 'lucide-react';
-import { buttonVariants } from '@/components/ui/button';
 import { apiGet, getSessionUser } from '@/lib/server-api';
 import { brl, currentCompetence, formatCompetence } from '@/lib/format';
 import { StatCard } from '@/components/stat-card';
-import { HealthScoreDialog } from '@/components/health-score-dialog';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   RevenueVsExpensesChart,
   ExpensesByCategoryChart,
-  ActiveStudentsChart,
   DefaultRateChart,
   GoalVsActualChart,
   PaymentStatusDonut,
@@ -36,8 +30,6 @@ import {
 interface DashboardSummary {
   competence: string;
   activeStudents: number;
-  capacity: number;
-  occupancyRate: number;
   receivedCents: number;
   receivedCount: number;
   pendingCents: number;
@@ -91,11 +83,6 @@ export default async function PainelPage() {
   const prevExpenses = revenueEvolution.length >= 2 ? revenueEvolution[revenueEvolution.length - 2].expensesCents : null;
   const expensesGrowth = growthPct(prevExpenses, summary.expensesCents);
 
-  const netPositive = summary.netCents !== null && summary.netCents >= 0;
-  const occScore = Math.min(summary.occupancyRate, 1) * 35;
-  const defaultScore = (1 - Math.min(summary.overdueStudentsRate, 1)) * 45;
-  const netScore = summary.netCents === null ? 11 : netPositive ? 20 : 0;
-  const healthScore = Math.max(0, Math.min(100, Math.round(occScore + defaultScore + netScore)));
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
   const competenceLabel = formatCompetence(summary.competence).replace(' de ', ' ');
 
@@ -141,109 +128,6 @@ export default async function PainelPage() {
             <Plus className="h-4 w-4" />
             Nova mensalidade
           </Link>
-        </div>
-      </div>
-
-      {/* Hero */}
-      <div className="relative grid min-h-[282px] gap-6 overflow-hidden rounded-[28px] brand-gradient p-7 text-white shadow-[0_18px_45px_rgba(83,70,206,.18)] xl:grid-cols-[1.65fr_.85fr] xl:items-stretch">
-        <span className="pointer-events-none absolute -right-24 -top-52 h-[430px] w-[430px] rounded-full border-[54px] border-white/[0.035]" />
-        <span className="pointer-events-none absolute -bottom-36 right-40 h-80 w-80 rounded-full bg-white/[0.025]" />
-        <div className="relative z-10 flex flex-col justify-center">
-          <span className="inline-flex h-[30px] w-fit self-start items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 text-[10px] font-extrabold uppercase tracking-[0.02em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,.06)]">
-            <span aria-hidden="true" className="flex h-3 items-end gap-[2px] text-white/65">
-              <span className="h-[5px] w-px rounded-full bg-current" />
-              <span className="h-[9px] w-px rounded-full bg-current" />
-              <span className="h-[7px] w-px rounded-full bg-current" />
-              <span className="h-[11px] w-px rounded-full bg-current" />
-            </span>
-            Resumo inteligente
-          </span>
-          <h2 className="mt-4 max-w-3xl font-display text-[27px] font-extrabold leading-[1.18] sm:text-[31px]">
-            {summary.overdueStudents > 0
-              ? 'A escola está saudável, mas a inadimplência exige atenção neste mês.'
-              : 'A escola está com as finanças em dia neste mês.'}
-          </h2>
-          <p className="mt-2.5 max-w-3xl text-sm leading-relaxed text-white/80">
-            {summary.netCents !== null && (
-              <>
-                O resultado líquido {netPositive ? 'permanece positivo' : 'está negativo'} em{' '}
-                <strong>{brl(summary.netCents)}</strong>.{' '}
-              </>
-            )}
-            Há {summary.overdueStudents} aluno(s) com mensalidades vencidas, enquanto a ocupação chegou a{' '}
-            {pct(summary.occupancyRate)}.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-2.5">
-            <Link
-              href="/relatorios"
-              className={buttonVariants({
-                variant: 'outline',
-                className: 'h-11 rounded-xl border-white/25 bg-white/10 px-5 text-white shadow-none hover:bg-white/20 hover:text-white',
-              })}
-            >
-              Ver relatório completo
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/mensalidades?status=OVERDUE"
-              className={buttonVariants({
-                variant: 'outline',
-                className: 'h-11 rounded-xl border-white/25 bg-white/10 px-5 text-white shadow-none hover:bg-white/20 hover:text-white',
-              })}
-            >
-              Cobrar mensalidades
-            </Link>
-          </div>
-        </div>
-
-        <div className="relative z-10 flex flex-col justify-center rounded-[24px] border border-white/20 bg-white/[0.11] p-5 backdrop-blur-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[11px] text-white/80">Saúde da escola</p>
-              <p className="mt-2 font-display text-5xl font-extrabold leading-none">
-                {healthScore}
-                <small className="ml-0.5 text-sm font-bold text-white/65">/100</small>
-              </p>
-            </div>
-            <span className="rounded-full bg-white/15 px-3 py-1.5 text-[10px] font-bold text-white/90">Atualizado</span>
-          </div>
-          <svg viewBox="0 0 220 108" className="mt-1 h-[92px] w-full" aria-hidden="true">
-            <circle
-              cx="110"
-              cy="98"
-              r="72"
-              pathLength="100"
-              fill="none"
-              stroke="rgba(255,255,255,.20)"
-              strokeWidth="12"
-              strokeLinecap="round"
-              strokeDasharray="50 50"
-              transform="rotate(180 110 98)"
-            />
-            <circle
-              cx="110"
-              cy="98"
-              r="72"
-              pathLength="100"
-              fill="none"
-              stroke="white"
-              strokeWidth="12"
-              strokeLinecap="round"
-              strokeDasharray={`${healthScore / 2} 100`}
-              transform="rotate(180 110 98)"
-            />
-          </svg>
-          <p className="text-[10px] text-white/65">Baseado em ocupação, caixa e inadimplência.</p>
-          <HealthScoreDialog
-            healthScore={healthScore}
-            occScore={occScore}
-            defaultScore={defaultScore}
-            netScore={netScore}
-            occupancyRate={summary.occupancyRate}
-            overdueStudentsRate={summary.overdueStudentsRate}
-            netCents={summary.netCents}
-            activeStudents={summary.activeStudents}
-          />
         </div>
       </div>
 
@@ -415,16 +299,6 @@ export default async function PainelPage() {
                 <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Cadastrar uma nova matrícula</p>
               </Link>
               <Link
-                href="/mensalidades?status=PENDING"
-                className="group rounded-lg border border-border bg-muted/60 p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-              >
-                <span className="grid h-8 w-8 place-items-center rounded-lg bg-success/10 text-success">
-                  <CheckCircle2 className="h-4 w-4" />
-                </span>
-                <p className="mt-2 text-xs font-extrabold text-foreground group-hover:text-primary">Registrar pagamento</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Dar baixa em uma mensalidade</p>
-              </Link>
-              <Link
                 href="/despesas?new=1"
                 className="group rounded-lg border border-border bg-muted/60 p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
@@ -433,16 +307,6 @@ export default async function PainelPage() {
                 </span>
                 <p className="mt-2 text-xs font-extrabold text-foreground group-hover:text-primary">Nova despesa</p>
                 <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Adicionar um lançamento financeiro</p>
-              </Link>
-              <Link
-                href="/relatorios"
-                className="group rounded-lg border border-border bg-muted/60 p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-              >
-                <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent/15 text-accent-deep">
-                  <FileBarChart className="h-4 w-4" />
-                </span>
-                <p className="mt-2 text-xs font-extrabold text-foreground group-hover:text-primary">Gerar relatório</p>
-                <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Exportar os dados do período</p>
               </Link>
             </div>
 
@@ -503,15 +367,6 @@ export default async function PainelPage() {
           </CardHeader>
           <CardContent>
             <ExpensesByCategoryChart data={charts.expensesByCategory} />
-          </CardContent>
-        </Card>
-        <Card className="paper-panel">
-          <CardHeader>
-            <CardTitle>Evolução de alunos ativos</CardTitle>
-            <CardDescription>Últimos 12 meses</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ActiveStudentsChart data={charts.activeStudentsEvolution} />
           </CardContent>
         </Card>
         <Card className="paper-panel">

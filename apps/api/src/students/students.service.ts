@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InvoiceStatus, Prisma, StudentStatus } from '@prisma/client';
+import { Prisma, StudentStatus } from '@prisma/client';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 import { CreateStudentInput, UpdateStudentInput } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
-import { parseDateString, todaySaoPaulo } from '../common/dates';
+import { currentCompetenceSaoPaulo, parseDateString, todaySaoPaulo } from '../common/dates';
 import { PageParams, paged } from '../common/pagination';
 import { STUDENT_PHOTOS_DIR } from '../uploads/uploads.constants';
 
@@ -37,13 +37,11 @@ export class StudentsService {
         include: {
           guardians: { where: { isFinancialResponsible: true } },
           enrollments: {
-            where: { status: 'ACTIVE' },
+            orderBy: { startDate: 'desc' },
+            take: 1,
             include: {
               classroom: { select: { id: true, name: true } },
-              invoices: {
-                where: { OR: [{ status: 'OVERDUE' }, { type: 'RENEWAL_FEE' }] },
-                select: { status: true, type: true },
-              },
+              invoices: { where: { status: 'OVERDUE' }, select: { id: true }, take: 1 },
             },
           },
         },
@@ -63,9 +61,7 @@ export class StudentsService {
         classroom: enrollment?.classroom ?? null,
         photoUrl: s.photoUrl,
         monthlyFeeCents: enrollment ? enrollment.monthlyFeeCents - enrollment.discountCents : null,
-        hasOverdue: enrollment?.invoices.some((invoice) => invoice.status === 'OVERDUE') ?? false,
-        renewalStatus:
-          enrollment?.invoices.find((invoice) => invoice.type === 'RENEWAL_FEE')?.status as InvoiceStatus | undefined ?? null,
+        hasOverdue: (enrollment?.invoices.length ?? 0) > 0,
         inactiveReason: s.inactiveReason,
         inactiveAt: s.inactiveAt,
         financialGuardian: s.guardians[0]
@@ -75,6 +71,62 @@ export class StudentsService {
     });
 
     return paged(mapped, total, pageParams);
+  }
+
+  /** Situação de rematrícula do ciclo atual (a cobrança é iniciada em julho). */
+  async renewals(schoolId: string, pageParams: PageParams) {
+    const current = currentCompetenceSaoPaulo();
+    const renewalYear = current.getUTCMonth() >= 6 ? current.getUTCFullYear() : current.getUTCFullYear() - 1;
+    const renewalCompetence = new Date(Date.UTC(renewalYear, 6, 1));
+    const where: Prisma.StudentWhereInput = { schoolId, status: 'ACTIVE' };
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.student.findMany({
+        where,
+        orderBy: { fullName: 'asc' },
+        skip: pageParams.skip,
+        take: pageParams.take,
+        include: {
+          enrollments: {
+            orderBy: { startDate: 'desc' },
+            take: 1,
+            include: {
+              classroom: { select: { id: true, name: true } },
+              invoices: {
+                where: { type: 'RENEWAL_FEE', competence: renewalCompetence },
+                select: { status: true, installmentNumber: true, installmentCount: true },
+                orderBy: { installmentNumber: 'asc' },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.student.count({ where }),
+    ]);
+
+    return {
+      ...paged(
+        items.map((student) => {
+          const enrollment = student.enrollments[0] ?? null;
+          const firstInvoice = enrollment?.invoices[0] ?? null;
+          return {
+            id: student.id,
+            fullName: student.fullName,
+            photoUrl: student.photoUrl,
+            classroom: enrollment?.classroom ?? null,
+            enrollmentId: enrollment?.id ?? null,
+            renewal: firstInvoice
+              ? {
+                  status: firstInvoice.status,
+                  installmentCount: firstInvoice.installmentCount,
+                }
+              : null,
+          };
+        }),
+        total,
+        pageParams,
+      ),
+      competence: renewalCompetence,
+    };
   }
 
   async detail(schoolId: string, id: string) {

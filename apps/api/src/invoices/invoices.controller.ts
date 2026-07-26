@@ -1,8 +1,8 @@
 import { BadRequestException, Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import { InvoiceStatus, InvoiceType } from '@prisma/client';
+import { InvoiceStatus } from '@prisma/client';
 import {
-  createAdditionalInvoiceSchema,
-  CreateAdditionalInvoiceInput,
+  createRenewalInvoiceSchema,
+  CreateRenewalInvoiceInput,
   payInvoiceSchema,
   PayInvoiceInput,
   competenceString,
@@ -25,7 +25,6 @@ export class InvoicesController {
     @CurrentUser() user: JwtPayload,
     @Query('competence') competence?: string,
     @Query('status') status?: string,
-    @Query('type') type?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
@@ -36,12 +35,9 @@ export class InvoicesController {
     const validStatus = INVOICE_STATUSES.includes(status as InvoiceStatus)
       ? (status as InvoiceStatus)
       : undefined;
-    const validType = ['MONTHLY_TUITION', 'ENROLLMENT_FEE', 'RENEWAL_FEE', 'SCHOOL_MATERIAL'].includes(type ?? '')
-      ? (type as InvoiceType)
-      : undefined;
     return this.invoicesService.list(
       user.schoolId,
-      { competence: parsedCompetence, status: validStatus, type: validType },
+      { competence: parsedCompetence, status: validStatus },
       parsePageParams(page, pageSize, 50),
     );
   }
@@ -63,11 +59,11 @@ export class InvoicesController {
 
   @Post()
   @Roles('ADMIN')
-  createAdditional(
+  createRenewal(
     @CurrentUser() user: JwtPayload,
-    @Body(new ZodValidationPipe(createAdditionalInvoiceSchema)) body: CreateAdditionalInvoiceInput,
+    @Body(new ZodValidationPipe(createRenewalInvoiceSchema)) body: CreateRenewalInvoiceInput,
   ) {
-    return this.invoicesService.createAdditional(user.schoolId, body);
+    return this.invoicesService.createRenewal(user.schoolId, body);
   }
 
   @Patch(':id/pay')

@@ -318,16 +318,15 @@ export const payInvoiceSchema = z.object({
 });
 export type PayInvoiceInput = z.infer<typeof payInvoiceSchema>;
 
-/** Lançamento avulso vinculado a uma matrícula (não é gerado pelo cron mensal). */
-export const createAdditionalInvoiceSchema = z.object({
+/** Cobrança de rematrícula vinculada a uma matrícula, parcelável em até 3 vezes. */
+export const createRenewalInvoiceSchema = z.object({
   enrollmentId: z.string().min(1, 'Escolha o aluno'),
-  type: z.enum(['ENROLLMENT_FEE', 'RENEWAL_FEE', 'SCHOOL_MATERIAL']),
   competence: competenceString,
   amountCents: cents.refine((v) => v > 0, 'Valor deve ser maior que zero'),
   dueDate: dateString,
   installments: z.number().int().min(1).max(3).default(1),
 });
-export type CreateAdditionalInvoiceInput = z.infer<typeof createAdditionalInvoiceSchema>;
+export type CreateRenewalInvoiceInput = z.infer<typeof createRenewalInvoiceSchema>;
 
 // ---------------------------------------------------------------------------
 // Expense (despesa)

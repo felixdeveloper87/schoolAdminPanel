@@ -23,10 +23,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card } from '@/components/ui/card';
 import { InvoiceStatusBadge } from '@/components/invoice-status-badge';
 import { InvoiceActions } from '@/components/invoice-actions';
-import { ExportCsvButton } from '@/components/export-csv-button';
 import { StatCard } from '@/components/stat-card';
 import { cn } from '@/lib/utils';
-import { CreateAdditionalInvoiceDialog } from '@/components/create-additional-invoice-dialog';
 
 interface InvoiceRow {
   id: string;
@@ -196,23 +194,6 @@ export default async function MensalidadesPage({
               </Link>
             );
           })}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {isAdmin && <CreateAdditionalInvoiceDialog />}
-          <ExportCsvButton
-            filename={`mensalidades-${competence}.csv`}
-            rows={data.items.map((i) => ({
-              Aluno: i.student.fullName,
-              Turma: i.classroom.name,
-              Tipo: INVOICE_TYPE_LABELS[i.type],
-              Valor: (i.effectiveCents / 100).toFixed(2),
-              Vencimento: formatDate(i.dueDate),
-              Status: INVOICE_STATUS_LABELS[i.status],
-              'Pago em': i.paidAt ? formatDate(i.paidAt) : '',
-              Método: i.paymentMethod ? PAYMENT_METHOD_LABELS[i.paymentMethod] : '',
-              Observação: i.receiptNote ?? '',
-            }))}
-          />
         </div>
       </div>
 
