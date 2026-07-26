@@ -56,7 +56,7 @@ export default async function AlunosPage({
 
   const [data, classrooms, activeSummary, waitlistSummary, inactiveSummary] = await Promise.all([
     apiGet<StudentsResponse>(`/students?${query.toString()}`),
-    apiGet<{ id: string; name: string }[]>('/classrooms'),
+    apiGet<{ id: string; name: string; activeCount: number; capacity: number }[]>('/classrooms'),
     apiGet<StudentsResponse>('/students?status=ACTIVE&pageSize=1'),
     apiGet<StudentsResponse>('/students?status=WAITLIST&pageSize=1'),
     apiGet<StudentsResponse>('/students?status=INACTIVE&pageSize=1'),
