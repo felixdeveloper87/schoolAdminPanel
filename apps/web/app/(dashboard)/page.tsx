@@ -12,7 +12,6 @@ import {
   Target,
   Bell,
   CalendarDays,
-  Plus,
   Search,
 } from 'lucide-react';
 import { apiGet, getSessionUser } from '@/lib/server-api';
@@ -121,13 +120,6 @@ export default async function PainelPage() {
             <CalendarDays className="h-4 w-4 text-brand" />
             {competenceLabel}
           </div>
-          <Link
-            href="/mensalidades"
-            className="inline-flex h-11 items-center gap-2 rounded-2xl brand-gradient px-5 text-xs font-extrabold text-white shadow-[0_10px_24px_rgba(101,84,232,.28)] transition-transform hover:-translate-y-0.5"
-          >
-            <Plus className="h-4 w-4" />
-            Nova mensalidade
-          </Link>
         </div>
       </div>
 
