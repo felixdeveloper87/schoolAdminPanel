@@ -32,7 +32,7 @@ export function StudentRegistrationDialog({
             </div>
           </div>
         </DialogHeader>
-        <div className="px-5 py-5 sm:px-8"><StudentForm classrooms={classrooms} onCancel={() => setOpen(false)} /></div>
+        <div className="px-5 py-5 sm:px-8"><StudentForm classrooms={classrooms} onCancel={() => setOpen(false)} cancelLabel="Fechar" /></div>
       </DialogContent>
     </Dialog>
   );

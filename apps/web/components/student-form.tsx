@@ -40,6 +40,7 @@ interface StudentFormProps {
   currentPhotoUrl?: string | null;
   classrooms?: { id: string; name: string; activeCount: number; capacity: number }[];
   onCancel?: () => void;
+  cancelLabel?: string;
 }
 
 const enrollmentFormSchema = createEnrollmentSchema
@@ -59,7 +60,7 @@ type StudentFormValues = CreateStudentInput & {
 
 const toCents = (value: string) => Math.round(Number(value.replace(/\./g, '').replace(',', '.')) * 100) || 0;
 
-export function StudentForm({ studentId, defaultValues, currentPhotoUrl, classrooms = [], onCancel }: StudentFormProps) {
+export function StudentForm({ studentId, defaultValues, currentPhotoUrl, classrooms = [], onCancel, cancelLabel = 'Cancelar' }: StudentFormProps) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
   const photoInputRef = React.useRef<StudentPhotoInputHandle>(null);
@@ -330,7 +331,7 @@ export function StudentForm({ studentId, defaultValues, currentPhotoUrl, classro
       {serverError && <p className="text-sm text-destructive">{serverError}</p>}
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel ?? (() => router.back())}>
-          Cancelar
+          {cancelLabel}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Salvando…' : studentId ? 'Salvar alterações' : 'Cadastrar aluno'}
