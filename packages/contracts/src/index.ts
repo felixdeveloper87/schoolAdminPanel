@@ -297,6 +297,12 @@ export const createEnrollmentSchema = z.object({
 });
 export type CreateEnrollmentInput = z.infer<typeof createEnrollmentSchema>;
 
+/** Cadastro inicial: aluno e matrícula são gravados juntos, quando a matrícula é informada. */
+export const createStudentWithEnrollmentSchema = createStudentSchema.extend({
+  enrollment: createEnrollmentSchema.omit({ studentId: true }).optional(),
+});
+export type CreateStudentWithEnrollmentInput = z.infer<typeof createStudentWithEnrollmentSchema>;
+
 export const updateEnrollmentStartDateSchema = z.object({
   startDate: dateString,
 });

@@ -2,15 +2,19 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, StudentStatus } from '@prisma/client';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
-import { CreateStudentInput, UpdateStudentInput } from '@escola/contracts';
+import { CreateStudentWithEnrollmentInput, UpdateStudentInput } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
+import { EnrollmentsService } from '../enrollments/enrollments.service';
 import { currentCompetenceSaoPaulo, parseDateString, todaySaoPaulo } from '../common/dates';
 import { PageParams, paged } from '../common/pagination';
 import { STUDENT_PHOTOS_DIR } from '../uploads/uploads.constants';
 
 @Injectable()
 export class StudentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private enrollmentsService: EnrollmentsService,
+  ) {}
 
   async list(
     schoolId: string,
@@ -168,18 +172,27 @@ export class StudentsService {
     return student;
   }
 
-  async create(schoolId: string, input: CreateStudentInput) {
-    const { guardians, ...data } = input;
-    return this.prisma.student.create({
-      data: {
-        schoolId,
-        ...data,
-        birthDate: parseDateString(data.birthDate),
-        guardians: {
-          create: guardians.map((g) => ({ schoolId, ...g })),
+  async create(schoolId: string, input: CreateStudentWithEnrollmentInput) {
+    const { guardians, enrollment: enrollmentInput, ...data } = input;
+    return this.prisma.$transaction(async (tx) => {
+      const student = await tx.student.create({
+        data: {
+          schoolId,
+          ...data,
+          birthDate: parseDateString(data.birthDate),
+          guardians: {
+            create: guardians.map((g) => ({ schoolId, ...g })),
+          },
         },
-      },
-      include: { guardians: true },
+        include: { guardians: true },
+      });
+      if (enrollmentInput) {
+        await this.enrollmentsService.createInTransaction(tx, schoolId, {
+          ...enrollmentInput,
+          studentId: student.id,
+        });
+      }
+      return student;
     });
   }
 

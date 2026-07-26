@@ -14,8 +14,8 @@ import {
 } from '@nestjs/common';
 import { StudentStatus } from '@prisma/client';
 import {
-  createStudentSchema,
-  CreateStudentInput,
+  createStudentWithEnrollmentSchema,
+  CreateStudentWithEnrollmentInput,
   updateStudentSchema,
   UpdateStudentInput,
   updateStudentStatusSchema,
@@ -70,7 +70,7 @@ export class StudentsController {
   @Post()
   create(
     @CurrentUser() user: JwtPayload,
-    @Body(new ZodValidationPipe(createStudentSchema)) body: CreateStudentInput,
+    @Body(new ZodValidationPipe(createStudentWithEnrollmentSchema)) body: CreateStudentWithEnrollmentInput,
   ) {
     return this.studentsService.create(user.schoolId, body);
   }

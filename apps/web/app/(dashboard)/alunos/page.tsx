@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowUpRight, ChevronLeft, ChevronRight, CircleCheckBig, Plus, UserRoundSearch, Users } from 'lucide-react';
+import { ArrowUpRight, ChevronLeft, ChevronRight, CircleCheckBig, UserRoundSearch, Users } from 'lucide-react';
 import {
   ENROLLMENT_TYPE_LABELS,
   EnrollmentType,
@@ -9,12 +9,12 @@ import {
 import { apiGet } from '@/lib/server-api';
 import { brl, formatAge, formatDate } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
-import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StudentsFilters } from '@/components/students-filters';
 import { ExportCsvButton } from '@/components/export-csv-button';
 import { StudentAvatar } from '@/components/student-avatar';
+import { StudentRegistrationDialog } from '@/components/student-registration-dialog';
 
 interface StudentRow {
   id: string;
@@ -42,7 +42,7 @@ interface StudentsResponse {
 export default async function AlunosPage({
   searchParams,
 }: {
-  searchParams: { q?: string; status?: string; classroomId?: string; page?: string };
+  searchParams: { q?: string; status?: string; classroomId?: string; page?: string; novo?: string };
 }) {
   const status = searchParams.status === 'WAITLIST' || searchParams.status === 'INACTIVE'
     ? searchParams.status
@@ -101,12 +101,7 @@ export default async function AlunosPage({
             >
               <CircleCheckBig className="h-4 w-4" /> Acompanhar rematrículas <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
-            <Link
-              href="/alunos/novo"
-              className={buttonVariants({ className: 'h-10 rounded-xl bg-card px-4 text-brand shadow-[0_8px_20px_rgba(0,0,0,.16)] hover:bg-brand/10 hover:text-brand' })}
-            >
-              <Plus className="h-4 w-4" /> Novo aluno
-            </Link>
+            <StudentRegistrationDialog classrooms={classrooms} initialOpen={searchParams.novo === '1'} />
           </div>
         </div>
       </section>

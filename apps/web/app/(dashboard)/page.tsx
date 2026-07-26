@@ -289,7 +289,7 @@ export default async function PainelPage() {
           <CardContent>
             <div className="grid gap-2.5 sm:grid-cols-2">
               <Link
-                href="/alunos/novo"
+                href="/alunos?novo=1"
                 className="group rounded-lg border border-border bg-muted/60 p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
                 <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">

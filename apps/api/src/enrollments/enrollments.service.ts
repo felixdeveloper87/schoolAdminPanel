@@ -58,21 +58,25 @@ export class EnrollmentsService {
   }
 
   async create(schoolId: string, input: CreateEnrollmentInput) {
+    return this.prisma.$transaction((tx) => this.createInTransaction(tx, schoolId, input));
+  }
+
+  async createInTransaction(tx: Prisma.TransactionClient, schoolId: string, input: CreateEnrollmentInput) {
     const [student, classroom] = await Promise.all([
-      this.prisma.student.findFirst({ where: { id: input.studentId, schoolId } }),
-      this.prisma.classroom.findFirst({ where: { id: input.classroomId, schoolId, active: true } }),
+      tx.student.findFirst({ where: { id: input.studentId, schoolId } }),
+      tx.classroom.findFirst({ where: { id: input.classroomId, schoolId, active: true } }),
     ]);
     if (!student) throw new NotFoundException('Aluno não encontrado');
     if (!classroom) throw new NotFoundException('Turma não encontrada ou inativa');
 
-    const existing = await this.prisma.enrollment.findFirst({
+    const existing = await tx.enrollment.findFirst({
       where: { schoolId, studentId: input.studentId, status: 'ACTIVE' },
     });
     if (existing) {
       throw new BadRequestException('Aluno já possui matrícula ativa. Encerre a atual antes de criar outra.');
     }
 
-    const activeCount = await this.prisma.enrollment.count({
+    const activeCount = await tx.enrollment.count({
       where: { schoolId, classroomId: input.classroomId, status: 'ACTIVE' },
     });
     if (activeCount >= classroom.capacity) {
@@ -93,8 +97,7 @@ export class EnrollmentsService {
     }
     const invoicesToCreate = input.backfillMode === 'NONE' ? competences.slice(-1) : competences;
 
-    return this.prisma.$transaction(async (tx) => {
-      const enrollment = await tx.enrollment.create({
+    const enrollment = await tx.enrollment.create({
         data: {
           schoolId,
           studentId: input.studentId,
@@ -111,14 +114,14 @@ export class EnrollmentsService {
           notes: input.notes,
         },
       });
-      if (student.status !== 'ACTIVE') {
-        await tx.student.update({ where: { id: student.id }, data: { status: 'ACTIVE' } });
-      }
+    if (student.status !== 'ACTIVE') {
+      await tx.student.update({ where: { id: student.id }, data: { status: 'ACTIVE' } });
+    }
 
-      const today = todaySaoPaulo();
-      const firstChargeCompetence = competenceOf(startDate);
-      const firstChargeDueDate = dueDateFor(firstChargeCompetence, input.dueDay);
-      const extraInvoices = [
+    const today = todaySaoPaulo();
+    const firstChargeCompetence = competenceOf(startDate);
+    const firstChargeDueDate = dueDateFor(firstChargeCompetence, input.dueDay);
+    const extraInvoices = [
         ...(input.enrollmentFeeCents > 0
           ? splitAdditionalCharge({
               schoolId,
@@ -141,35 +144,34 @@ export class EnrollmentsService {
               installments: input.materialInstallments,
             })
           : []),
-      ].map((invoice) => ({
-        ...invoice,
-        ...(invoice.dueDate < today ? { status: 'OVERDUE' as const } : {}),
-      }));
+    ].map((invoice) => ({
+      ...invoice,
+      ...(invoice.dueDate < today ? { status: 'OVERDUE' as const } : {}),
+    }));
 
-      if (invoicesToCreate.length > 0 || extraInvoices.length > 0) {
-        await tx.tuitionInvoice.createMany({
-          data: [
-            ...invoicesToCreate.map((competence) => {
-              const dueDate = dueDateFor(competence, input.dueDay);
-              const retroactive = competence < currentCompetence;
-              return {
-                schoolId,
-                enrollmentId: enrollment.id,
-                competence,
-                type: 'MONTHLY_TUITION' as const,
-                amountCents: input.monthlyFeeCents,
-                discountCents: input.discountCents,
-                dueDate,
-                ...backfillFields(retroactive ? input.backfillMode : 'NONE', dueDate, today),
-              };
-            }),
-            ...extraInvoices,
-          ],
-        });
-      }
+    if (invoicesToCreate.length > 0 || extraInvoices.length > 0) {
+      await tx.tuitionInvoice.createMany({
+        data: [
+          ...invoicesToCreate.map((competence) => {
+            const dueDate = dueDateFor(competence, input.dueDay);
+            const retroactive = competence < currentCompetence;
+            return {
+              schoolId,
+              enrollmentId: enrollment.id,
+              competence,
+              type: 'MONTHLY_TUITION' as const,
+              amountCents: input.monthlyFeeCents,
+              discountCents: input.discountCents,
+              dueDate,
+              ...backfillFields(retroactive ? input.backfillMode : 'NONE', dueDate, today),
+            };
+          }),
+          ...extraInvoices,
+        ],
+      });
+    }
 
-      return { ...enrollment, backfilledMonths: Math.max(invoicesToCreate.length - 1, 0) };
-    });
+    return { ...enrollment, backfilledMonths: Math.max(invoicesToCreate.length - 1, 0) };
   }
 
   async end(schoolId: string, id: string, input: EndEnrollmentInput) {
