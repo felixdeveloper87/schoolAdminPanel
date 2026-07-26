@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, StudentStatus } from '@prisma/client';
+import { InvoiceStatus, Prisma, StudentStatus } from '@prisma/client';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 import { CreateStudentInput, UpdateStudentInput } from '@escola/contracts';
@@ -40,7 +40,10 @@ export class StudentsService {
             where: { status: 'ACTIVE' },
             include: {
               classroom: { select: { id: true, name: true } },
-              invoices: { where: { status: 'OVERDUE' }, select: { id: true }, take: 1 },
+              invoices: {
+                where: { OR: [{ status: 'OVERDUE' }, { type: 'RENEWAL_FEE' }] },
+                select: { status: true, type: true },
+              },
             },
           },
         },
@@ -60,7 +63,9 @@ export class StudentsService {
         classroom: enrollment?.classroom ?? null,
         photoUrl: s.photoUrl,
         monthlyFeeCents: enrollment ? enrollment.monthlyFeeCents - enrollment.discountCents : null,
-        hasOverdue: (enrollment?.invoices.length ?? 0) > 0,
+        hasOverdue: enrollment?.invoices.some((invoice) => invoice.status === 'OVERDUE') ?? false,
+        renewalStatus:
+          enrollment?.invoices.find((invoice) => invoice.type === 'RENEWAL_FEE')?.status as InvoiceStatus | undefined ?? null,
         inactiveReason: s.inactiveReason,
         inactiveAt: s.inactiveAt,
         financialGuardian: s.guardians[0]

@@ -3,6 +3,8 @@ import { ChevronLeft, ChevronRight, Plus, UserRoundSearch, Users } from 'lucide-
 import {
   ENROLLMENT_TYPE_LABELS,
   EnrollmentType,
+  INVOICE_STATUS_LABELS,
+  InvoiceStatus,
   STUDENT_STATUS_LABELS,
   StudentStatus,
 } from '@escola/contracts';
@@ -28,6 +30,7 @@ interface StudentRow {
   classroom: { id: string; name: string } | null;
   monthlyFeeCents: number | null;
   hasOverdue: boolean;
+  renewalStatus: InvoiceStatus | null;
   inactiveReason: string | null;
   inactiveAt: string | null;
   financialGuardian: { fullName: string; phoneWhatsapp: string } | null;
@@ -92,6 +95,7 @@ export default async function AlunosPage({
                 Mensalidade: student.monthlyFeeCents !== null ? (student.monthlyFeeCents / 100).toFixed(2) : '',
                 Status: STUDENT_STATUS_LABELS[student.status],
                 Inadimplente: student.hasOverdue ? 'Sim' : 'Não',
+                Rematrícula: student.renewalStatus ? INVOICE_STATUS_LABELS[student.renewalStatus] : 'Não registrada',
                 Responsável: student.financialGuardian?.fullName ?? '',
                 WhatsApp: student.financialGuardian?.phoneWhatsapp ?? '',
               }))}
@@ -144,13 +148,14 @@ export default async function AlunosPage({
               <TableHead className="hidden h-12 tracking-[0.08em] lg:table-cell">Idade</TableHead>
               <TableHead className="hidden h-12 tracking-[0.08em] xl:table-cell">Período</TableHead>
               <TableHead className="hidden h-12 tracking-[0.08em] sm:table-cell">Mensalidade</TableHead>
+              <TableHead className="hidden h-12 tracking-[0.08em] lg:table-cell">Rematrícula</TableHead>
               <TableHead className="h-12 tracking-[0.08em]">Situação</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-16 text-center">
+                <TableCell colSpan={7} className="py-16 text-center">
                   <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-muted/60 text-muted-foreground">
                     <UserRoundSearch className="h-5 w-5" />
                   </span>
@@ -181,6 +186,7 @@ export default async function AlunosPage({
                           {student.inactiveAt ? `Desligado em ${formatDate(student.inactiveAt)}${student.inactiveReason ? ` · ${student.inactiveReason}` : ''}` : student.inactiveReason ?? 'Aluno desligado'}
                         </p>
                       )}
+                      {student.renewalStatus && <Badge variant="success" className="mt-1 text-[10px] lg:hidden">Rematrícula registrada</Badge>}
                       <div className="mt-1 flex gap-1 md:hidden">
                         <span className="text-[10px] text-muted-foreground">{student.classroom?.name ?? 'Sem turma'}</span>
                       </div>
@@ -198,6 +204,13 @@ export default async function AlunosPage({
                 <TableCell className="hidden text-sm text-muted-foreground xl:table-cell">{ENROLLMENT_TYPE_LABELS[student.enrollmentType]}</TableCell>
                 <TableCell className="money hidden font-semibold text-foreground sm:table-cell">
                   {student.monthlyFeeCents !== null ? brl(student.monthlyFeeCents) : '—'}
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  {student.renewalStatus ? (
+                    <div className="flex flex-col items-start gap-1"><Badge variant="success" className="text-[10px]">Registrada</Badge><span className="text-[11px] text-muted-foreground">{INVOICE_STATUS_LABELS[student.renewalStatus]}</span></div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Pendente</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col items-start gap-1.5">
