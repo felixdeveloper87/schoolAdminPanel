@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowLeft, ReceiptText } from 'lucide-react';
-import { PAYMENT_METHOD_LABELS, type PaymentMethod, type InvoiceStatus } from '@escola/contracts';
+import { INVOICE_TYPE_LABELS, PAYMENT_METHOD_LABELS, type InvoiceType, type PaymentMethod, type InvoiceStatus } from '@escola/contracts';
 import { apiGet } from '@/lib/server-api';
 import { brl, formatCompetence, formatDate } from '@/lib/format';
 import { PrintButton } from '@/components/print-button';
@@ -9,6 +9,9 @@ import { Card } from '@/components/ui/card';
 interface InvoiceReceipt {
   id: string;
   competence: string;
+  type: InvoiceType;
+  installmentNumber: number;
+  installmentCount: number;
   amountCents: number;
   discountCents: number;
   effectiveCents: number;
@@ -87,12 +90,18 @@ export default async function ReciboPage({ params }: { params: { id: string } })
           <p className="text-sm leading-relaxed text-foreground">
             Recebemos de <strong>{invoice.financialGuardian?.fullName ?? `responsável por ${invoice.student.fullName}`}</strong>
             {invoice.financialGuardian?.cpf ? ` (CPF ${invoice.financialGuardian.cpf})` : ''} a importância de{' '}
-            <strong className="money">{brl(invoice.effectiveCents)}</strong>, referente à mensalidade de{' '}
+            <strong className="money">{brl(invoice.effectiveCents)}</strong>, referente a {INVOICE_TYPE_LABELS[invoice.type].toLowerCase()} de{' '}
             <strong>{competence}</strong> do(a) aluno(a) <strong>{invoice.student.fullName}</strong>, turma{' '}
             <strong>{invoice.classroom.name}</strong>.
           </p>
 
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-2xl border border-border bg-muted/40 p-5 text-sm sm:grid-cols-3">
+            {invoice.installmentCount > 1 && (
+              <div>
+                <dt className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Parcela</dt>
+                <dd className="mt-0.5 font-bold text-foreground">{invoice.installmentNumber}/{invoice.installmentCount}</dd>
+              </div>
+            )}
             <div>
               <dt className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Valor</dt>
               <dd className="money mt-0.5 font-bold text-foreground">{brl(invoice.amountCents)}</dd>

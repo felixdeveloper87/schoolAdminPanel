@@ -157,7 +157,7 @@ Convenção Prisma: models em `PascalCase`, campos em `camelCase`. Onde fizer se
 - Sugestão automática de desconto de irmãos: ao matricular 2º filho do mesmo responsável financeiro, sugerir `SIBLING` (percentual configurável, default 10%). Sempre editável.
 
 ### Ciclo anual
-- Rematrícula: ação em lote "Rematricular turma para 2027" que clona matrículas ativas com novo valor (reajuste % aplicado em massa, editável por aluno) e cobra `enrollment_fee_cents` como invoice avulsa de competência janeiro.
+- Rematrícula: ação em lote "Rematricular turma para 2027" que clona matrículas ativas com novo valor (reajuste % aplicado em massa, editável por aluno) e cobra `enrollment_fee_cents` como invoice avulsa de competência julho.
 
 ---
 

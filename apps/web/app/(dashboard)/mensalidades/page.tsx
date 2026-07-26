@@ -11,7 +11,9 @@ import {
 import {
   INVOICE_STATUSES,
   INVOICE_STATUS_LABELS,
+  INVOICE_TYPE_LABELS,
   InvoiceStatus,
+  InvoiceType,
   PaymentMethod,
   PAYMENT_METHOD_LABELS,
 } from '@escola/contracts';
@@ -24,10 +26,14 @@ import { InvoiceActions } from '@/components/invoice-actions';
 import { ExportCsvButton } from '@/components/export-csv-button';
 import { StatCard } from '@/components/stat-card';
 import { cn } from '@/lib/utils';
+import { CreateAdditionalInvoiceDialog } from '@/components/create-additional-invoice-dialog';
 
 interface InvoiceRow {
   id: string;
   competence: string;
+  type: InvoiceType;
+  installmentNumber: number;
+  installmentCount: number;
   effectiveCents: number;
   dueDate: string;
   status: InvoiceStatus;
@@ -90,7 +96,7 @@ export default async function MensalidadesPage({
         <div className="relative flex flex-wrap items-end justify-between gap-5">
           <div>
             <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#b8c9ee]">Financeiro escolar</p>
-            <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight sm:text-[34px]">Mensalidades</h1>
+            <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight sm:text-[34px]">Cobranças</h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-[#c7d3ec]">
               Acompanhe recebimentos, pendências e os próximos vencimentos de {formatCompetence(competence)}.
             </p>
@@ -121,7 +127,7 @@ export default async function MensalidadesPage({
         <StatCard
           label="Previsto no mês"
           value={brl(issuedCents)}
-          hint={`${totalInvoiceCount} mensalidade(s) emitida(s)`}
+          hint={`${totalInvoiceCount} cobrança(s) emitida(s)`}
           icon={CircleDollarSign}
           accent="primary"
           money
@@ -192,11 +198,13 @@ export default async function MensalidadesPage({
           })}
         </div>
         <div className="flex flex-wrap gap-2">
+          {isAdmin && <CreateAdditionalInvoiceDialog />}
           <ExportCsvButton
             filename={`mensalidades-${competence}.csv`}
             rows={data.items.map((i) => ({
               Aluno: i.student.fullName,
               Turma: i.classroom.name,
+              Tipo: INVOICE_TYPE_LABELS[i.type],
               Valor: (i.effectiveCents / 100).toFixed(2),
               Vencimento: formatDate(i.dueDate),
               Status: INVOICE_STATUS_LABELS[i.status],
@@ -223,6 +231,7 @@ export default async function MensalidadesPage({
             <TableRow>
               <TableHead>Aluno</TableHead>
               <TableHead className="hidden md:table-cell">Turma</TableHead>
+              <TableHead className="hidden sm:table-cell">Tipo</TableHead>
               <TableHead>Valor</TableHead>
               <TableHead className="hidden sm:table-cell">Vencimento</TableHead>
               <TableHead>Status</TableHead>
@@ -250,6 +259,10 @@ export default async function MensalidadesPage({
                 <TableCell className="hidden text-muted-foreground md:table-cell">
                   {invoice.classroom.name}
                 </TableCell>
+                <TableCell className="hidden sm:table-cell text-muted-foreground">
+                  {INVOICE_TYPE_LABELS[invoice.type]}
+                  {invoice.installmentCount > 1 && <p className="text-xs">Parcela {invoice.installmentNumber}/{invoice.installmentCount}</p>}
+                </TableCell>
                 <TableCell className="money font-semibold">{brl(invoice.effectiveCents)}</TableCell>
                 <TableCell className="money hidden sm:table-cell">
                   {formatDate(invoice.dueDate)}
@@ -269,6 +282,7 @@ export default async function MensalidadesPage({
                     studentName={invoice.student.fullName}
                     effectiveCents={invoice.effectiveCents}
                     status={invoice.status}
+                    type={invoice.type}
                     isAdmin={isAdmin}
                   />
                 </TableCell>

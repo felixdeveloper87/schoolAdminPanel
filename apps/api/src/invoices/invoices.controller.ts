@@ -1,6 +1,8 @@
 import { BadRequestException, Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import { InvoiceStatus } from '@prisma/client';
+import { InvoiceStatus, InvoiceType } from '@prisma/client';
 import {
+  createAdditionalInvoiceSchema,
+  CreateAdditionalInvoiceInput,
   payInvoiceSchema,
   PayInvoiceInput,
   competenceString,
@@ -23,6 +25,7 @@ export class InvoicesController {
     @CurrentUser() user: JwtPayload,
     @Query('competence') competence?: string,
     @Query('status') status?: string,
+    @Query('type') type?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
@@ -33,9 +36,12 @@ export class InvoicesController {
     const validStatus = INVOICE_STATUSES.includes(status as InvoiceStatus)
       ? (status as InvoiceStatus)
       : undefined;
+    const validType = ['MONTHLY_TUITION', 'ENROLLMENT_FEE', 'RENEWAL_FEE', 'SCHOOL_MATERIAL'].includes(type ?? '')
+      ? (type as InvoiceType)
+      : undefined;
     return this.invoicesService.list(
       user.schoolId,
-      { competence: parsedCompetence, status: validStatus },
+      { competence: parsedCompetence, status: validStatus, type: validType },
       parsePageParams(page, pageSize, 50),
     );
   }
@@ -53,6 +59,15 @@ export class InvoicesController {
       throw new BadRequestException('Informe a competência no formato AAAA-MM');
     }
     return this.invoicesService.generate(user.schoolId, parseCompetence(parsed.data));
+  }
+
+  @Post()
+  @Roles('ADMIN')
+  createAdditional(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(createAdditionalInvoiceSchema)) body: CreateAdditionalInvoiceInput,
+  ) {
+    return this.invoicesService.createAdditional(user.schoolId, body);
   }
 
   @Patch(':id/pay')

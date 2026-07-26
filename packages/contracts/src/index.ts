@@ -43,6 +43,9 @@ export type DiscountReason = (typeof DISCOUNT_REASONS)[number];
 export const INVOICE_STATUSES = ['PENDING', 'PAID', 'OVERDUE', 'EXEMPT', 'CANCELLED'] as const;
 export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
 
+export const INVOICE_TYPES = ['MONTHLY_TUITION', 'ENROLLMENT_FEE', 'RENEWAL_FEE', 'SCHOOL_MATERIAL'] as const;
+export type InvoiceType = (typeof INVOICE_TYPES)[number];
+
 export const PAYMENT_METHODS = ['PIX', 'CASH', 'TRANSFER'] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
@@ -111,6 +114,13 @@ export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   OVERDUE: 'Atrasada',
   EXEMPT: 'Isenta',
   CANCELLED: 'Cancelada',
+};
+
+export const INVOICE_TYPE_LABELS: Record<InvoiceType, string> = {
+  MONTHLY_TUITION: 'Mensalidade',
+  ENROLLMENT_FEE: 'Taxa de matrícula',
+  RENEWAL_FEE: 'Taxa de rematrícula',
+  SCHOOL_MATERIAL: 'Material escolar',
 };
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
@@ -279,6 +289,9 @@ export const createEnrollmentSchema = z.object({
   discountReason: z.enum(DISCOUNT_REASONS).default('NONE'),
   dueDay: z.number().int().min(1, 'Entre 1 e 28').max(28, 'Entre 1 e 28'),
   enrollmentFeeCents: cents.default(0),
+  enrollmentFeeInstallments: z.number().int().min(1).max(3).default(1),
+  materialFeeCents: cents.default(0),
+  materialInstallments: z.number().int().min(1).max(3).default(1),
   backfillMode: z.enum(BACKFILL_MODES).default('NONE'),
   notes: z.string().max(500).optional().or(z.literal('').transform(() => undefined)),
 });
@@ -304,6 +317,17 @@ export const payInvoiceSchema = z.object({
   receiptNote: z.string().max(300).optional().or(z.literal('').transform(() => undefined)),
 });
 export type PayInvoiceInput = z.infer<typeof payInvoiceSchema>;
+
+/** Lançamento avulso vinculado a uma matrícula (não é gerado pelo cron mensal). */
+export const createAdditionalInvoiceSchema = z.object({
+  enrollmentId: z.string().min(1, 'Escolha o aluno'),
+  type: z.enum(['ENROLLMENT_FEE', 'RENEWAL_FEE', 'SCHOOL_MATERIAL']),
+  competence: competenceString,
+  amountCents: cents.refine((v) => v > 0, 'Valor deve ser maior que zero'),
+  dueDate: dateString,
+  installments: z.number().int().min(1).max(3).default(1),
+});
+export type CreateAdditionalInvoiceInput = z.infer<typeof createAdditionalInvoiceSchema>;
 
 // ---------------------------------------------------------------------------
 // Expense (despesa)
@@ -370,6 +394,11 @@ export const renewBatchSchema = z.object({
   readjustPercent: z.number().min(-100).max(500),
   newStartDate: dateString,
   chargeEnrollmentFee: z.boolean().default(true),
+  chargeSchoolMaterial: z.boolean().default(true),
+  renewalFeeCents: cents.optional(),
+  renewalFeeInstallments: z.number().int().min(1).max(3).optional(),
+  materialFeeCents: cents.optional(),
+  materialInstallments: z.number().int().min(1).max(3).optional(),
   overrides: z
     .array(
       z.object({

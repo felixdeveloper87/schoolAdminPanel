@@ -40,6 +40,11 @@ export function RenewBatchDialog({ classrooms }: { classrooms: ClassroomOption[]
   const [readjustPercent, setReadjustPercent] = React.useState(10);
   const [newStartDate, setNewStartDate] = React.useState(todayDateInput());
   const [chargeEnrollmentFee, setChargeEnrollmentFee] = React.useState(true);
+  const [chargeSchoolMaterial, setChargeSchoolMaterial] = React.useState(true);
+  const [renewalFee, setRenewalFee] = React.useState('');
+  const [renewalFeeInstallments, setRenewalFeeInstallments] = React.useState(1);
+  const [materialFee, setMaterialFee] = React.useState('');
+  const [materialInstallments, setMaterialInstallments] = React.useState(1);
   const [students, setStudents] = React.useState<EnrollmentRow[]>([]);
   const [overrides, setOverrides] = React.useState<Record<string, string>>({});
   const [loadingStudents, setLoadingStudents] = React.useState(false);
@@ -76,6 +81,11 @@ export function RenewBatchDialog({ classrooms }: { classrooms: ClassroomOption[]
         readjustPercent,
         newStartDate,
         chargeEnrollmentFee,
+        chargeSchoolMaterial,
+        renewalFeeCents: renewalFee ? Math.round(Number(renewalFee.replace(/\./g, '').replace(',', '.')) * 100) : undefined,
+        renewalFeeInstallments,
+        materialFeeCents: materialFee ? Math.round(Number(materialFee.replace(/\./g, '').replace(',', '.')) * 100) : undefined,
+        materialInstallments,
         overrides: Object.entries(overrides)
           .filter(([, v]) => v !== '')
           .map(([enrollmentId, v]) => ({
@@ -154,8 +164,30 @@ export function RenewBatchDialog({ classrooms }: { classrooms: ClassroomOption[]
               checked={chargeEnrollmentFee}
               onChange={(e) => setChargeEnrollmentFee(e.target.checked)}
             />
-            <Label htmlFor="chargeFee">Cobrar taxa de matrícula na mensalidade de janeiro</Label>
+            <Label htmlFor="chargeFee">Criar taxa de rematrícula separada, com vencimento em julho</Label>
           </div>
+          {chargeEnrollmentFee && (
+            <div className="col-span-2 grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5"><Label>Taxa de rematrícula por aluno (R$)</Label><Input inputMode="decimal" placeholder="Usar valor já cadastrado" value={renewalFee} onChange={(e) => setRenewalFee(e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Parcelas da taxa</Label><Select value={String(renewalFeeInstallments)} onChange={(e) => setRenewalFeeInstallments(Number(e.target.value))}><option value="1">À vista</option><option value="2">2x</option><option value="3">3x</option></Select></div>
+            </div>
+          )}
+          <div className="col-span-2 flex items-center gap-2">
+            <input
+              id="chargeMaterial"
+              type="checkbox"
+              className="h-4 w-4"
+              checked={chargeSchoolMaterial}
+              onChange={(e) => setChargeSchoolMaterial(e.target.checked)}
+            />
+            <Label htmlFor="chargeMaterial">Criar cobrança de material didático, com vencimento em julho</Label>
+          </div>
+          {chargeSchoolMaterial && (
+            <div className="col-span-2 grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5"><Label>Material didático por aluno (R$)</Label><Input inputMode="decimal" placeholder="Usar valor já cadastrado" value={materialFee} onChange={(e) => setMaterialFee(e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Parcelas do material</Label><Select value={String(materialInstallments)} onChange={(e) => setMaterialInstallments(Number(e.target.value))}><option value="1">À vista</option><option value="2">2x</option><option value="3">3x</option></Select></div>
+            </div>
+          )}
         </div>
 
         {sourceId && (

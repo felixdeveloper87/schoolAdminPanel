@@ -10,6 +10,8 @@ import {
   PAYMENT_METHODS,
   PAYMENT_METHOD_LABELS,
   InvoiceStatus,
+  InvoiceType,
+  INVOICE_TYPE_LABELS,
 } from '@escola/contracts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +32,7 @@ interface InvoiceActionsProps {
   studentName: string;
   effectiveCents: number;
   status: InvoiceStatus;
+  type?: InvoiceType;
   isAdmin: boolean;
 }
 
@@ -87,7 +90,7 @@ function ConfirmInvoiceAction({
   );
 }
 
-export function InvoiceActions({ invoiceId, studentName, effectiveCents, status, isAdmin }: InvoiceActionsProps) {
+export function InvoiceActions({ invoiceId, studentName, effectiveCents, status, isAdmin, type = 'MONTHLY_TUITION' }: InvoiceActionsProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
@@ -150,10 +153,10 @@ export function InvoiceActions({ invoiceId, studentName, effectiveCents, status,
     <div className="flex items-center justify-end gap-1">
       {isAdmin && (
         <ConfirmInvoiceAction
-          title="Isentar mensalidade?"
+          title={`Isentar ${INVOICE_TYPE_LABELS[type].toLowerCase()}?`}
           description={
             <>
-              A mensalidade de <strong>{studentName}</strong> no valor de <span className="money font-semibold">{brl(effectiveCents)}</span>{' '}
+              A cobrança de <strong>{INVOICE_TYPE_LABELS[type].toLowerCase()}</strong> de {studentName} no valor de <span className="money font-semibold">{brl(effectiveCents)}</span>{' '}
               será marcada como isenta e não poderá mais ser recebida.
             </>
           }

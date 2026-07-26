@@ -115,8 +115,8 @@ export class DashboardService {
     const rates: number[] = [];
     for (const month of closedMonths) {
       const [overdueCount, totalCount] = await Promise.all([
-        this.prisma.tuitionInvoice.count({ where: { schoolId, competence: month, status: 'OVERDUE' } }),
-        this.prisma.tuitionInvoice.count({ where: { schoolId, competence: month } }),
+        this.prisma.tuitionInvoice.count({ where: { schoolId, competence: month, type: 'MONTHLY_TUITION', status: 'OVERDUE' } }),
+        this.prisma.tuitionInvoice.count({ where: { schoolId, competence: month, type: 'MONTHLY_TUITION' } }),
       ]);
       if (totalCount > 0) rates.push(overdueCount / totalCount);
     }
@@ -198,9 +198,9 @@ export class DashboardService {
           months.map(async (month) => {
             const [overdueCount, totalCount] = await Promise.all([
               this.prisma.tuitionInvoice.count({
-                where: { schoolId, competence: month, status: 'OVERDUE' },
+                where: { schoolId, competence: month, type: 'MONTHLY_TUITION', status: 'OVERDUE' },
               }),
-              this.prisma.tuitionInvoice.count({ where: { schoolId, competence: month } }),
+              this.prisma.tuitionInvoice.count({ where: { schoolId, competence: month, type: 'MONTHLY_TUITION' } }),
             ]);
             return {
               competence: competenceToString(month),

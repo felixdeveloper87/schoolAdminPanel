@@ -24,6 +24,8 @@ import {
   EnrollmentStatus,
   EnrollmentType,
   InvoiceStatus,
+  InvoiceType,
+  INVOICE_TYPE_LABELS,
   RELATIONSHIP_LABELS,
   Relationship,
   SHIFT_LABELS,
@@ -85,6 +87,9 @@ interface StudentDetail {
     invoices: {
       id: string;
       competence: string;
+      type: InvoiceType;
+      installmentNumber: number;
+      installmentCount: number;
       amountCents: number;
       discountCents: number;
       dueDate: string;
@@ -273,13 +278,14 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
           <Card className={panelClassName}>
             <CardHeader className="flex-row items-center gap-3 space-y-0 border-b border-border">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-success/10 text-success"><ReceiptText className="h-4 w-4" /></span>
-              <div><CardTitle className="text-lg text-foreground">Mensalidades</CardTitle><p className="text-[11px] text-muted-foreground">{invoices.length > 0 ? `${invoices.length} ${invoices.length === 1 ? 'lançamento' : 'lançamentos'} · mais recentes primeiro` : 'Histórico de cobranças'}</p></div>
+              <div><CardTitle className="text-lg text-foreground">Cobranças</CardTitle><p className="text-[11px] text-muted-foreground">{invoices.length > 0 ? `${invoices.length} ${invoices.length === 1 ? 'lançamento' : 'lançamentos'} · mais recentes primeiro` : 'Histórico de cobranças'}</p></div>
             </CardHeader>
             <CardContent className="p-0">
               <Table className="min-w-[620px]">
                 <TableHeader className="bg-muted/60">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="pl-5">Competência</TableHead>
+                    <TableHead>Tipo</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Vencimento</TableHead>
                     <TableHead>Status</TableHead>
@@ -287,10 +293,14 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {invoices.length === 0 && <TableRow><TableCell colSpan={5} className="py-10 text-center text-xs text-muted-foreground">Nenhuma mensalidade gerada ainda.</TableCell></TableRow>}
+                  {invoices.length === 0 && <TableRow><TableCell colSpan={6} className="py-10 text-center text-xs text-muted-foreground">Nenhuma cobrança gerada ainda.</TableCell></TableRow>}
                   {invoices.map((invoice) => (
                     <TableRow key={invoice.id} className="border-border hover:bg-muted/60">
                       <TableCell className="money pl-5 font-semibold">{formatDate(invoice.competence).slice(3)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {INVOICE_TYPE_LABELS[invoice.type]}
+                        {invoice.installmentCount > 1 && <p>Parcela {invoice.installmentNumber}/{invoice.installmentCount}</p>}
+                      </TableCell>
                       <TableCell className="money font-extrabold text-foreground">{brl(invoice.amountCents - invoice.discountCents)}</TableCell>
                       <TableCell className="money text-muted-foreground">{formatDate(invoice.dueDate)}</TableCell>
                       <TableCell><InvoiceStatusBadge status={invoice.status} /></TableCell>
@@ -300,6 +310,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
                           studentName={student.fullName}
                           effectiveCents={invoice.amountCents - invoice.discountCents}
                           status={invoice.status}
+                          type={invoice.type}
                           isAdmin={user.role === 'ADMIN'}
                         />
                       </TableCell>

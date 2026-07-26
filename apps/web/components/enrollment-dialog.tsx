@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { CalendarDays, CircleDollarSign, GraduationCap, ReceiptText, Sparkles } from 'lucide-react';
 import {
   BackfillMode,
   BACKFILL_MODE_LABELS,
@@ -28,10 +29,11 @@ import {
 import { todayDateInput, brl, competenceDiff, currentCompetence, toDateInput } from '@/lib/format';
 
 // No formulário os valores são digitados em reais e convertidos para centavos no submit
-const formSchema = createEnrollmentSchema.omit({ studentId: true, monthlyFeeCents: true, discountCents: true, enrollmentFeeCents: true }).extend({
+const formSchema = createEnrollmentSchema.omit({ studentId: true, monthlyFeeCents: true, discountCents: true, enrollmentFeeCents: true, materialFeeCents: true }).extend({
   monthlyFee: z.string().min(1, 'Informe o valor'),
   discount: z.string().default('0'),
   enrollmentFee: z.string().default('0'),
+  materialFee: z.string().default('0'),
 });
 type FormValues = z.infer<typeof formSchema>;
 
@@ -86,6 +88,9 @@ export function EnrollmentDialog({
       monthlyFee: '',
       discount: '0',
       enrollmentFee: '0',
+      materialFee: '0',
+      enrollmentFeeInstallments: 1,
+      materialInstallments: 1,
       discountReason: 'NONE',
       dueDay: 5,
       backfillMode: 'PAID',
@@ -111,6 +116,13 @@ export function EnrollmentDialog({
   const monthlyFee = watch('monthlyFee');
   const discount = watch('discount');
   const effective = toCents(monthlyFee) - toCents(discount);
+  const enrollmentFeeCents = toCents(watch('enrollmentFee'));
+  const materialFeeCents = toCents(watch('materialFee'));
+  const enrollmentFeeInstallments = Number(watch('enrollmentFeeInstallments')) || 1;
+  const materialInstallments = Number(watch('materialInstallments')) || 1;
+  const firstInstallment = (total: number, installments: number) => Math.ceil(total / installments);
+  const firstMonthCharges =
+    effective + firstInstallment(enrollmentFeeCents, enrollmentFeeInstallments) + firstInstallment(materialFeeCents, materialInstallments);
 
   const backfillMode = watch('backfillMode');
   const pastMonths = retroactiveMonths(watch('startDate'));
@@ -130,6 +142,9 @@ export function EnrollmentDialog({
         discountReason: data.discountReason,
         dueDay: Number(data.dueDay),
         enrollmentFeeCents: toCents(data.enrollmentFee),
+        enrollmentFeeInstallments: Number(data.enrollmentFeeInstallments),
+        materialFeeCents: toCents(data.materialFee),
+        materialInstallments: Number(data.materialInstallments),
         backfillMode: data.backfillMode,
         notes: data.notes,
       }),
@@ -148,66 +163,42 @@ export function EnrollmentDialog({
       <DialogTrigger asChild>
         <Button size="sm">Nova matrícula</Button>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Nova matrícula</DialogTitle>
-          <DialogDescription>{studentName}</DialogDescription>
+      <DialogContent className="max-w-3xl gap-0 overflow-hidden rounded-[24px] border-border p-0">
+        <DialogHeader className="relative overflow-hidden border-b border-border bg-gradient-to-br from-[#192d55] via-[#233e70] to-brand px-6 py-6 text-white sm:px-8">
+          <span aria-hidden="true" className="absolute -right-10 -top-16 h-40 w-40 rounded-full bg-white/10 blur-xl" />
+          <div className="relative flex items-start gap-3 pr-7">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/15 text-white shadow-inner"><GraduationCap className="h-5 w-5" /></span>
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-white/65">Cadastro escolar</p>
+              <DialogTitle className="mt-1 text-2xl text-white">Nova matrícula</DialogTitle>
+              <DialogDescription className="mt-1 text-white/75">Complete os dados de <strong className="text-white">{studentName}</strong>. As cobranças são geradas automaticamente.</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
+        <div className="max-h-[calc(90vh-166px)] overflow-y-auto px-5 py-5 sm:px-8">
         {siblingHint && (
-          <p className="rounded-md bg-accent/20 px-3 py-2 text-sm">{siblingHint}</p>
+          <p className="mb-4 flex gap-2 rounded-xl border border-accent/35 bg-accent/10 px-3.5 py-3 text-sm text-foreground"><Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-accent-deep" />{siblingHint}</p>
         )}
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <div className="space-y-1.5">
-            <Label>Turma</Label>
-            <Select {...register('classroomId')}>
-              <option value="">Escolha a turma…</option>
-              {classrooms.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.activeCount}/{c.capacity})
-                </option>
-              ))}
-            </Select>
-            {errors.classroomId && <p className="text-xs text-destructive">{errors.classroomId.message}</p>}
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Início</Label>
-              <Input type="date" {...register('startDate')} />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <section className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-brand/10 text-brand"><GraduationCap className="h-4 w-4" /></span><div><h3 className="text-sm font-extrabold">Turma e período</h3><p className="text-xs text-muted-foreground">Defina onde e quando o aluno começa.</p></div></div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5 sm:col-span-2"><Label>Turma</Label><Select {...register('classroomId')}><option value="">Escolha a turma…</option>{classrooms.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.activeCount} de {c.capacity} vagas ocupadas</option>)}</Select>{errors.classroomId && <p className="text-xs text-destructive">{errors.classroomId.message}</p>}</div>
+              <div className="space-y-1.5"><Label>Início</Label><Input type="date" {...register('startDate')} /></div>
+              <div className="space-y-1.5"><Label>Vencimento mensal</Label><div className="relative"><CalendarDays className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-9" type="number" min={1} max={28} {...register('dueDay', { valueAsNumber: true })} /></div><p className="text-[11px] text-muted-foreground">Dia 1 a 28</p>{errors.dueDay && <p className="text-xs text-destructive">{errors.dueDay.message}</p>}</div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Dia de vencimento (1–28)</Label>
-              <Input type="number" min={1} max={28} {...register('dueDay', { valueAsNumber: true })} />
-              {errors.dueDay && <p className="text-xs text-destructive">{errors.dueDay.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label>Mensalidade (R$)</Label>
-              <Input inputMode="decimal" placeholder="1650,00" {...register('monthlyFee')} />
-              {errors.monthlyFee && <p className="text-xs text-destructive">{errors.monthlyFee.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label>Desconto (R$)</Label>
-              <Input inputMode="decimal" placeholder="0,00" {...register('discount')} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Motivo do desconto</Label>
-              <Select {...register('discountReason')}>
-                {DISCOUNT_REASONS.map((r) => (
-                  <option key={r} value={r}>
-                    {DISCOUNT_REASON_LABELS[r]}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Taxa de matrícula (R$)</Label>
-              <Input inputMode="decimal" placeholder="450,00" {...register('enrollmentFee')} />
-            </div>
-          </div>
-          {effective > 0 && (
-            <p className="text-sm text-muted-foreground">
-              Valor efetivo da mensalidade: <span className="money font-semibold text-foreground">{brl(effective)}</span>
-            </p>
-          )}
+          </section>
+
+          <section className="rounded-2xl border border-brand/20 bg-brand/[0.035] p-4 sm:p-5">
+            <div className="mb-4 flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-brand/10 text-brand"><CircleDollarSign className="h-4 w-4" /></span><div><h3 className="text-sm font-extrabold">Mensalidade</h3><p className="text-xs text-muted-foreground">O valor recorrente do aluno.</p></div></div>
+            <div className="grid gap-3 sm:grid-cols-3"><div className="space-y-1.5"><Label>Valor mensal (R$)</Label><Input inputMode="decimal" placeholder="1.650,00" {...register('monthlyFee')} />{errors.monthlyFee && <p className="text-xs text-destructive">{errors.monthlyFee.message}</p>}</div><div className="space-y-1.5"><Label>Desconto (R$)</Label><Input inputMode="decimal" placeholder="0,00" {...register('discount')} /></div><div className="space-y-1.5"><Label>Motivo</Label><Select {...register('discountReason')}>{DISCOUNT_REASONS.map((r) => <option key={r} value={r}>{DISCOUNT_REASON_LABELS[r]}</option>)}</Select></div></div>
+            <p className="mt-3 rounded-xl bg-card px-3 py-2 text-sm text-muted-foreground">Mensalidade efetiva: <span className="money font-extrabold text-foreground">{brl(Math.max(effective, 0))}</span></p>
+          </section>
+
+          <section className="rounded-2xl border border-accent/35 bg-accent/10 p-4 sm:p-5">
+            <div className="mb-4 flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-accent/20 text-accent-deep"><ReceiptText className="h-4 w-4" /></span><div><h3 className="text-sm font-extrabold">Cobranças de entrada <span className="font-normal text-muted-foreground">(opcional)</span></h3><p className="text-xs text-muted-foreground">Taxa e material são separados da mensalidade e podem ser parcelados.</p></div></div>
+            <div className="grid gap-x-5 gap-y-3 sm:grid-cols-2"><div className="space-y-1.5"><Label>Taxa de matrícula (R$)</Label><Input inputMode="decimal" placeholder="Ex.: 450,00" {...register('enrollmentFee')} /></div><div className="space-y-1.5"><Label>Parcelar taxa</Label><Select {...register('enrollmentFeeInstallments', { valueAsNumber: true })}><option value="1">À vista</option><option value="2">2x mensais</option><option value="3">3x mensais</option></Select></div><div className="space-y-1.5"><Label>Material didático (R$)</Label><Input inputMode="decimal" placeholder="Ex.: 650,00" {...register('materialFee')} /></div><div className="space-y-1.5"><Label>Parcelar material</Label><Select {...register('materialInstallments', { valueAsNumber: true })}><option value="1">À vista</option><option value="2">2x mensais</option><option value="3">3x mensais</option></Select></div></div>
+          </section>
 
           {pastMonths > 0 && (
             <div className="space-y-3 rounded-xl border border-accent/40 bg-accent/10 p-3.5">
@@ -253,16 +244,29 @@ export function EnrollmentDialog({
               )}
             </div>
           )}
+          <section className="rounded-2xl bg-[#192d55] p-4 text-white shadow-[0_12px_25px_rgba(25,45,85,.16)]">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-white/60">Resumo da matrícula</p>
+            <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+              <p className="text-white/75">Mensalidade mensal <strong className="money float-right text-white">{brl(Math.max(effective, 0))}</strong></p>
+              <p className="text-white/75">Primeira cobrança <strong className="money float-right text-white">{brl(Math.max(firstMonthCharges, 0))}</strong></p>
+            </div>
+            {(enrollmentFeeCents > 0 || materialFeeCents > 0) && (
+              <p className="mt-2 border-t border-white/15 pt-2 text-xs text-white/65">
+                Inclui {enrollmentFeeCents > 0 ? `taxa ${enrollmentFeeInstallments}x` : ''}{enrollmentFeeCents > 0 && materialFeeCents > 0 ? ' e ' : ''}{materialFeeCents > 0 ? `material ${materialInstallments}x` : ''}. Parcelas seguintes vencem mensalmente.
+              </p>
+            )}
+          </section>
           {serverError && <p className="text-sm text-destructive">{serverError}</p>}
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="sm:min-w-36">
               {isSubmitting ? 'Matriculando…' : 'Matricular'}
             </Button>
           </div>
         </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -10,12 +10,14 @@ import {
 } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+  competenceOf,
   competenceRange,
   currentCompetenceSaoPaulo,
   dueDateFor,
   parseDateString,
   todaySaoPaulo,
 } from '../common/dates';
+import { splitAdditionalCharge } from '../invoices/invoices.service';
 
 const oneDayBefore = (date: Date) => new Date(date.getTime() - 24 * 60 * 60 * 1000);
 
@@ -103,6 +105,9 @@ export class EnrollmentsService {
           discountReason: input.discountReason,
           dueDay: input.dueDay,
           enrollmentFeeCents: input.enrollmentFeeCents,
+          enrollmentFeeInstallments: input.enrollmentFeeInstallments,
+          materialFeeCents: input.materialFeeCents,
+          materialInstallments: input.materialInstallments,
           notes: input.notes,
         },
       });
@@ -110,22 +115,56 @@ export class EnrollmentsService {
         await tx.student.update({ where: { id: student.id }, data: { status: 'ACTIVE' } });
       }
 
-      if (invoicesToCreate.length > 0) {
-        const today = todaySaoPaulo();
-        await tx.tuitionInvoice.createMany({
-          data: invoicesToCreate.map((competence) => {
-            const dueDate = dueDateFor(competence, input.dueDay);
-            const retroactive = competence < currentCompetence;
-            return {
+      const today = todaySaoPaulo();
+      const firstChargeCompetence = competenceOf(startDate);
+      const firstChargeDueDate = dueDateFor(firstChargeCompetence, input.dueDay);
+      const extraInvoices = [
+        ...(input.enrollmentFeeCents > 0
+          ? splitAdditionalCharge({
               schoolId,
               enrollmentId: enrollment.id,
-              competence,
-              amountCents: input.monthlyFeeCents,
-              discountCents: input.discountCents,
-              dueDate,
-              ...backfillFields(retroactive ? input.backfillMode : 'NONE', dueDate, today),
-            };
-          }),
+              type: 'ENROLLMENT_FEE',
+              amountCents: input.enrollmentFeeCents,
+              competence: firstChargeCompetence,
+              dueDate: firstChargeDueDate,
+              installments: input.enrollmentFeeInstallments,
+            })
+          : []),
+        ...(input.materialFeeCents > 0
+          ? splitAdditionalCharge({
+              schoolId,
+              enrollmentId: enrollment.id,
+              type: 'SCHOOL_MATERIAL',
+              amountCents: input.materialFeeCents,
+              competence: firstChargeCompetence,
+              dueDate: firstChargeDueDate,
+              installments: input.materialInstallments,
+            })
+          : []),
+      ].map((invoice) => ({
+        ...invoice,
+        ...(invoice.dueDate < today ? { status: 'OVERDUE' as const } : {}),
+      }));
+
+      if (invoicesToCreate.length > 0 || extraInvoices.length > 0) {
+        await tx.tuitionInvoice.createMany({
+          data: [
+            ...invoicesToCreate.map((competence) => {
+              const dueDate = dueDateFor(competence, input.dueDay);
+              const retroactive = competence < currentCompetence;
+              return {
+                schoolId,
+                enrollmentId: enrollment.id,
+                competence,
+                type: 'MONTHLY_TUITION' as const,
+                amountCents: input.monthlyFeeCents,
+                discountCents: input.discountCents,
+                dueDate,
+                ...backfillFields(retroactive ? input.backfillMode : 'NONE', dueDate, today),
+              };
+            }),
+            ...extraInvoices,
+          ],
         });
       }
 
@@ -147,7 +186,7 @@ export class EnrollmentsService {
   async updateStartDate(schoolId: string, id: string, input: UpdateEnrollmentStartDateInput) {
     const enrollment = await this.prisma.enrollment.findFirst({
       where: { id, schoolId },
-      include: { invoices: { select: { competence: true } } },
+      include: { invoices: { where: { type: 'MONTHLY_TUITION' }, select: { competence: true } } },
     });
     if (!enrollment) throw new NotFoundException('Matrícula não encontrada');
 
@@ -166,12 +205,13 @@ export class EnrollmentsService {
       // A data de matrícula determina quais competências existem. Ao corrigi-la,
       // removemos lançamentos fora do novo período e criamos os que estiverem faltando.
       if (expectedCompetences.length === 0) {
-        await tx.tuitionInvoice.deleteMany({ where: { schoolId, enrollmentId: id } });
+        await tx.tuitionInvoice.deleteMany({ where: { schoolId, enrollmentId: id, type: 'MONTHLY_TUITION' } });
       } else {
         await tx.tuitionInvoice.deleteMany({
           where: {
             schoolId,
             enrollmentId: id,
+            type: 'MONTHLY_TUITION',
             competence: { notIn: expectedCompetences },
           },
         });
@@ -187,6 +227,7 @@ export class EnrollmentsService {
               schoolId,
               enrollmentId: id,
               competence,
+              type: 'MONTHLY_TUITION',
               amountCents: enrollment.monthlyFeeCents,
               discountCents: enrollment.discountCents,
               dueDate,
@@ -234,7 +275,7 @@ export class EnrollmentsService {
   /**
    * Rematrícula em lote (spec seção 6): clona matrículas ativas de uma turma pra outra
    * (normalmente a turma do ano seguinte), com reajuste % em massa (editável por aluno),
-   * e cobra a taxa de matrícula embutida na primeira mensalidade (competência de janeiro).
+   * e cria a taxa de rematrícula na competência de julho.
    */
   async renewBatch(schoolId: string, input: RenewBatchInput) {
     const targetClassroom = await this.prisma.classroom.findFirst({
@@ -255,7 +296,14 @@ export class EnrollmentsService {
     }
 
     const newStartDate = parseDateString(input.newStartDate);
-    const januaryCompetence = new Date(Date.UTC(newStartDate.getUTCFullYear(), 0, 1));
+    const firstTuitionCompetence = new Date(
+      Date.UTC(newStartDate.getUTCFullYear(), newStartDate.getUTCMonth(), 1),
+    );
+    // A rematrícula é cobrada em julho. Para turmas que começam no primeiro
+    // semestre, julho pertence ao ano anterior (ex.: início em jan/2027 → jul/2026).
+    const renewalYear =
+      newStartDate.getUTCMonth() < 6 ? newStartDate.getUTCFullYear() - 1 : newStartDate.getUTCFullYear();
+    const julyCompetence = new Date(Date.UTC(renewalYear, 6, 1));
     const overrideByEnrollment = new Map(input.overrides.map((o) => [o.enrollmentId, o.monthlyFeeCents]));
 
     return this.prisma.$transaction(async (tx) => {
@@ -269,6 +317,11 @@ export class EnrollmentsService {
         const newMonthlyFeeCents =
           overrideByEnrollment.get(old.id) ?? Math.round(old.monthlyFeeCents * (1 + input.readjustPercent / 100));
 
+        const renewalFeeCents = input.renewalFeeCents ?? old.enrollmentFeeCents;
+        const renewalFeeInstallments = input.renewalFeeInstallments ?? old.enrollmentFeeInstallments;
+        const materialFeeCents = input.materialFeeCents ?? old.materialFeeCents;
+        const materialInstallments = input.materialInstallments ?? old.materialInstallments;
+
         const newEnrollment = await tx.enrollment.create({
           data: {
             schoolId,
@@ -279,24 +332,56 @@ export class EnrollmentsService {
             discountCents: old.discountCents,
             discountReason: old.discountReason,
             dueDay: old.dueDay,
-            enrollmentFeeCents: old.enrollmentFeeCents,
+            enrollmentFeeCents: renewalFeeCents,
+            enrollmentFeeInstallments: renewalFeeInstallments,
+            materialFeeCents,
+            materialInstallments,
             notes: old.notes,
           },
         });
 
-        // Invoice avulsa de janeiro já embutindo a taxa de matrícula — evita conflito
-        // com a geração automática mensal, que usa a mesma chave (schoolId, enrollmentId, competence).
-        const enrollmentFee = input.chargeEnrollmentFee ? old.enrollmentFeeCents : 0;
+        // A mensalidade e a taxa de rematrícula são cobranças separadas: cada uma
+        // pode ser quitada, isentada ou receber recibo independentemente.
+        const enrollmentFee = input.chargeEnrollmentFee ? renewalFeeCents : 0;
+        const materialFee = input.chargeSchoolMaterial ? materialFeeCents : 0;
         await tx.tuitionInvoice.create({
           data: {
             schoolId,
             enrollmentId: newEnrollment.id,
-            competence: januaryCompetence,
-            amountCents: newMonthlyFeeCents + enrollmentFee,
+            competence: firstTuitionCompetence,
+            type: 'MONTHLY_TUITION',
+            amountCents: newMonthlyFeeCents,
             discountCents: old.discountCents,
-            dueDate: dueDateFor(januaryCompetence, old.dueDay),
+            dueDate: dueDateFor(firstTuitionCompetence, old.dueDay),
           },
         });
+        const additionalInvoices = [
+          ...(enrollmentFee > 0
+            ? splitAdditionalCharge({
+                schoolId,
+                enrollmentId: newEnrollment.id,
+                type: 'RENEWAL_FEE',
+                amountCents: enrollmentFee,
+                competence: julyCompetence,
+                dueDate: dueDateFor(julyCompetence, old.dueDay),
+                installments: renewalFeeInstallments,
+              })
+            : []),
+          ...(materialFee > 0
+            ? splitAdditionalCharge({
+                schoolId,
+                enrollmentId: newEnrollment.id,
+                type: 'SCHOOL_MATERIAL',
+                amountCents: materialFee,
+                competence: julyCompetence,
+                dueDate: dueDateFor(julyCompetence, old.dueDay),
+                installments: materialInstallments,
+              })
+            : []),
+        ];
+        if (additionalInvoices.length > 0) {
+          await tx.tuitionInvoice.createMany({ data: additionalInvoices });
+        }
 
         renewed += 1;
       }

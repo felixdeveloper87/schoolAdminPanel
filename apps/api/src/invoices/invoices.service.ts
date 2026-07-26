@@ -1,9 +1,39 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { InvoiceStatus, Prisma } from '@prisma/client';
-import { PayInvoiceInput } from '@escola/contracts';
+import { InvoiceStatus, InvoiceType, Prisma } from '@prisma/client';
+import { CreateAdditionalInvoiceInput, PayInvoiceInput } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import { dueDateFor, monthRange, parseDateString, todaySaoPaulo } from '../common/dates';
 import { PageParams, paged } from '../common/pagination';
+
+function addMonthsKeepingDay(date: Date, months: number): Date {
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth() + months;
+  const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(year, month, Math.min(date.getUTCDate(), lastDay)));
+}
+
+export function splitAdditionalCharge(input: {
+  schoolId: string;
+  enrollmentId: string;
+  type: Exclude<InvoiceType, 'MONTHLY_TUITION'>;
+  amountCents: number;
+  competence: Date;
+  dueDate: Date;
+  installments: number;
+}): Prisma.TuitionInvoiceCreateManyInput[] {
+  const base = Math.floor(input.amountCents / input.installments);
+  const remainder = input.amountCents % input.installments;
+  return Array.from({ length: input.installments }, (_, index) => ({
+    schoolId: input.schoolId,
+    enrollmentId: input.enrollmentId,
+    type: input.type,
+    competence: new Date(Date.UTC(input.competence.getUTCFullYear(), input.competence.getUTCMonth() + index, 1)),
+    amountCents: base + (index < remainder ? 1 : 0),
+    dueDate: addMonthsKeepingDay(input.dueDate, index),
+    installmentNumber: index + 1,
+    installmentCount: input.installments,
+  }));
+}
 
 @Injectable()
 export class InvoicesService {
@@ -11,7 +41,7 @@ export class InvoicesService {
 
   async list(
     schoolId: string,
-    filters: { competence?: Date; status?: InvoiceStatus },
+    filters: { competence?: Date; status?: InvoiceStatus; type?: InvoiceType },
     pageParams: PageParams,
   ) {
     // Recupera faturas cujo cron diário não tenha sido executado (por exemplo, durante um reinício).
@@ -21,6 +51,7 @@ export class InvoicesService {
       schoolId,
       ...(filters.competence ? { competence: filters.competence } : {}),
       ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.type ? { type: filters.type } : {}),
     };
 
     const [items, total, summary] = await this.prisma.$transaction([
@@ -51,6 +82,9 @@ export class InvoicesService {
     const mapped = items.map((i) => ({
       id: i.id,
       competence: i.competence,
+      type: i.type,
+      installmentNumber: i.installmentNumber,
+      installmentCount: i.installmentCount,
       amountCents: i.amountCents,
       discountCents: i.discountCents,
       effectiveCents: i.amountCents - i.discountCents,
@@ -102,6 +136,9 @@ export class InvoicesService {
     return {
       id: invoice.id,
       competence: invoice.competence,
+      type: invoice.type,
+      installmentNumber: invoice.installmentNumber,
+      installmentCount: invoice.installmentCount,
       amountCents: invoice.amountCents,
       discountCents: invoice.discountCents,
       effectiveCents: invoice.amountCents - invoice.discountCents,
@@ -133,6 +170,7 @@ export class InvoicesService {
         schoolId,
         enrollmentId: e.id,
         competence,
+        type: 'MONTHLY_TUITION',
         amountCents: e.monthlyFeeCents,
         discountCents: e.discountCents,
         dueDate: dueDateFor(competence, e.dueDay),
@@ -140,6 +178,39 @@ export class InvoicesService {
       skipDuplicates: true,
     });
     return { generated: result.count, activeEnrollments: enrollments.length };
+  }
+
+  async createAdditional(schoolId: string, input: CreateAdditionalInvoiceInput) {
+    const enrollment = await this.prisma.enrollment.findFirst({
+      where: { id: input.enrollmentId, schoolId },
+      select: { id: true },
+    });
+    if (!enrollment) throw new NotFoundException('Matrícula não encontrada');
+
+    const competence = new Date(`${input.competence}T00:00:00.000Z`);
+    const invoices = splitAdditionalCharge({
+      schoolId,
+      enrollmentId: enrollment.id,
+      type: input.type,
+      amountCents: input.amountCents,
+      competence,
+      dueDate: parseDateString(input.dueDate),
+      installments: input.installments,
+    });
+    const duplicate = await this.prisma.tuitionInvoice.findFirst({
+      where: {
+        schoolId,
+        enrollmentId: enrollment.id,
+        type: input.type,
+        competence: { in: invoices.map((invoice) => new Date(invoice.competence)) },
+      },
+      select: { id: true },
+    });
+    if (duplicate) {
+      throw new BadRequestException('Este aluno já possui esta cobrança nesta competência.');
+    }
+    await this.prisma.tuitionInvoice.createMany({ data: invoices });
+    return { created: invoices.length };
   }
 
   async pay(schoolId: string, id: string, input: PayInvoiceInput) {

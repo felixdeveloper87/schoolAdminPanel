@@ -77,6 +77,15 @@ enum InvoiceStatus {
   CANCELLED
 }
 
+// Cada cobrança pode ter seu próprio ciclo de baixa, atraso e recibo.  A
+// mensalidade continua sendo gerada pelo cron; as demais são lançamentos avulsos.
+enum InvoiceType {
+  MONTHLY_TUITION
+  ENROLLMENT_FEE
+  RENEWAL_FEE
+  SCHOOL_MATERIAL
+}
+
 enum PaymentMethod {
   PIX
   CASH
@@ -205,6 +214,9 @@ model Enrollment {
   discountReason     DiscountReason   @default(NONE)
   dueDay             Int
   enrollmentFeeCents Int              @default(0)
+  enrollmentFeeInstallments Int       @default(1)
+  materialFeeCents   Int              @default(0)
+  materialInstallments Int            @default(1)
   notes              String?
 
   school    School           @relation(fields: [schoolId], references: [id])
@@ -222,6 +234,9 @@ model TuitionInvoice {
   schoolId      String
   enrollmentId  String
   competence    DateTime       @db.Date
+  type          InvoiceType    @default(MONTHLY_TUITION)
+  installmentNumber Int        @default(1)
+  installmentCount  Int        @default(1)
   amountCents   Int
   discountCents Int            @default(0)
   dueDate       DateTime       @db.Date
@@ -234,7 +249,7 @@ model TuitionInvoice {
   school     School     @relation(fields: [schoolId], references: [id])
   enrollment Enrollment @relation(fields: [enrollmentId], references: [id])
 
-  @@unique([schoolId, enrollmentId, competence])
+  @@unique([schoolId, enrollmentId, competence, type])
   @@index([schoolId, competence, status])
   @@index([schoolId, status, dueDate])
   @@map("tuition_invoices")
