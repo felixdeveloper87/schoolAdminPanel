@@ -98,11 +98,12 @@ export class StudentsService {
               classroom: { select: { id: true, name: true } },
               invoices: {
                 where: {
-                  type: 'RENEWAL_FEE',
+                  type: { in: ['RENEWAL_FEE', 'ENROLLMENT_FEE'] },
                   competence: { gte: renewalCompetence, lt: renewalEndCompetence },
                 },
                 select: {
                   status: true,
+                  type: true,
                   installmentNumber: true,
                   installmentCount: true,
                   amountCents: true,
@@ -133,9 +134,11 @@ export class StudentsService {
             renewal: firstInvoice
               ? {
                   status: firstInvoice.status,
+                  type: firstInvoice.type,
                   installmentCount: firstInvoice.installmentCount,
                   installments: enrollment!.invoices.map((invoice) => ({
                     status: invoice.status,
+                    type: invoice.type,
                     installmentNumber: invoice.installmentNumber,
                     installmentCount: invoice.installmentCount,
                     amountCents: invoice.amountCents,

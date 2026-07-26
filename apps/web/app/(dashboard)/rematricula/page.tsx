@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { CalendarDays, CheckCircle2, ChevronRight, CircleDashed, GraduationCap, Users } from 'lucide-react';
-import { INVOICE_STATUS_LABELS, type InvoiceStatus } from '@escola/contracts';
+import { INVOICE_STATUS_LABELS, type InvoiceStatus, type InvoiceType } from '@escola/contracts';
 import { apiGet } from '@/lib/server-api';
 import { formatCompetence } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
@@ -19,9 +19,11 @@ interface RenewalRow {
   enrollmentId: string | null;
   renewal: {
     status: InvoiceStatus;
+    type: InvoiceType;
     installmentCount: number;
     installments: Array<{
       status: InvoiceStatus;
+      type: InvoiceType;
       installmentNumber: number;
       installmentCount: number;
       amountCents: number;
@@ -74,7 +76,7 @@ export default async function RematriculaPage() {
                 <TableCell className="pl-5 py-4"><Link href={`/alunos/${student.id}`} className="flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><StudentAvatar photoUrl={student.photoUrl} name={student.fullName} size="md" /><span className="text-sm font-extrabold hover:text-brand hover:underline">{student.fullName}</span></Link></TableCell>
                 <TableCell className="hidden sm:table-cell"><span className="rounded-lg bg-muted/60 px-2.5 py-1 text-xs font-bold text-muted-foreground">{student.classroom?.name ?? 'Sem turma'}</span></TableCell>
                 <TableCell>
-                  {student.renewal ? <RenewalAgreementDialog studentName={student.fullName} installments={student.renewal.installments} trigger={<button type="button" className="group flex min-w-[190px] items-center justify-between gap-3 rounded-xl border border-success/25 bg-success/5 px-3 py-2 text-left transition-colors hover:border-success/50 hover:bg-success/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span><Badge variant="success" className="gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Gerada</Badge><span className="mt-1 block text-xs text-muted-foreground">{INVOICE_STATUS_LABELS[student.renewal.status]}{student.renewal.installmentCount > 1 ? ` · ${student.renewal.installmentCount}x` : ''}</span></span><span className="flex items-center gap-1 text-xs font-extrabold text-success underline-offset-2 group-hover:underline">Ver acordo <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span></button>} /> : student.enrollmentId ? <RenewalChargeDialog enrollmentId={student.enrollmentId} studentName={student.fullName} trigger={<Button variant="outline" size="sm" className="group border-accent/50 bg-accent/10 text-accent-deep hover:bg-accent/20"><CircleDashed className="h-4 w-4" /> <span><span className="block text-left leading-none">Não gerada</span><span className="mt-1 flex items-center gap-1 text-[11px] font-extrabold underline-offset-2 group-hover:underline">Criar acordo <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" /></span></span></Button>} /> : <span className="text-xs text-muted-foreground">Sem matrícula</span>}
+                  {student.renewal ? <RenewalAgreementDialog studentName={student.fullName} feeType={student.renewal.type} installments={student.renewal.installments} trigger={<button type="button" className="group flex min-w-[190px] items-center justify-between gap-3 rounded-xl border border-success/25 bg-success/5 px-3 py-2 text-left transition-colors hover:border-success/50 hover:bg-success/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><span><Badge variant="success" className="gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Gerada</Badge><span className="mt-1 block text-xs text-muted-foreground">{INVOICE_STATUS_LABELS[student.renewal.status]}{student.renewal.installmentCount > 1 ? ` · ${student.renewal.installmentCount}x` : ''}</span></span><span className="flex items-center gap-1 text-xs font-extrabold text-success underline-offset-2 group-hover:underline">Ver acordo <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span></button>} /> : student.enrollmentId ? <RenewalChargeDialog enrollmentId={student.enrollmentId} studentName={student.fullName} trigger={<Button variant="outline" size="sm" className="group border-accent/50 bg-accent/10 text-accent-deep hover:bg-accent/20"><CircleDashed className="h-4 w-4" /> <span><span className="block text-left leading-none">Não gerada</span><span className="mt-1 flex items-center gap-1 text-[11px] font-extrabold underline-offset-2 group-hover:underline">Criar acordo <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" /></span></span></Button>} /> : <span className="text-xs text-muted-foreground">Sem matrícula</span>}
                 </TableCell>
               </TableRow>
             ))}

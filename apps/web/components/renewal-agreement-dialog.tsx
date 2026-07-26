@@ -2,12 +2,13 @@
 
 import * as React from 'react';
 import { CheckCircle2 } from 'lucide-react';
-import { INVOICE_STATUS_LABELS, type InvoiceStatus } from '@escola/contracts';
+import { INVOICE_STATUS_LABELS, type InvoiceStatus, type InvoiceType } from '@escola/contracts';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { brl, formatDate } from '@/lib/format';
 
 type Installment = {
   status: InvoiceStatus;
+  type: InvoiceType;
   installmentNumber: number;
   installmentCount: number;
   amountCents: number;
@@ -18,10 +19,12 @@ type Installment = {
 
 export function RenewalAgreementDialog({
   studentName,
+  feeType,
   installments,
   trigger,
 }: {
   studentName: string;
+  feeType: InvoiceType;
   installments: Installment[];
   trigger: React.ReactNode;
 }) {
@@ -29,6 +32,7 @@ export function RenewalAgreementDialog({
   const materialCents = installments.reduce((total, installment) => total + installment.materialCents, 0);
   const discountCents = installments.reduce((total, installment) => total + installment.discountCents, 0);
   const renewalFeeCents = installments.reduce((total, installment) => total + installment.amountCents - installment.materialCents, 0);
+  const feeLabel = feeType === 'ENROLLMENT_FEE' ? 'Taxa de matrícula' : 'Taxa de rematrícula';
 
   return (
     <Dialog>
@@ -40,7 +44,7 @@ export function RenewalAgreementDialog({
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-3 rounded-lg border bg-muted/40 p-3 text-sm">
-          <div><p className="text-xs text-muted-foreground">Taxa de rematrícula</p><p className="mt-0.5 font-bold">{brl(renewalFeeCents)}</p></div>
+          <div><p className="text-xs text-muted-foreground">{feeLabel}</p><p className="mt-0.5 font-bold">{brl(renewalFeeCents)}</p></div>
           <div><p className="text-xs text-muted-foreground">Material didático</p><p className="mt-0.5 font-bold">{brl(materialCents)}</p></div>
           {discountCents > 0 && <div><p className="text-xs text-muted-foreground">Desconto aplicado</p><p className="mt-0.5 font-bold text-success">−{brl(discountCents)}</p></div>}
           <div><p className="text-xs text-muted-foreground">Total do acordo</p><p className="mt-0.5 font-bold">{brl(totalCents)}</p></div>
