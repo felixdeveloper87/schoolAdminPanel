@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StudentAvatar } from '@/components/student-avatar';
 import { RenewalChargeDialog } from '@/components/renewal-charge-dialog';
+import { RenewalAgreementDialog } from '@/components/renewal-agreement-dialog';
 import { Button } from '@/components/ui/button';
 
 interface RenewalRow {
@@ -16,7 +17,19 @@ interface RenewalRow {
   photoUrl: string | null;
   classroom: { id: string; name: string } | null;
   enrollmentId: string | null;
-  renewal: { status: InvoiceStatus; installmentCount: number } | null;
+  renewal: {
+    status: InvoiceStatus;
+    installmentCount: number;
+    installments: Array<{
+      status: InvoiceStatus;
+      installmentNumber: number;
+      installmentCount: number;
+      amountCents: number;
+      materialCents: number;
+      discountCents: number;
+      dueDate: string;
+    }>;
+  } | null;
 }
 
 interface RenewalsResponse {
@@ -61,7 +74,7 @@ export default async function RematriculaPage() {
                 <TableCell className="pl-5 py-4"><Link href={`/alunos/${student.id}`} className="flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><StudentAvatar photoUrl={student.photoUrl} name={student.fullName} size="md" /><span className="text-sm font-extrabold hover:text-brand hover:underline">{student.fullName}</span></Link></TableCell>
                 <TableCell className="hidden sm:table-cell"><span className="rounded-lg bg-muted/60 px-2.5 py-1 text-xs font-bold text-muted-foreground">{student.classroom?.name ?? 'Sem turma'}</span></TableCell>
                 <TableCell>
-                  {student.renewal ? <div className="flex flex-wrap items-center gap-2"><Badge variant="success" className="gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Gerada</Badge><span className="text-xs text-muted-foreground">{INVOICE_STATUS_LABELS[student.renewal.status]}{student.renewal.installmentCount > 1 ? ` · ${student.renewal.installmentCount}x` : ''}</span></div> : student.enrollmentId ? <RenewalChargeDialog enrollmentId={student.enrollmentId} studentName={student.fullName} trigger={<Button variant="outline" size="sm" className="border-accent/50 bg-accent/10 text-accent-deep hover:bg-accent/20"><CircleDashed className="h-4 w-4" /> Não gerada · iniciar</Button>} /> : <span className="text-xs text-muted-foreground">Sem matrícula</span>}
+                  {student.renewal ? <RenewalAgreementDialog studentName={student.fullName} installments={student.renewal.installments} trigger={<button type="button" className="flex flex-wrap items-center gap-2 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Badge variant="success" className="gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Gerada</Badge><span className="text-xs text-muted-foreground underline-offset-2 hover:underline">{INVOICE_STATUS_LABELS[student.renewal.status]}{student.renewal.installmentCount > 1 ? ` · ${student.renewal.installmentCount}x` : ''}</span></button>} /> : student.enrollmentId ? <RenewalChargeDialog enrollmentId={student.enrollmentId} studentName={student.fullName} trigger={<Button variant="outline" size="sm" className="border-accent/50 bg-accent/10 text-accent-deep hover:bg-accent/20"><CircleDashed className="h-4 w-4" /> Não gerada · iniciar</Button>} /> : <span className="text-xs text-muted-foreground">Sem matrícula</span>}
                 </TableCell>
               </TableRow>
             ))}

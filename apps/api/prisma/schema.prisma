@@ -238,6 +238,7 @@ model TuitionInvoice {
   installmentNumber Int        @default(1)
   installmentCount  Int        @default(1)
   amountCents   Int
+  materialCents Int            @default(0)
   discountCents Int            @default(0)
   dueDate       DateTime       @db.Date
   status        InvoiceStatus  @default(PENDING)

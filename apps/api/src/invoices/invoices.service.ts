@@ -35,6 +35,39 @@ export function splitAdditionalCharge(input: {
   }));
 }
 
+function splitCents(amountCents: number, installments: number) {
+  const base = Math.floor(amountCents / installments);
+  const remainder = amountCents % installments;
+  return Array.from({ length: installments }, (_, index) => base + (index < remainder ? 1 : 0));
+}
+
+function splitRenewalCharge(input: {
+  schoolId: string;
+  enrollmentId: string;
+  renewalFeeCents: number;
+  materialFeeCents: number;
+  discountCents: number;
+  competence: Date;
+  dueDate: Date;
+  installments: number;
+}): Prisma.TuitionInvoiceCreateManyInput[] {
+  const renewalParts = splitCents(input.renewalFeeCents, input.installments);
+  const materialParts = splitCents(input.materialFeeCents, input.installments);
+  const discountParts = splitCents(input.discountCents, input.installments);
+  return Array.from({ length: input.installments }, (_, index) => ({
+    schoolId: input.schoolId,
+    enrollmentId: input.enrollmentId,
+    type: 'RENEWAL_FEE',
+    competence: new Date(Date.UTC(input.competence.getUTCFullYear(), input.competence.getUTCMonth() + index, 1)),
+    amountCents: renewalParts[index] + materialParts[index],
+    materialCents: materialParts[index],
+    discountCents: discountParts[index],
+    dueDate: addMonthsKeepingDay(input.dueDate, index),
+    installmentNumber: index + 1,
+    installmentCount: input.installments,
+  }));
+}
+
 @Injectable()
 export class InvoicesService {
   constructor(private readonly prisma: PrismaService) {}
@@ -88,6 +121,7 @@ export class InvoicesService {
       installmentNumber: i.installmentNumber,
       installmentCount: i.installmentCount,
       amountCents: i.amountCents,
+      materialCents: i.materialCents,
       discountCents: i.discountCents,
       effectiveCents: i.amountCents - i.discountCents,
       dueDate: i.dueDate,
@@ -142,6 +176,7 @@ export class InvoicesService {
       installmentNumber: invoice.installmentNumber,
       installmentCount: invoice.installmentCount,
       amountCents: invoice.amountCents,
+      materialCents: invoice.materialCents,
       discountCents: invoice.discountCents,
       effectiveCents: invoice.amountCents - invoice.discountCents,
       dueDate: invoice.dueDate,
@@ -190,11 +225,12 @@ export class InvoicesService {
     if (!enrollment) throw new NotFoundException('Matrícula não encontrada');
 
     const competence = new Date(`${input.competence}T00:00:00.000Z`);
-    const invoices = splitAdditionalCharge({
+    const invoices = splitRenewalCharge({
       schoolId,
       enrollmentId: enrollment.id,
-      type: 'RENEWAL_FEE',
-      amountCents: input.amountCents,
+      renewalFeeCents: input.renewalFeeCents,
+      materialFeeCents: input.materialFeeCents,
+      discountCents: input.discountCents,
       competence,
       dueDate: parseDateString(input.dueDate),
       installments: input.installments,

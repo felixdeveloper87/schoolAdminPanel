@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { currentCompetence, todayDateInput } from '@/lib/format';
+import { brl, currentCompetence, todayDateInput } from '@/lib/format';
 
 function toCents(value: string) {
   return Math.round(Number(value.replace(/\./g, '').replace(',', '.')) * 100);
@@ -26,15 +26,26 @@ export function RenewalChargeDialog({
   const [open, setOpen] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [amount, setAmount] = React.useState('');
+  const [renewalFee, setRenewalFee] = React.useState('');
+  const [materialFee, setMaterialFee] = React.useState('');
+  const [discount, setDiscount] = React.useState('');
   const [competence, setCompetence] = React.useState(currentCompetence());
   const [dueDate, setDueDate] = React.useState(todayDateInput());
   const [installments, setInstallments] = React.useState(1);
 
+  const renewalFeeCents = toCents(renewalFee) || 0;
+  const materialFeeCents = toCents(materialFee) || 0;
+  const discountCents = toCents(discount) || 0;
+  const grossTotalCents = renewalFeeCents + materialFeeCents;
+  const totalCents = grossTotalCents - discountCents;
+
   const submit = async () => {
-    const amountCents = toCents(amount);
-    if (!Number.isFinite(amountCents) || amountCents <= 0) {
-      setError('Informe um valor válido para a taxa de rematrícula.');
+    if (!Number.isFinite(grossTotalCents) || grossTotalCents <= 0) {
+      setError('Informe a taxa de rematrícula ou o custo do material.');
+      return;
+    }
+    if (!Number.isFinite(discountCents) || discountCents < 0 || discountCents > grossTotalCents) {
+      setError('O desconto não pode ser maior que o total da cobrança.');
       return;
     }
     setBusy(true);
@@ -42,7 +53,7 @@ export function RenewalChargeDialog({
     const res = await fetch('/api/invoices', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enrollmentId, amountCents, competence, dueDate, installments }),
+      body: JSON.stringify({ enrollmentId, renewalFeeCents, materialFeeCents, discountCents, competence, dueDate, installments }),
     });
     setBusy(false);
     if (!res.ok) {
@@ -51,7 +62,9 @@ export function RenewalChargeDialog({
       return;
     }
     setOpen(false);
-    setAmount('');
+    setRenewalFee('');
+    setMaterialFee('');
+    setDiscount('');
     router.refresh();
   };
 
@@ -61,15 +74,21 @@ export function RenewalChargeDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Registrar rematrícula</DialogTitle>
-          <DialogDescription>Gere a taxa de rematrícula de {studentName} em até 3 parcelas.</DialogDescription>
+          <DialogDescription>Informe os valores de {studentName}. O total pode ser dividido em até 3 parcelas.</DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2 space-y-1.5"><Label>Valor total (R$)</Label><Input inputMode="decimal" placeholder="450,00" value={amount} onChange={(event) => setAmount(event.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Taxa de rematrícula (R$)</Label><Input inputMode="decimal" placeholder="450,00" value={renewalFee} onChange={(event) => setRenewalFee(event.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Material didático (R$)</Label><Input inputMode="decimal" placeholder="300,00" value={materialFee} onChange={(event) => setMaterialFee(event.target.value)} /></div>
+          <div className="col-span-2 space-y-1.5"><Label>Desconto manual (R$)</Label><Input inputMode="decimal" placeholder="0,00" value={discount} onChange={(event) => setDiscount(event.target.value)} /></div>
           <div className="space-y-1.5"><Label>Competência</Label><Input type="month" value={competence} onChange={(event) => setCompetence(event.target.value)} /></div>
           <div className="space-y-1.5"><Label>Vencimento</Label><Input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></div>
           <div className="space-y-1.5"><Label>Parcelas</Label><Select value={String(installments)} onChange={(event) => setInstallments(Number(event.target.value))}><option value="1">À vista</option><option value="2">2x mensais</option><option value="3">3x mensais</option></Select></div>
         </div>
-        {installments > 1 && <p className="text-xs text-muted-foreground">O valor será dividido em {installments} vencimentos mensais consecutivos.</p>}
+        <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
+          {discountCents > 0 && <p className="text-muted-foreground">Total antes do desconto: {brl(Math.max(0, grossTotalCents))}</p>}
+          <span className="text-muted-foreground">Total a parcelar: </span><strong>{brl(Math.max(0, totalCents))}</strong>
+        </div>
+        {installments > 1 && <p className="text-xs text-muted-foreground">O total será dividido em {installments} vencimentos mensais consecutivos.</p>}
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>Cancelar</Button><Button onClick={submit} disabled={busy}>{busy ? 'Gerando…' : 'Gerar rematrícula'}</Button></div>
       </DialogContent>

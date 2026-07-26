@@ -78,6 +78,7 @@ export class StudentsService {
     const current = currentCompetenceSaoPaulo();
     const renewalYear = current.getUTCMonth() >= 6 ? current.getUTCFullYear() : current.getUTCFullYear() - 1;
     const renewalCompetence = new Date(Date.UTC(renewalYear, 6, 1));
+    const renewalEndCompetence = new Date(Date.UTC(renewalYear, 9, 1));
     const where: Prisma.StudentWhereInput = { schoolId, status: 'ACTIVE' };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.student.findMany({
@@ -92,8 +93,19 @@ export class StudentsService {
             include: {
               classroom: { select: { id: true, name: true } },
               invoices: {
-                where: { type: 'RENEWAL_FEE', competence: renewalCompetence },
-                select: { status: true, installmentNumber: true, installmentCount: true },
+                where: {
+                  type: 'RENEWAL_FEE',
+                  competence: { gte: renewalCompetence, lt: renewalEndCompetence },
+                },
+                select: {
+                  status: true,
+                  installmentNumber: true,
+                  installmentCount: true,
+                  amountCents: true,
+                  materialCents: true,
+                  discountCents: true,
+                  dueDate: true,
+                },
                 orderBy: { installmentNumber: 'asc' },
               },
             },
@@ -118,6 +130,15 @@ export class StudentsService {
               ? {
                   status: firstInvoice.status,
                   installmentCount: firstInvoice.installmentCount,
+                  installments: enrollment!.invoices.map((invoice) => ({
+                    status: invoice.status,
+                    installmentNumber: invoice.installmentNumber,
+                    installmentCount: invoice.installmentCount,
+                    amountCents: invoice.amountCents,
+                    materialCents: invoice.materialCents,
+                    discountCents: invoice.discountCents,
+                    dueDate: invoice.dueDate,
+                  })),
                 }
               : null,
           };

@@ -322,9 +322,15 @@ export type PayInvoiceInput = z.infer<typeof payInvoiceSchema>;
 export const createRenewalInvoiceSchema = z.object({
   enrollmentId: z.string().min(1, 'Escolha o aluno'),
   competence: competenceString,
-  amountCents: cents.refine((v) => v > 0, 'Valor deve ser maior que zero'),
+  renewalFeeCents: cents.default(0),
+  materialFeeCents: cents.default(0),
+  discountCents: cents.default(0),
   dueDate: dateString,
   installments: z.number().int().min(1).max(3).default(1),
+}).refine((value) => value.renewalFeeCents + value.materialFeeCents > 0, {
+  message: 'Informe a taxa de rematrícula ou o custo do material',
+}).refine((value) => value.discountCents <= value.renewalFeeCents + value.materialFeeCents, {
+  message: 'O desconto não pode ser maior que o total da cobrança',
 });
 export type CreateRenewalInvoiceInput = z.infer<typeof createRenewalInvoiceSchema>;
 
