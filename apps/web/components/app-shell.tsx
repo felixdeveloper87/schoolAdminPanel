@@ -36,6 +36,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { href: '/', label: 'Visão geral', icon: Home },
       { href: '/alunos', label: 'Alunos', icon: Users },
       { href: '/rematricula', label: 'Rematrícula', icon: RefreshCw },
+      { href: '/material-escolar', label: 'Material escolar', icon: BookOpen },
       { href: '/mensalidades', label: 'Mensalidades', icon: CreditCard },
       { href: '/turmas', label: 'Turmas', icon: BookOpen },
       { href: '/despesas', label: 'Despesas', icon: ArrowDown },

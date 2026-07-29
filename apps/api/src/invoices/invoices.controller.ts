@@ -3,10 +3,14 @@ import { InvoiceStatus } from '@prisma/client';
 import {
   createRenewalInvoiceSchema,
   CreateRenewalInvoiceInput,
+  createSchoolMaterialInvoiceSchema,
+  CreateSchoolMaterialInvoiceInput,
   payInvoiceSchema,
   PayInvoiceInput,
   competenceString,
   INVOICE_STATUSES,
+  INVOICE_TYPES,
+  InvoiceType,
 } from '@escola/contracts';
 import { InvoicesService } from './invoices.service';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
@@ -25,6 +29,7 @@ export class InvoicesController {
     @CurrentUser() user: JwtPayload,
     @Query('competence') competence?: string,
     @Query('status') status?: string,
+    @Query('type') type?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
@@ -35,9 +40,10 @@ export class InvoicesController {
     const validStatus = INVOICE_STATUSES.includes(status as InvoiceStatus)
       ? (status as InvoiceStatus)
       : undefined;
+    const validType = INVOICE_TYPES.includes(type as InvoiceType) ? (type as InvoiceType) : undefined;
     return this.invoicesService.list(
       user.schoolId,
-      { competence: parsedCompetence, status: validStatus },
+      { competence: parsedCompetence, status: validStatus, type: validType },
       parsePageParams(page, pageSize, 50),
     );
   }
@@ -64,6 +70,15 @@ export class InvoicesController {
     @Body(new ZodValidationPipe(createRenewalInvoiceSchema)) body: CreateRenewalInvoiceInput,
   ) {
     return this.invoicesService.createRenewal(user.schoolId, body);
+  }
+
+  @Post('school-material')
+  @Roles('ADMIN')
+  createSchoolMaterial(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(createSchoolMaterialInvoiceSchema)) body: CreateSchoolMaterialInvoiceInput,
+  ) {
+    return this.invoicesService.createSchoolMaterial(user.schoolId, body);
   }
 
   @Patch(':id/pay')

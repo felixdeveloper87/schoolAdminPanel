@@ -29,9 +29,8 @@ export function RenewalAgreementDialog({
   trigger: React.ReactNode;
 }) {
   const totalCents = installments.reduce((total, installment) => total + installment.amountCents - installment.discountCents, 0);
-  const materialCents = installments.reduce((total, installment) => total + installment.materialCents, 0);
   const discountCents = installments.reduce((total, installment) => total + installment.discountCents, 0);
-  const renewalFeeCents = installments.reduce((total, installment) => total + installment.amountCents - installment.materialCents, 0);
+  const renewalFeeCents = installments.reduce((total, installment) => total + installment.amountCents, 0);
   const feeLabel = feeType === 'ENROLLMENT_FEE' ? 'Taxa de matrícula' : 'Taxa de rematrícula';
 
   return (
@@ -45,7 +44,6 @@ export function RenewalAgreementDialog({
 
         <div className="grid grid-cols-2 gap-3 rounded-lg border bg-muted/40 p-3 text-sm">
           <div><p className="text-xs text-muted-foreground">{feeLabel}</p><p className="mt-0.5 font-bold">{brl(renewalFeeCents)}</p></div>
-          <div><p className="text-xs text-muted-foreground">Material didático</p><p className="mt-0.5 font-bold">{brl(materialCents)}</p></div>
           {discountCents > 0 && <div><p className="text-xs text-muted-foreground">Desconto aplicado</p><p className="mt-0.5 font-bold text-success">−{brl(discountCents)}</p></div>}
           <div><p className="text-xs text-muted-foreground">Total do acordo</p><p className="mt-0.5 font-bold">{brl(totalCents)}</p></div>
         </div>

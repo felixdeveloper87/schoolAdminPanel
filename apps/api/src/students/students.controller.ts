@@ -62,6 +62,15 @@ export class StudentsController {
     return this.studentsService.renewals(user.schoolId, parsePageParams(page, pageSize, 50));
   }
 
+  @Get('school-materials')
+  schoolMaterials(
+    @CurrentUser() user: JwtPayload,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.studentsService.schoolMaterials(user.schoolId, parsePageParams(page, pageSize, 50));
+  }
+
   @Get(':id')
   detail(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     return this.studentsService.detail(user.schoolId, id);

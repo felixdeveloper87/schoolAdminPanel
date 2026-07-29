@@ -44,11 +44,12 @@ interface StudentFormProps {
 }
 
 const enrollmentFormSchema = createEnrollmentSchema
-  .omit({ studentId: true, monthlyFeeCents: true, discountCents: true, enrollmentFeeCents: true, materialFeeCents: true })
+  .omit({ studentId: true, monthlyFeeCents: true, discountCents: true, enrollmentFeeCents: true, enrollmentFeeEntryCents: true, materialFeeCents: true })
   .extend({
     monthlyFee: z.string().min(1, 'Informe o valor da mensalidade'),
     discount: z.string().default('0'),
     enrollmentFee: z.string().default('0'),
+    enrollmentFeeEntry: z.string().default('0'),
     materialFee: z.string().default('0'),
   });
 
@@ -84,6 +85,7 @@ export function StudentForm({ studentId, defaultValues, currentPhotoUrl, classro
         discountReason: 'NONE',
         dueDay: 5,
         enrollmentFee: '0',
+        enrollmentFeeEntry: '0',
         enrollmentFeeInstallments: 1,
         materialFee: '0',
         materialInstallments: 1,
@@ -130,6 +132,7 @@ export function StudentForm({ studentId, defaultValues, currentPhotoUrl, classro
                 monthlyFeeCents: toCents(enrollmentValidation.data.monthlyFee),
                 discountCents: toCents(enrollmentValidation.data.discount),
                 enrollmentFeeCents: toCents(enrollmentValidation.data.enrollmentFee),
+                enrollmentFeeEntryCents: toCents(enrollmentValidation.data.enrollmentFeeEntry),
                 materialFeeCents: toCents(enrollmentValidation.data.materialFee),
               }
             : undefined,
@@ -217,6 +220,14 @@ export function StudentForm({ studentId, defaultValues, currentPhotoUrl, classro
             ) : <p className="text-sm text-muted-foreground">Você poderá matricular o aluno em uma turma depois, pela ficha dele.</p>}
           </CardContent>
         </Card>
+      )}
+
+      {!studentId && createEnrollment && (
+        <div className="-mt-4 rounded-xl border border-accent/35 bg-accent/10 p-4">
+          <Label>Valor de entrada da taxa (R$)</Label>
+          <Input className="mt-1.5" inputMode="decimal" placeholder="Opcional" {...register('enrollment.enrollmentFeeEntry')} />
+          <p className="mt-1 text-xs text-muted-foreground">A entrada vence primeiro; o saldo da taxa segue nas parcelas.</p>
+        </div>
       )}
 
       <Card className="notebook-card paper-panel" style={{ ['--notebook-accent' as string]: 'var(--destructive)' }}>

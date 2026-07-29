@@ -68,6 +68,9 @@ export class EnrollmentsService {
     ]);
     if (!student) throw new NotFoundException('Aluno não encontrado');
     if (!classroom) throw new NotFoundException('Turma não encontrada ou inativa');
+    if (input.enrollmentFeeEntryCents > input.enrollmentFeeCents) {
+      throw new BadRequestException('A entrada não pode ser maior que a taxa de matrícula.');
+    }
 
     const existing = await tx.enrollment.findFirst({
       where: { schoolId, studentId: input.studentId, status: 'ACTIVE' },
@@ -108,6 +111,7 @@ export class EnrollmentsService {
           discountReason: input.discountReason,
           dueDay: input.dueDay,
           enrollmentFeeCents: input.enrollmentFeeCents,
+          enrollmentFeeEntryCents: input.enrollmentFeeEntryCents,
           enrollmentFeeInstallments: input.enrollmentFeeInstallments,
           materialFeeCents: input.materialFeeCents,
           materialInstallments: input.materialInstallments,
@@ -131,6 +135,7 @@ export class EnrollmentsService {
               competence: firstChargeCompetence,
               dueDate: firstChargeDueDate,
               installments: input.enrollmentFeeInstallments,
+              entryCents: input.enrollmentFeeEntryCents,
             })
           : []),
         ...(input.materialFeeCents > 0
@@ -320,6 +325,10 @@ export class EnrollmentsService {
           overrideByEnrollment.get(old.id) ?? Math.round(old.monthlyFeeCents * (1 + input.readjustPercent / 100));
 
         const renewalFeeCents = input.renewalFeeCents ?? old.enrollmentFeeCents;
+        const renewalFeeEntryCents = input.renewalFeeEntryCents ?? old.enrollmentFeeEntryCents;
+        if (renewalFeeEntryCents > renewalFeeCents) {
+          throw new BadRequestException('A entrada não pode ser maior que a taxa de rematrícula.');
+        }
         const renewalFeeInstallments = input.renewalFeeInstallments ?? old.enrollmentFeeInstallments;
         const materialFeeCents = input.materialFeeCents ?? old.materialFeeCents;
         const materialInstallments = input.materialInstallments ?? old.materialInstallments;
@@ -335,6 +344,7 @@ export class EnrollmentsService {
             discountReason: old.discountReason,
             dueDay: old.dueDay,
             enrollmentFeeCents: renewalFeeCents,
+            enrollmentFeeEntryCents: renewalFeeEntryCents,
             enrollmentFeeInstallments: renewalFeeInstallments,
             materialFeeCents,
             materialInstallments,
@@ -367,6 +377,7 @@ export class EnrollmentsService {
                 competence: julyCompetence,
                 dueDate: dueDateFor(julyCompetence, old.dueDay),
                 installments: renewalFeeInstallments,
+                entryCents: renewalFeeEntryCents,
               })
             : []),
           ...(materialFee > 0

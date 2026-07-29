@@ -29,10 +29,11 @@ import {
 import { todayDateInput, brl, competenceDiff, currentCompetence, toDateInput } from '@/lib/format';
 
 // No formulário os valores são digitados em reais e convertidos para centavos no submit
-const formSchema = createEnrollmentSchema.omit({ studentId: true, monthlyFeeCents: true, discountCents: true, enrollmentFeeCents: true, materialFeeCents: true }).extend({
+const formSchema = createEnrollmentSchema.omit({ studentId: true, monthlyFeeCents: true, discountCents: true, enrollmentFeeCents: true, enrollmentFeeEntryCents: true, materialFeeCents: true }).extend({
   monthlyFee: z.string().min(1, 'Informe o valor'),
   discount: z.string().default('0'),
   enrollmentFee: z.string().default('0'),
+  enrollmentFeeEntry: z.string().default('0'),
   materialFee: z.string().default('0'),
 });
 type FormValues = z.infer<typeof formSchema>;
@@ -88,6 +89,7 @@ export function EnrollmentDialog({
       monthlyFee: '',
       discount: '0',
       enrollmentFee: '0',
+      enrollmentFeeEntry: '0',
       materialFee: '0',
       enrollmentFeeInstallments: 1,
       materialInstallments: 1,
@@ -117,12 +119,13 @@ export function EnrollmentDialog({
   const discount = watch('discount');
   const effective = toCents(monthlyFee) - toCents(discount);
   const enrollmentFeeCents = toCents(watch('enrollmentFee'));
+  const enrollmentFeeEntryCents = toCents(watch('enrollmentFeeEntry'));
   const materialFeeCents = toCents(watch('materialFee'));
   const enrollmentFeeInstallments = Number(watch('enrollmentFeeInstallments')) || 1;
   const materialInstallments = Number(watch('materialInstallments')) || 1;
   const firstInstallment = (total: number, installments: number) => Math.ceil(total / installments);
   const firstMonthCharges =
-    effective + firstInstallment(enrollmentFeeCents, enrollmentFeeInstallments) + firstInstallment(materialFeeCents, materialInstallments);
+    effective + (enrollmentFeeEntryCents || firstInstallment(enrollmentFeeCents, enrollmentFeeInstallments)) + firstInstallment(materialFeeCents, materialInstallments);
 
   const backfillMode = watch('backfillMode');
   const pastMonths = retroactiveMonths(watch('startDate'));
@@ -142,6 +145,7 @@ export function EnrollmentDialog({
         discountReason: data.discountReason,
         dueDay: Number(data.dueDay),
         enrollmentFeeCents: toCents(data.enrollmentFee),
+        enrollmentFeeEntryCents: toCents(data.enrollmentFeeEntry),
         enrollmentFeeInstallments: Number(data.enrollmentFeeInstallments),
         materialFeeCents: toCents(data.materialFee),
         materialInstallments: Number(data.materialInstallments),
@@ -197,8 +201,13 @@ export function EnrollmentDialog({
 
           <section className="rounded-2xl border border-accent/35 bg-accent/10 p-4 sm:p-5">
             <div className="mb-4 flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl bg-accent/20 text-accent-deep"><ReceiptText className="h-4 w-4" /></span><div><h3 className="text-sm font-extrabold">Cobranças de entrada <span className="font-normal text-muted-foreground">(opcional)</span></h3><p className="text-xs text-muted-foreground">Taxa e material são separados da mensalidade e podem ser parcelados.</p></div></div>
-            <div className="grid gap-x-5 gap-y-3 sm:grid-cols-2"><div className="space-y-1.5"><Label>Taxa de matrícula (R$)</Label><Input inputMode="decimal" placeholder="Ex.: 450,00" {...register('enrollmentFee')} /></div><div className="space-y-1.5"><Label>Parcelar taxa</Label><Select {...register('enrollmentFeeInstallments', { valueAsNumber: true })}><option value="1">À vista</option><option value="2">2x mensais</option><option value="3">3x mensais</option></Select></div><div className="space-y-1.5"><Label>Material didático (R$)</Label><Input inputMode="decimal" placeholder="Ex.: 650,00" {...register('materialFee')} /></div><div className="space-y-1.5"><Label>Parcelar material</Label><Select {...register('materialInstallments', { valueAsNumber: true })}><option value="1">À vista</option><option value="2">2x mensais</option><option value="3">3x mensais</option></Select></div></div>
+            <div className="grid gap-x-5 gap-y-3 sm:grid-cols-2"><div className="space-y-1.5"><Label>Taxa de matrícula (R$)</Label><Input inputMode="decimal" placeholder="Ex.: 450,00" {...register('enrollmentFee')} /></div><div className="space-y-1.5"><Label>Parcelas da taxa</Label><Select {...register('enrollmentFeeInstallments', { valueAsNumber: true })}><option value="1">À vista</option><option value="2">2x mensais</option><option value="3">3x mensais</option></Select></div><div className="space-y-1.5"><Label>Material didático (R$)</Label><Input inputMode="decimal" placeholder="Ex.: 650,00" {...register('materialFee')} /></div><div className="space-y-1.5"><Label>Parcelar material</Label><Select {...register('materialInstallments', { valueAsNumber: true })}><option value="1">À vista</option><option value="2">2x mensais</option><option value="3">3x mensais</option></Select></div></div>
           </section>
+
+          <div className="grid gap-3 rounded-xl border border-accent/35 bg-accent/10 p-3 sm:grid-cols-2">
+            <div className="space-y-1.5"><Label>Valor de entrada da taxa (R$)</Label><Input inputMode="decimal" placeholder="Opcional" {...register('enrollmentFeeEntry')} /></div>
+            <p className="self-end pb-1 text-xs text-muted-foreground">A entrada é cobrada primeiro; o saldo da taxa segue nas parcelas escolhidas.</p>
+          </div>
 
           {pastMonths > 0 && (
             <div className="space-y-3 rounded-xl border border-accent/40 bg-accent/10 p-3.5">
@@ -252,7 +261,7 @@ export function EnrollmentDialog({
             </div>
             {(enrollmentFeeCents > 0 || materialFeeCents > 0) && (
               <p className="mt-2 border-t border-white/15 pt-2 text-xs text-white/65">
-                Inclui {enrollmentFeeCents > 0 ? `taxa ${enrollmentFeeInstallments}x` : ''}{enrollmentFeeCents > 0 && materialFeeCents > 0 ? ' e ' : ''}{materialFeeCents > 0 ? `material ${materialInstallments}x` : ''}. Parcelas seguintes vencem mensalmente.
+                Inclui {enrollmentFeeCents > 0 ? (enrollmentFeeEntryCents > 0 ? `entrada de ${brl(enrollmentFeeEntryCents)} + taxa em ${enrollmentFeeInstallments}x` : `taxa ${enrollmentFeeInstallments}x`) : ''}{enrollmentFeeCents > 0 && materialFeeCents > 0 ? ' e ' : ''}{materialFeeCents > 0 ? `material ${materialInstallments}x` : ''}. Parcelas seguintes vencem mensalmente.
               </p>
             )}
           </section>

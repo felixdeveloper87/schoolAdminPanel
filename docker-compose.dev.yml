@@ -21,7 +21,7 @@ services:
     environment:
       DATABASE_URL: postgresql://escola:escola@postgres:5432/escola?connection_limit=5
     working_dir: /app
-    command: pnpm --filter @escola/api dev
+    command: sh -c 'pnpm --filter @escola/contracts build && pnpm --filter @escola/api exec prisma generate && pnpm --filter @escola/api dev'
     ports:
       - '3002:3002'
     volumes:

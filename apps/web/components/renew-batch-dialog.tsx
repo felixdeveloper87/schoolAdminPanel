@@ -42,6 +42,7 @@ export function RenewBatchDialog({ classrooms }: { classrooms: ClassroomOption[]
   const [chargeEnrollmentFee, setChargeEnrollmentFee] = React.useState(true);
   const [chargeSchoolMaterial, setChargeSchoolMaterial] = React.useState(true);
   const [renewalFee, setRenewalFee] = React.useState('');
+  const [renewalFeeEntry, setRenewalFeeEntry] = React.useState('');
   const [renewalFeeInstallments, setRenewalFeeInstallments] = React.useState(1);
   const [materialFee, setMaterialFee] = React.useState('');
   const [materialInstallments, setMaterialInstallments] = React.useState(1);
@@ -83,6 +84,7 @@ export function RenewBatchDialog({ classrooms }: { classrooms: ClassroomOption[]
         chargeEnrollmentFee,
         chargeSchoolMaterial,
         renewalFeeCents: renewalFee ? Math.round(Number(renewalFee.replace(/\./g, '').replace(',', '.')) * 100) : undefined,
+        renewalFeeEntryCents: renewalFeeEntry ? Math.round(Number(renewalFeeEntry.replace(/\./g, '').replace(',', '.')) * 100) : undefined,
         renewalFeeInstallments,
         materialFeeCents: materialFee ? Math.round(Number(materialFee.replace(/\./g, '').replace(',', '.')) * 100) : undefined,
         materialInstallments,
@@ -169,6 +171,7 @@ export function RenewBatchDialog({ classrooms }: { classrooms: ClassroomOption[]
           {chargeEnrollmentFee && (
             <div className="col-span-2 grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5"><Label>Taxa de rematrícula por aluno (R$)</Label><Input inputMode="decimal" placeholder="Usar valor já cadastrado" value={renewalFee} onChange={(e) => setRenewalFee(e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Valor de entrada (R$)</Label><Input inputMode="decimal" placeholder="Opcional" value={renewalFeeEntry} onChange={(e) => setRenewalFeeEntry(e.target.value)} /></div>
               <div className="space-y-1.5"><Label>Parcelas da taxa</Label><Select value={String(renewalFeeInstallments)} onChange={(e) => setRenewalFeeInstallments(Number(e.target.value))}><option value="1">À vista</option><option value="2">2x</option><option value="3">3x</option></Select></div>
             </div>
           )}

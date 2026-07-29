@@ -157,6 +157,78 @@ export class StudentsService {
     };
   }
 
+  /** Situação da cobrança de material escolar no ciclo atual. */
+  async schoolMaterials(schoolId: string, pageParams: PageParams) {
+    const current = currentCompetenceSaoPaulo();
+    const schoolYear = current.getUTCMonth() >= 6 ? current.getUTCFullYear() : current.getUTCFullYear() - 1;
+    const startCompetence = new Date(Date.UTC(schoolYear, 6, 1));
+    const endCompetence = new Date(Date.UTC(schoolYear, 9, 1));
+    const where: Prisma.StudentWhereInput = { schoolId, status: 'ACTIVE' };
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.student.findMany({
+        where,
+        orderBy: { fullName: 'asc' },
+        skip: pageParams.skip,
+        take: pageParams.take,
+        include: {
+          enrollments: {
+            orderBy: { startDate: 'desc' },
+            take: 1,
+            include: {
+              classroom: { select: { id: true, name: true } },
+              invoices: {
+                where: { type: 'SCHOOL_MATERIAL', competence: { gte: startCompetence, lt: endCompetence } },
+                select: {
+                  status: true,
+                  installmentNumber: true,
+                  installmentCount: true,
+                  amountCents: true,
+                  discountCents: true,
+                  dueDate: true,
+                },
+                orderBy: { installmentNumber: 'asc' },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.student.count({ where }),
+    ]);
+
+    return {
+      ...paged(
+        items.map((student) => {
+          const enrollment = student.enrollments[0] ?? null;
+          const firstInvoice = enrollment?.invoices[0] ?? null;
+          return {
+            id: student.id,
+            fullName: student.fullName,
+            photoUrl: student.photoUrl,
+            classroom: enrollment?.classroom ?? null,
+            enrollmentId: enrollment?.id ?? null,
+            material: firstInvoice
+              ? {
+                  status: firstInvoice.status,
+                  installmentCount: firstInvoice.installmentCount,
+                  installments: enrollment!.invoices.map((invoice) => ({
+                    status: invoice.status,
+                    installmentNumber: invoice.installmentNumber,
+                    installmentCount: invoice.installmentCount,
+                    amountCents: invoice.amountCents,
+                    discountCents: invoice.discountCents,
+                    dueDate: invoice.dueDate,
+                  })),
+                }
+              : null,
+          };
+        }),
+        total,
+        pageParams,
+      ),
+      competence: startCompetence,
+    };
+  }
+
   async detail(schoolId: string, id: string) {
     const student = await this.prisma.student.findFirst({
       where: { id, schoolId },

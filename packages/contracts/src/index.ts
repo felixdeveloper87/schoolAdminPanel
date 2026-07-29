@@ -289,6 +289,7 @@ export const createEnrollmentSchema = z.object({
   discountReason: z.enum(DISCOUNT_REASONS).default('NONE'),
   dueDay: z.number().int().min(1, 'Entre 1 e 28').max(28, 'Entre 1 e 28'),
   enrollmentFeeCents: cents.default(0),
+  enrollmentFeeEntryCents: cents.default(0),
   enrollmentFeeInstallments: z.number().int().min(1).max(3).default(1),
   materialFeeCents: cents.default(0),
   materialInstallments: z.number().int().min(1).max(3).default(1),
@@ -329,16 +330,28 @@ export const createRenewalInvoiceSchema = z.object({
   enrollmentId: z.string().min(1, 'Escolha o aluno'),
   competence: competenceString,
   renewalFeeCents: cents.default(0),
-  materialFeeCents: cents.default(0),
+  entryCents: cents.default(0),
   discountCents: cents.default(0),
   dueDate: dateString,
   installments: z.number().int().min(1).max(3).default(1),
-}).refine((value) => value.renewalFeeCents + value.materialFeeCents > 0, {
-  message: 'Informe a taxa de rematrícula ou o custo do material',
-}).refine((value) => value.discountCents <= value.renewalFeeCents + value.materialFeeCents, {
+}).refine((value) => value.renewalFeeCents > 0, {
+  message: 'Informe a taxa de rematrícula',
+}).refine((value) => value.discountCents <= value.renewalFeeCents, {
   message: 'O desconto não pode ser maior que o total da cobrança',
+}).refine((value) => value.entryCents <= value.renewalFeeCents - value.discountCents, {
+  message: 'A entrada nao pode ser maior que o total apos o desconto',
+  path: ['entryCents'],
 });
 export type CreateRenewalInvoiceInput = z.infer<typeof createRenewalInvoiceSchema>;
+
+export const createSchoolMaterialInvoiceSchema = z.object({
+  enrollmentId: z.string().min(1, 'Escolha o aluno'),
+  competence: competenceString,
+  materialFeeCents: cents.refine((value) => value > 0, 'Informe o valor do material'),
+  dueDate: dateString,
+  installments: z.number().int().min(1).max(3).default(1),
+});
+export type CreateSchoolMaterialInvoiceInput = z.infer<typeof createSchoolMaterialInvoiceSchema>;
 
 // ---------------------------------------------------------------------------
 // Expense (despesa)
@@ -407,6 +420,7 @@ export const renewBatchSchema = z.object({
   chargeEnrollmentFee: z.boolean().default(true),
   chargeSchoolMaterial: z.boolean().default(true),
   renewalFeeCents: cents.optional(),
+  renewalFeeEntryCents: cents.optional(),
   renewalFeeInstallments: z.number().int().min(1).max(3).optional(),
   materialFeeCents: cents.optional(),
   materialInstallments: z.number().int().min(1).max(3).optional(),

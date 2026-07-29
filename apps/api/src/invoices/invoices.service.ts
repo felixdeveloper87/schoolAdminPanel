@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InvoiceStatus, InvoiceType, Prisma } from '@prisma/client';
-import { CreateRenewalInvoiceInput, PayInvoiceInput } from '@escola/contracts';
+import { CreateRenewalInvoiceInput, CreateSchoolMaterialInvoiceInput, PayInvoiceInput } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import { dueDateFor, monthRange, parseDateString, todaySaoPaulo } from '../common/dates';
 import { PageParams, paged } from '../common/pagination';
@@ -20,18 +20,18 @@ export function splitAdditionalCharge(input: {
   competence: Date;
   dueDate: Date;
   installments: number;
+  entryCents?: number;
 }): Prisma.TuitionInvoiceCreateManyInput[] {
-  const base = Math.floor(input.amountCents / input.installments);
-  const remainder = input.amountCents % input.installments;
-  return Array.from({ length: input.installments }, (_, index) => ({
+  const parts = splitCentsWithEntry(input.amountCents, input.entryCents ?? 0, input.installments);
+  return parts.map((amountCents, index) => ({
     schoolId: input.schoolId,
     enrollmentId: input.enrollmentId,
     type: input.type,
     competence: new Date(Date.UTC(input.competence.getUTCFullYear(), input.competence.getUTCMonth() + index, 1)),
-    amountCents: base + (index < remainder ? 1 : 0),
+    amountCents,
     dueDate: addMonthsKeepingDay(input.dueDate, index),
     installmentNumber: index + 1,
-    installmentCount: input.installments,
+    installmentCount: parts.length,
   }));
 }
 
@@ -41,30 +41,38 @@ function splitCents(amountCents: number, installments: number) {
   return Array.from({ length: installments }, (_, index) => base + (index < remainder ? 1 : 0));
 }
 
+function splitCentsWithEntry(amountCents: number, entryCents: number, installments: number) {
+  if (!Number.isFinite(entryCents) || entryCents <= 0) return splitCents(amountCents, installments);
+  if (entryCents >= amountCents) return [amountCents];
+  return [entryCents, ...splitCents(amountCents - entryCents, installments)];
+}
+
 function splitRenewalCharge(input: {
   schoolId: string;
   enrollmentId: string;
   renewalFeeCents: number;
-  materialFeeCents: number;
+  entryCents: number;
   discountCents: number;
   competence: Date;
   dueDate: Date;
   installments: number;
 }): Prisma.TuitionInvoiceCreateManyInput[] {
-  const renewalParts = splitCents(input.renewalFeeCents, input.installments);
-  const materialParts = splitCents(input.materialFeeCents, input.installments);
-  const discountParts = splitCents(input.discountCents, input.installments);
-  return Array.from({ length: input.installments }, (_, index) => ({
+  const effectiveParts = splitCentsWithEntry(
+    input.renewalFeeCents - input.discountCents,
+    input.entryCents,
+    input.installments,
+  );
+  const discountParts = splitCents(input.discountCents, effectiveParts.length);
+  return effectiveParts.map((effectiveCents, index) => ({
     schoolId: input.schoolId,
     enrollmentId: input.enrollmentId,
     type: 'RENEWAL_FEE',
     competence: new Date(Date.UTC(input.competence.getUTCFullYear(), input.competence.getUTCMonth() + index, 1)),
-    amountCents: renewalParts[index] + materialParts[index],
-    materialCents: materialParts[index],
+    amountCents: effectiveCents + discountParts[index],
     discountCents: discountParts[index],
     dueDate: addMonthsKeepingDay(input.dueDate, index),
     installmentNumber: index + 1,
-    installmentCount: input.installments,
+    installmentCount: effectiveParts.length,
   }));
 }
 
@@ -74,7 +82,7 @@ export class InvoicesService {
 
   async list(
     schoolId: string,
-    filters: { competence?: Date; status?: InvoiceStatus },
+    filters: { competence?: Date; status?: InvoiceStatus; type?: InvoiceType },
     pageParams: PageParams,
   ) {
     // Recupera faturas cujo cron diário não tenha sido executado (por exemplo, durante um reinício).
@@ -84,6 +92,7 @@ export class InvoicesService {
       schoolId,
       ...(filters.competence ? { competence: filters.competence } : {}),
       ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.type ? { type: filters.type } : {}),
     };
 
     const [items, total, summary] = await this.prisma.$transaction([
@@ -107,6 +116,7 @@ export class InvoicesService {
         where: {
           schoolId,
           ...(filters.competence ? { competence: filters.competence } : {}),
+          ...(filters.type ? { type: filters.type } : {}),
         },
         orderBy: { status: 'asc' },
         _sum: { amountCents: true, discountCents: true },
@@ -229,7 +239,8 @@ export class InvoicesService {
       schoolId,
       enrollmentId: enrollment.id,
       renewalFeeCents: input.renewalFeeCents,
-      materialFeeCents: input.materialFeeCents,
+      // Missing entry from an already-running contract means R$ 0,00.
+      entryCents: Number.isFinite(input.entryCents) ? input.entryCents : 0,
       discountCents: input.discountCents,
       competence,
       dueDate: parseDateString(input.dueDate),
@@ -247,6 +258,36 @@ export class InvoicesService {
     if (duplicate) {
       throw new BadRequestException('Este aluno já possui esta cobrança nesta competência.');
     }
+    await this.prisma.tuitionInvoice.createMany({ data: invoices });
+    return { created: invoices.length };
+  }
+
+  async createSchoolMaterial(schoolId: string, input: CreateSchoolMaterialInvoiceInput) {
+    const enrollment = await this.prisma.enrollment.findFirst({
+      where: { id: input.enrollmentId, schoolId },
+      select: { id: true },
+    });
+    if (!enrollment) throw new NotFoundException('Matr\u00edcula n\u00e3o encontrada');
+
+    const invoices = splitAdditionalCharge({
+      schoolId,
+      enrollmentId: enrollment.id,
+      type: 'SCHOOL_MATERIAL',
+      amountCents: input.materialFeeCents,
+      competence: new Date(`${input.competence}T00:00:00.000Z`),
+      dueDate: parseDateString(input.dueDate),
+      installments: input.installments,
+    });
+    const duplicate = await this.prisma.tuitionInvoice.findFirst({
+      where: {
+        schoolId,
+        enrollmentId: enrollment.id,
+        type: 'SCHOOL_MATERIAL',
+        competence: { in: invoices.map((invoice) => new Date(invoice.competence)) },
+      },
+      select: { id: true },
+    });
+    if (duplicate) throw new BadRequestException('Este aluno j\u00e1 possui material escolar nesta compet\u00eancia.');
     await this.prisma.tuitionInvoice.createMany({ data: invoices });
     return { created: invoices.length };
   }

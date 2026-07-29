@@ -214,6 +214,7 @@ model Enrollment {
   discountReason     DiscountReason   @default(NONE)
   dueDay             Int
   enrollmentFeeCents Int              @default(0)
+  enrollmentFeeEntryCents Int         @default(0)
   enrollmentFeeInstallments Int       @default(1)
   materialFeeCents   Int              @default(0)
   materialInstallments Int            @default(1)
