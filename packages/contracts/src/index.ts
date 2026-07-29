@@ -357,6 +357,11 @@ export const createSchoolMaterialInvoiceSchema = z.object({
 });
 export type CreateSchoolMaterialInvoiceInput = z.infer<typeof createSchoolMaterialInvoiceSchema>;
 
+export const deleteInvoiceAgreementSchema = z.object({
+  invoiceIds: z.array(z.string().min(1)).min(1, 'Informe as parcelas do acordo'),
+});
+export type DeleteInvoiceAgreementInput = z.infer<typeof deleteInvoiceAgreementSchema>;
+
 // ---------------------------------------------------------------------------
 // Expense (despesa)
 // ---------------------------------------------------------------------------

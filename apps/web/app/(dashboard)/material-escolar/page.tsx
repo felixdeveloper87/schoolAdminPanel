@@ -20,7 +20,7 @@ type MaterialRow = {
   material: {
     status: InvoiceStatus;
     installmentCount: number;
-    installments: Array<{ status: InvoiceStatus; installmentNumber: number; installmentCount: number; amountCents: number; discountCents: number; dueDate: string }>;
+    installments: Array<{ id: string; status: InvoiceStatus; installmentNumber: number; installmentCount: number; amountCents: number; discountCents: number; dueDate: string }>;
   } | null;
 };
 type MaterialsResponse = { items: MaterialRow[]; total: number; competence: string };

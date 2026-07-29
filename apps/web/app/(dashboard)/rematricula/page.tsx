@@ -22,6 +22,7 @@ interface RenewalRow {
     type: InvoiceType;
     installmentCount: number;
     installments: Array<{
+      id: string;
       status: InvoiceStatus;
       type: InvoiceType;
       installmentNumber: number;

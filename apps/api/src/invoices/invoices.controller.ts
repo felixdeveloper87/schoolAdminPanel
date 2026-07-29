@@ -1,10 +1,12 @@
-import { BadRequestException, Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { InvoiceStatus } from '@prisma/client';
 import {
   createRenewalInvoiceSchema,
   CreateRenewalInvoiceInput,
   createSchoolMaterialInvoiceSchema,
   CreateSchoolMaterialInvoiceInput,
+  deleteInvoiceAgreementSchema,
+  DeleteInvoiceAgreementInput,
   payInvoiceSchema,
   PayInvoiceInput,
   competenceString,
@@ -79,6 +81,15 @@ export class InvoicesController {
     @Body(new ZodValidationPipe(createSchoolMaterialInvoiceSchema)) body: CreateSchoolMaterialInvoiceInput,
   ) {
     return this.invoicesService.createSchoolMaterial(user.schoolId, body);
+  }
+
+  @Delete('agreements')
+  @Roles('ADMIN')
+  deleteAgreement(
+    @CurrentUser() user: JwtPayload,
+    @Body(new ZodValidationPipe(deleteInvoiceAgreementSchema)) body: DeleteInvoiceAgreementInput,
+  ) {
+    return this.invoicesService.deleteAgreement(user.schoolId, body);
   }
 
   @Patch(':id/pay')

@@ -102,6 +102,7 @@ export class StudentsService {
                   competence: { gte: renewalCompetence, lt: renewalEndCompetence },
                 },
                 select: {
+                  id: true,
                   status: true,
                   type: true,
                   installmentNumber: true,
@@ -137,6 +138,7 @@ export class StudentsService {
                   type: firstInvoice.type,
                   installmentCount: firstInvoice.installmentCount,
                   installments: enrollment!.invoices.map((invoice) => ({
+                    id: invoice.id,
                     status: invoice.status,
                     type: invoice.type,
                     installmentNumber: invoice.installmentNumber,
@@ -179,6 +181,7 @@ export class StudentsService {
               invoices: {
                 where: { type: 'SCHOOL_MATERIAL', competence: { gte: startCompetence, lt: endCompetence } },
                 select: {
+                  id: true,
                   status: true,
                   installmentNumber: true,
                   installmentCount: true,
@@ -211,6 +214,7 @@ export class StudentsService {
                   status: firstInvoice.status,
                   installmentCount: firstInvoice.installmentCount,
                   installments: enrollment!.invoices.map((invoice) => ({
+                    id: invoice.id,
                     status: invoice.status,
                     installmentNumber: invoice.installmentNumber,
                     installmentCount: invoice.installmentCount,

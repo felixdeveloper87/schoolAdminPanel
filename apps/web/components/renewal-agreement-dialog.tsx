@@ -5,8 +5,10 @@ import { CheckCircle2 } from 'lucide-react';
 import { INVOICE_STATUS_LABELS, type InvoiceStatus, type InvoiceType } from '@escola/contracts';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { brl, formatDate } from '@/lib/format';
+import { UndoAgreementButton } from '@/components/undo-agreement-button';
 
 type Installment = {
+  id: string;
   status: InvoiceStatus;
   type: InvoiceType;
   installmentNumber: number;
@@ -20,11 +22,13 @@ type Installment = {
 export function RenewalAgreementDialog({
   studentName,
   feeType,
+  isAdmin = true,
   installments,
   trigger,
 }: {
   studentName: string;
   feeType: InvoiceType;
+  isAdmin?: boolean;
   installments: Installment[];
   trigger: React.ReactNode;
 }) {
@@ -61,7 +65,7 @@ export function RenewalAgreementDialog({
           ))}
         </div>
 
-        <p className="flex items-center gap-2 text-xs text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-success" /> A cobrança já foi gerada.</p>
+        <div className="flex items-center justify-between gap-3"><p className="flex items-center gap-2 text-xs text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-success" /> A cobrança já foi gerada.</p>{isAdmin && <UndoAgreementButton invoiceIds={installments.map((installment) => installment.id)} label="rematrícula" />}</div>
       </DialogContent>
     </Dialog>
   );

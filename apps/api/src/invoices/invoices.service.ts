@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InvoiceStatus, InvoiceType, Prisma } from '@prisma/client';
-import { CreateRenewalInvoiceInput, CreateSchoolMaterialInvoiceInput, PayInvoiceInput } from '@escola/contracts';
+import { CreateRenewalInvoiceInput, CreateSchoolMaterialInvoiceInput, DeleteInvoiceAgreementInput, PayInvoiceInput } from '@escola/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 import { dueDateFor, monthRange, parseDateString, todaySaoPaulo } from '../common/dates';
 import { PageParams, paged } from '../common/pagination';
@@ -291,6 +291,30 @@ export class InvoicesService {
     if (duplicate) throw new BadRequestException('Este aluno j\u00e1 possui material escolar nesta compet\u00eancia.');
     await this.prisma.tuitionInvoice.createMany({ data: invoices });
     return { created: invoices.length };
+  }
+
+  async deleteAgreement(schoolId: string, input: DeleteInvoiceAgreementInput) {
+    const invoices = await this.prisma.tuitionInvoice.findMany({
+      where: {
+        schoolId,
+        id: { in: input.invoiceIds },
+        type: { in: ['RENEWAL_FEE', 'SCHOOL_MATERIAL'] },
+      },
+      select: { id: true, status: true, enrollmentId: true, type: true },
+    });
+    if (invoices.length !== new Set(input.invoiceIds).size) {
+      throw new NotFoundException('Acordo não encontrado ou inválido.');
+    }
+    if (invoices.some((invoice) => invoice.status === 'PAID')) {
+      throw new BadRequestException('Não é possível desfazer um acordo que possui parcela paga.');
+    }
+    if (new Set(invoices.map((invoice) => `${invoice.enrollmentId}:${invoice.type}`)).size !== 1) {
+      throw new BadRequestException('As parcelas precisam pertencer ao mesmo acordo.');
+    }
+    const result = await this.prisma.tuitionInvoice.deleteMany({
+      where: { schoolId, id: { in: invoices.map((invoice) => invoice.id) } },
+    });
+    return { deleted: result.count };
   }
 
   async pay(schoolId: string, id: string, input: PayInvoiceInput) {
