@@ -28,14 +28,20 @@ export function SchoolMaterialChargeDialog({
   const [error, setError] = React.useState<string | null>(null);
   const [enrollmentId, setEnrollmentId] = React.useState(initialEnrollmentId ?? '');
   const [amount, setAmount] = React.useState('');
+  const [entry, setEntry] = React.useState('');
   const [competence, setCompetence] = React.useState(currentCompetence());
   const [dueDate, setDueDate] = React.useState(todayDateInput());
   const [installments, setInstallments] = React.useState(1);
 
   const submit = async () => {
     const materialFeeCents = toCents(amount);
+    const entryCents = toCents(entry);
     if (!enrollmentId || materialFeeCents <= 0) {
       setError('Escolha o aluno e informe o valor do material.');
+      return;
+    }
+    if (entryCents < 0 || entryCents > materialFeeCents) {
+      setError('A entrada não pode ser maior que o valor do material.');
       return;
     }
     setBusy(true);
@@ -43,7 +49,7 @@ export function SchoolMaterialChargeDialog({
     const response = await fetch('/api/invoices/school-material', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enrollmentId, materialFeeCents, competence, dueDate, installments }),
+      body: JSON.stringify({ enrollmentId, materialFeeCents, entryCents, competence, dueDate, installments }),
     });
     setBusy(false);
     if (!response.ok) {
@@ -53,6 +59,7 @@ export function SchoolMaterialChargeDialog({
     }
     setOpen(false);
     setAmount('');
+    setEntry('');
     setEnrollmentId(initialEnrollmentId ?? '');
     router.refresh();
   };
@@ -65,10 +72,12 @@ export function SchoolMaterialChargeDialog({
         <div className="grid gap-3 sm:grid-cols-2">
           {!initialEnrollmentId && <div className="space-y-1.5 sm:col-span-2"><Label>Aluno</Label><Select value={enrollmentId} onChange={(event) => setEnrollmentId(event.target.value)}><option value="">Escolha o aluno…</option>{students.filter((student) => student.enrollmentId).map((student) => <option key={student.enrollmentId} value={student.enrollmentId!}>{student.fullName}</option>)}</Select></div>}
           <div className="space-y-1.5"><Label>Valor (R$)</Label><Input inputMode="decimal" placeholder="650,00" value={amount} onChange={(event) => setAmount(event.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Valor de entrada (R$)</Label><Input inputMode="decimal" placeholder="Opcional" value={entry} onChange={(event) => setEntry(event.target.value)} /></div>
           <div className="space-y-1.5"><Label>Parcelas</Label><Select value={String(installments)} onChange={(event) => setInstallments(Number(event.target.value))}><option value="1">À vista</option><option value="2">2x mensais</option><option value="3">3x mensais</option></Select></div>
           <div className="space-y-1.5"><Label>Competência</Label><Input type="month" value={competence} onChange={(event) => setCompetence(event.target.value)} /></div>
           <div className="space-y-1.5"><Label>Vencimento</Label><Input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></div>
         </div>
+        {Number(entry.replace(/\./g, '').replace(',', '.')) > 0 && <p className="text-xs text-muted-foreground">A entrada vence primeiro; o saldo será dividido nas parcelas escolhidas.</p>}
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>Cancelar</Button><Button onClick={submit} disabled={busy}>{busy ? 'Criando…' : 'Criar cobrança'}</Button></div>
       </DialogContent>

@@ -348,8 +348,12 @@ export const createSchoolMaterialInvoiceSchema = z.object({
   enrollmentId: z.string().min(1, 'Escolha o aluno'),
   competence: competenceString,
   materialFeeCents: cents.refine((value) => value > 0, 'Informe o valor do material'),
+  entryCents: cents.default(0),
   dueDate: dateString,
   installments: z.number().int().min(1).max(3).default(1),
+}).refine((value) => value.entryCents <= value.materialFeeCents, {
+  message: 'A entrada não pode ser maior que o valor do material',
+  path: ['entryCents'],
 });
 export type CreateSchoolMaterialInvoiceInput = z.infer<typeof createSchoolMaterialInvoiceSchema>;
 

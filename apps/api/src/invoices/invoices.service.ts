@@ -274,6 +274,7 @@ export class InvoicesService {
       enrollmentId: enrollment.id,
       type: 'SCHOOL_MATERIAL',
       amountCents: input.materialFeeCents,
+      entryCents: Number.isFinite(input.entryCents) ? input.entryCents : 0,
       competence: new Date(`${input.competence}T00:00:00.000Z`),
       dueDate: parseDateString(input.dueDate),
       installments: input.installments,
